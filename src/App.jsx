@@ -395,7 +395,6 @@ Clinical but warm. Pure prose, no bullets. Reference specific numbers.`;
       <header style={S.header}>
         <div>
          <div style={S.brandRow}>
-  <div style={S.axionMark}>A</div>
   <div style={S.axionText}>AXION</div>
 </div>
           <p style={S.sub}>
