@@ -1,7 +1,7 @@
 {
-  "name": "Reta Protocol Tracker",
-  "short_name": "Reta",
-  "description": "Personal retatrutide + peptide protocol tracker",
+  "name": "AXION",
+  "short_name": "AXION",
+  "description": "AI-powered health and performance tracking.",
   "start_url": "./",
   "display": "standalone",
   "orientation": "portrait",
