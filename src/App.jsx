@@ -406,6 +406,9 @@ Clinical but warm. Pure prose, no bullets. Reference specific numbers.`;
     </p>
   </div>
 
+  
+</header>
+      <div style={{ position: "absolute", top: 24, right: 18 }}>
   <button
     onClick={() => {
       setTempKey(apiKey);
@@ -416,7 +419,7 @@ Clinical but warm. Pure prose, no bullets. Reference specific numbers.`;
   >
     ⚙️
   </button>
-</header>
+</div>
 
       {showSettings && (
         <div style={S.modal} onClick={() => setShowSettings(false)}>
@@ -1278,6 +1281,7 @@ heroSub: {
   fontSize: 13,
   letterSpacing: 2,
   fontFamily: "monospace",
+  textAlign: "center",
 },
 
 heroDose: {
@@ -1286,6 +1290,7 @@ heroDose: {
   fontSize: 15,
   letterSpacing: 2,
   fontFamily: "monospace",
+  textAlign: "center",
 },
 
 heroGear: {
