@@ -4,9 +4,9 @@ import { useMemo, useState, useEffect, useCallback } from "react";
 // MICHAEL'S PROTOCOL
 // ─────────────────────────────────────────────────────────────────────
 const USER_NAME = "User";
-const START_WEIGHT = 0;
-const START_DATE = "";
-const TARGET_WEIGHT = 0;
+const START_WEIGHT = 225;
+const START_DATE = "2026-05-26";
+const TARGET_WEIGHT = 200;
 const DOSE_DAYS = [];
 const DOSE_TIME = "";
 
