@@ -166,7 +166,13 @@ export default function App() {
     [weights]
   );
 
-  const latestWeight = sortedWeights[sortedWeights.length - 1] || SEED_WEIGHTS[0];
+  const latestWeight = sortedWeights[sortedWeights.length - 1] || {
+  id: 0,
+  date: todayISO(),
+  weight: START_WEIGHT || 0,
+  type: "start",
+  note: ""
+};
   const lowestWeight = sortedWeights.length ? Math.min(...sortedWeights.map(w => +w.weight)) : START_WEIGHT;
   const totalLost = START_WEIGHT - +latestWeight.weight;
   const remainingToGoal = +latestWeight.weight - TARGET_WEIGHT;
