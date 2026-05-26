@@ -408,7 +408,7 @@ Clinical but warm. Pure prose, no bullets. Reference specific numbers.`;
 
   
 </header>
-      <div style={{ position: "absolute", top: 40, right: 18 }}>
+      <div style={{ position: "absolute", top: 50, right: 18 }}>
   <button
     onClick={() => {
       setTempKey(apiKey);
