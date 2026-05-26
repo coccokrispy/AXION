@@ -394,8 +394,10 @@ Clinical but warm. Pure prose, no bullets. Reference specific numbers.`;
     <div style={S.page}>
       <header style={S.header}>
         <div>
-          <div style={S.kicker}>⚡ AXION Dashboard</div>
-          <h1 style={S.title}>Command Center</h1>
+         <div style={S.brandRow}>
+  <div style={S.axionMark}>A</div>
+  <div style={S.axionText}>AXION</div>
+</div>
           <p style={S.sub}>
             Start: {START_WEIGHT} lbs · {fmtDate(START_DATE)} · Goal: {TARGET_WEIGHT} lbs
             <span style={{ marginLeft: 8, color: "#fb7185" }}>· Wk {currentWeek} · {currentDose}mg/dose</span>
@@ -1119,5 +1121,35 @@ const S = {
   aiResultBox: { background: "#020617", border: "1px solid #1e3a5f", borderRadius: 12, padding: 16, marginTop: 4 },
   cameraBtn: { display: "block", background: "#0f172a", border: "1px solid #334155", color: "#e2e8f0", borderRadius: 8, padding: "11px 16px", cursor: "pointer", fontFamily: "monospace", fontSize: 13, fontWeight: 700 },
   aiStatBox: { background: "#0f172a", border: "1px solid #1e293b", borderRadius: 10, padding: 12 },
-  aiStatLabel: { fontSize: 10, color: "#475569", fontFamily: "monospace", textTransform: "uppercase", letterSpacing: 1.5, marginBottom: 4 },
+  aiStatLabel: { fontSize: 10, color: "#475569", fontFamily: "monospace", textTransform: "uppercase", letterSpacing: 1.5, marginBottom: 4 }, brandRow: {
+  display: "flex",
+  alignItems: "center",
+  gap: 14,
+  marginBottom: 18,
+},
+
+axionMark: {
+  width: 44,
+  height: 44,
+  borderRadius: 12,
+  background: "linear-gradient(145deg, #0b0f14, #111827)",
+  border: "1px solid #334155",
+  color: "#f8fafc",
+  display: "flex",
+  alignItems: "center",
+  justifyContent: "center",
+  fontSize: 28,
+  fontWeight: 900,
+  fontFamily: "Arial Black, sans-serif",
+  boxShadow: "0 0 22px rgba(74, 222, 128, 0.18)",
+},
+
+axionText: {
+  fontSize: 44,
+  fontWeight: 900,
+  letterSpacing: 8,
+  color: "#f8fafc",
+  fontFamily: "Arial Black, Impact, sans-serif",
+  textShadow: "0 0 18px rgba(255,255,255,0.22)",
+},
 };
