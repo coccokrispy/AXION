@@ -212,11 +212,31 @@ export default function App() {
   }
   function addFood() {
     if (!foodForm.item) return;
-    setFoods([...(foods || []), { ...foodForm, id: uid(), calories: +(foodForm.calories || 0), protein: +(foodForm.protein || 0) }]);
-    setFoodForm({ date: todayISO(), item: "", calories: "", protein: "" });
-    setAiResult(null);
-    flash("Food saved ✓");
-  }
+
+  setFoods([
+    ...(foods || []),
+    {
+      ...foodForm,
+      id: uid(),
+      calories: +(foodForm.calories || 0),
+      protein: +(foodForm.protein || 0),
+      carbs: +(foodForm.carbs || 0),
+      fat: +(foodForm.fat || 0)
+    }
+  ]);
+
+  setFoodForm({
+    date: todayISO(),
+    item: "",
+    calories: "",
+    protein: "",
+    carbs: "",
+    fat: ""
+  });
+
+  setAiResult(null);
+  flash("Food saved ✓");
+} 
   function addWorkout() {
     if (!workoutForm.type) return;
     setWorkouts([...(workouts || []), { ...workoutForm, id: uid(), minutes: +(workoutForm.minutes || 0) }]);
