@@ -161,6 +161,12 @@ export default function App() {
   const [servingInput, setServingInput] = useState("");
   const [insightLoading, setInsightLoading] = useState(false);
   const [aiInsight, setAiInsight] = useState("");
+  const [setupForm, setSetupForm] = useState({
+  name: "",
+  startWeight: "",
+  targetWeight: "",
+  startDate: todayISO()
+});
 
   const sortedWeights = useMemo(
     () => (weights || []).slice().sort((a, b) => new Date(a.date) - new Date(b.date)),
@@ -327,7 +333,63 @@ Clinical but warm. Pure prose, no bullets. Reference specific numbers.`;
 
   const TABS = ["dashboard", "weight", "doses", "peptides", "food", "workouts", "supplements", "calculator"];
   const ICONS = { dashboard: "⚡", weight: "⚖️", doses: "💉", peptides: "🧬", food: "🥩", workouts: "🏋️", supplements: "💊", calculator: "🧮" };
+  if (!HAS_SETUP) {
+  return (
+    <div style={S.page}>
+      <div style={S.panel}>
+        <h1 style={S.title}>Welcome to AXION</h1>
 
+        <div style={S.form}>
+          <label style={S.label}>Name</label>
+          <input
+            style={S.input}
+            value={setupForm.name}
+            onChange={e => setSetupForm({...setupForm, name: e.target.value})}
+          />
+
+          <label style={S.label}>Starting Weight</label>
+          <input
+            style={S.input}
+            type="number"
+            value={setupForm.startWeight}
+            onChange={e => setSetupForm({...setupForm, startWeight: e.target.value})}
+          />
+
+          <label style={S.label}>Goal Weight</label>
+          <input
+            style={S.input}
+            type="number"
+            value={setupForm.targetWeight}
+            onChange={e => setSetupForm({...setupForm, targetWeight: e.target.value})}
+          />
+
+          <label style={S.label}>Start Date</label>
+          <input
+            style={S.input}
+            type="date"
+            value={setupForm.startDate}
+            onChange={e => setSetupForm({...setupForm, startDate: e.target.value})}
+          />
+
+          <button
+            style={S.btn}
+            onClick={() => {
+              localStorage.setItem("tracker_name", setupForm.name);
+              localStorage.setItem("tracker_start_weight", setupForm.startWeight);
+              localStorage.setItem("tracker_target_weight", setupForm.targetWeight);
+              localStorage.setItem("tracker_start_date", setupForm.startDate);
+              localStorage.setItem("tracker_setup_complete", "true");
+
+              location.reload();
+            }}
+          >
+            Start AXION
+          </button>
+        </div>
+      </div>
+    </div>
+  );
+}
   return (
     <div style={S.page}>
       <header style={S.header}>
