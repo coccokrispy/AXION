@@ -5,7 +5,7 @@ import { useMemo, useState, useEffect, useCallback } from "react";
 // ─────────────────────────────────────────────────────────────────────
 const USER_NAME = "User";
 const START_WEIGHT = 0;
-const START_DATE = "todayISO()";
+const START_DATE = "";
 const TARGET_WEIGHT = 0;
 const DOSE_DAYS = [];
 const DOSE_TIME = "";
