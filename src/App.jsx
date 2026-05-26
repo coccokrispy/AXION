@@ -331,7 +331,7 @@ Clinical but warm. Pure prose, no bullets. Reference specific numbers.`;
     <div style={S.page}>
       <header style={S.header}>
         <div>
-          <div style={S.kicker}>🏆 {USER_NAME}'s Reta Protocol</div>
+          <div style={S.kicker}>⚡ AXION Dashboard</div>
           <h1 style={S.title}>Command Center</h1>
           <p style={S.sub}>
             Start: {START_WEIGHT} lbs · {fmtDate(START_DATE)} · Goal: {TARGET_WEIGHT} lbs
