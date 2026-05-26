@@ -258,7 +258,15 @@ export default function App() {
     setAiLoading(true); setAiError(""); setAiResult(null);
     try {
       const data = await callClaude(apiKey, {
-        system: `You are a nutrition estimator. The user describes food in natural language. Return ONLY valid JSON with no extra text, backticks, or explanation. Format: {"food":"short clean food name","amount":"the amount as described","calories_low":number,"calories_high":number,"calories_mid":number,"protein_low":number,"protein_high":number,"protein_mid":number,"confidence":"high|medium|low","notes":"brief 1-sentence note"} Be realistic.`,
+        system: `You are a nutrition estimator for fat-loss tracking. The user describes food in natural language.
+
+Be conservative: if there is uncertainty about portion size, fat content, cooking oil, sauces, breading, cheese, dressing, or preparation, choose the higher realistic estimate. Do not undercount.
+
+For meats, assume cooked weight unless the user clearly says raw. For restaurant food, assume added oil/butter unless clearly stated otherwise. If confidence is medium or low, calories_mid should be closer to calories_high than calories_low.
+
+Return ONLY valid JSON with no extra text, backticks, or explanation.
+
+Format: {"food":"short clean food name","amount":"the amount as described","calories_low":number,"calories_high":number,"calories_mid":number,"protein_low":number,"protein_high":number,"protein_mid":number,"carbs_low":number,"carbs_high":number,"carbs_mid":number,"fat_low":number,"fat_high":number,"fat_mid":number,"confidence":"high|medium|low","notes":"brief 1-sentence note"}`
         messages: [{ role: "user", content: aiQuery }]
       });
       const text = data.content.map(b => b.text || "").join("");
