@@ -392,21 +392,31 @@ Clinical but warm. Pure prose, no bullets. Reference specific numbers.`;
 }
   return (
     <div style={S.page}>
-      <header style={S.header}>
-        <div>
-         <div style={S.brandRow}>
-  <div style={S.axionText}>AXION</div>
-</div>
-          <p style={S.sub}>
-            Start: {START_WEIGHT} lbs · {fmtDate(START_DATE)} · Goal: {TARGET_WEIGHT} lbs
-            <span style={{ marginLeft: 8, color: "#fb7185" }}>· Wk {currentWeek} · {currentDose}mg/dose</span>
-          </p>
-        </div>
-        <div style={{ display: "flex", gap: 8, alignItems: "center" }}>
-          {saved && <div style={S.toast}>{saved}</div>}
-          <button onClick={() => { setTempKey(apiKey); setShowSettings(true); }} style={S.gearBtn} title="Settings">⚙️</button>
-        </div>
-      </header>
+      <header style={S.heroHeader}>
+  <div>
+    <div style={S.axionMain}>AXION</div>
+
+    <p style={S.heroSub}>
+      START: {START_WEIGHT} LBS · {fmtDate(START_DATE).toUpperCase()} · GOAL: {TARGET_WEIGHT} LBS
+      <span style={{ color: "#4ade80" }}> ·</span>
+    </p>
+
+    <p style={S.heroDose}>
+      WK {currentWeek} · <span style={{ color: "#fb7185" }}>{currentDose}mg/DOSE</span>
+    </p>
+  </div>
+
+  <button
+    onClick={() => {
+      setTempKey(apiKey);
+      setShowSettings(true);
+    }}
+    style={S.heroGear}
+    title="Settings"
+  >
+    ⚙️
+  </button>
+</header>
 
       {showSettings && (
         <div style={S.modal} onClick={() => setShowSettings(false)}>
@@ -432,16 +442,56 @@ Clinical but warm. Pure prose, no bullets. Reference specific numbers.`;
         </div>
       )}
 
-      <div style={S.progressWrap}>
-        <div style={S.progressTrack}>
-          <div style={{ ...S.progressFill, width: `${progressPct}%` }} />
-        </div>
-        <div style={S.progressLabels}>
-          <span>{START_WEIGHT} lbs</span>
-          <span style={{ color: "#4ade80", fontWeight: 700 }}>{progressPct.toFixed(1)}% to goal</span>
-          <span>{TARGET_WEIGHT} lbs</span>
-        </div>
-      </div>
+      <div style={S.goalCard}>
+  <div style={S.goalLeft}>
+    <div>
+      <span style={S.goalBig}>{START_WEIGHT}</span>
+      <span style={S.goalUnit}>LBS</span>
+    </div>
+
+    <div style={S.goalLabel}>START WEIGHT</div>
+  </div>
+
+  <div style={S.goalCircle}>
+    <div style={S.goalPct}>
+      {progressPct.toFixed(1)}%
+    </div>
+
+    <div style={S.goalCircleLabel}>
+      TO GOAL
+    </div>
+  </div>
+
+  <div style={S.goalRight}>
+    <div>
+      <span style={S.goalBig}>{TARGET_WEIGHT}</span>
+      <span style={S.goalUnit}>LBS</span>
+    </div>
+
+    <div style={S.goalLabel}>
+      GOAL WEIGHT
+    </div>
+  </div>
+
+  <div style={S.goalBarFull}>
+    <div
+      style={{
+        ...S.goalBarFill,
+        width: `${progressPct}%`
+      }}
+    />
+  </div>
+
+  <div style={S.goalBarLabels}>
+    <span>{START_WEIGHT} LBS</span>
+
+    <span style={{ color: "#4ade80" }}>
+      {progressPct.toFixed(1)}% TO GOAL
+    </span>
+
+    <span>{TARGET_WEIGHT} LBS</span>
+  </div>
+</div>
 
       <nav style={S.tabs}>
         {TABS.map(t => (
