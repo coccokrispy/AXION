@@ -3,24 +3,18 @@ import { useMemo, useState, useEffect, useCallback } from "react";
 // ─────────────────────────────────────────────────────────────────────
 // MICHAEL'S PROTOCOL
 // ─────────────────────────────────────────────────────────────────────
-const USER_NAME = "Michael";
-const START_WEIGHT = 223.4;
-const START_DATE = "2026-05-24";
-const TARGET_WEIGHT = 190;
-const DOSE_DAYS = [0, 4];
-const DOSE_TIME = "19:00";
+const USER_NAME = "User";
+const START_WEIGHT = 0;
+const START_DATE = "todayISO()";
+const TARGET_WEIGHT = 0;
+const DOSE_DAYS = [];
+const DOSE_TIME = "";
 
-const SEED_WEIGHTS = [
-  { id: 1, date: "2026-05-24", weight: 223.4, type: "start", note: "Official start weight · first dose day" },
-];
+const SEED_WEIGHTS = [];
 
-const SEED_DOSES = [
-  { id: 10, date: "2026-05-24", dose: 1.0, note: "Starting dose · Sunday" },
-];
+const SEED_DOSES = [];
 
-const SEED_PEPTIDES = [
-  { id: 100, name: "MOTS-c", category: "Mitochondrial", startDate: "2026-06-24", doseAmount: 5, doseUnit: "mg", frequency: "Weekly", cycleWeeks: 10, status: "planned", color: "#f0abfc", notes: "Planned start ~1 month after Reta. Mitochondrial AMPK activator — complements Reta's GLP-1/GIP/glucagon pathway." },
-];
+const SEED_PEPTIDES = [];
 
 const RETA_PHASES = [
   { weeks: "1–4",   phase: "Initiation",    expected: "0–1%",  desc: "Body adapting. Appetite suppression begins. GI side effects most likely." },
