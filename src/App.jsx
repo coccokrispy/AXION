@@ -6,7 +6,7 @@ import { useMemo, useState, useEffect, useCallback } from "react";
 const USER_NAME = localStorage.getItem("tracker_name") || "User";
 const START_WEIGHT = Number(localStorage.getItem("tracker_start_weight")) || 225;
 const START_DATE = "2026-05-26";
-const TARGET_WEIGHT = 200;
+const TARGET_WEIGHT = Number(localStorage.getItem("tracker_target_weight")) || 200;
 const DOSE_DAYS = [];
 const DOSE_TIME = "";
 
