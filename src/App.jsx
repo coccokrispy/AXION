@@ -257,7 +257,14 @@ export default function App() {
       const text = data.content.map(b => b.text || "").join("");
       const parsed = JSON.parse(text.replace(/```json|```/g, "").trim());
       setAiResult(parsed);
-      setFoodForm(f => ({ ...f, item: parsed.food + " (" + parsed.amount + ")", calories: String(parsed.calories_mid), protein: String(parsed.protein_mid) }));
+      setFoodForm(f => ({ 
+  ...f, 
+  item: parsed.food + " (" + parsed.amount + ")", 
+  calories: String(parsed.calories_mid), 
+  protein: String(parsed.protein_mid),
+  carbs: String(parsed.carbs_mid),
+  fat: String(parsed.fat_mid)
+}));
     } catch (e) { setAiError("Lookup failed: " + e.message); }
     setAiLoading(false);
   }
