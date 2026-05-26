@@ -1201,4 +1201,145 @@ axionText: {
   fontFamily: "Arial Black, Impact, sans-serif",
   textShadow: "0 0 18px rgba(255,255,255,0.22)",
 },
-};
+heroHeader: {
+  display: "flex",
+  justifyContent: "space-between",
+  alignItems: "flex-start",
+  marginBottom: 22,
+  gap: 12,
+},
+
+axionMain: {
+  fontSize: 54,
+  lineHeight: 0.9,
+  fontWeight: 900,
+  letterSpacing: 12,
+  color: "#f8fafc",
+  fontFamily: "Impact, Arial Black, sans-serif",
+  textTransform: "uppercase",
+  textShadow: "0 0 18px rgba(255,255,255,0.25)",
+},
+
+heroSub: {
+  margin: "18px 0 0",
+  color: "#94a3b8",
+  fontSize: 13,
+  letterSpacing: 2,
+  fontFamily: "monospace",
+},
+
+heroDose: {
+  margin: "10px 0 0",
+  color: "#f8fafc",
+  fontSize: 15,
+  letterSpacing: 2,
+  fontFamily: "monospace",
+},
+
+heroGear: {
+  width: 54,
+  height: 54,
+  borderRadius: 12,
+  background: "linear-gradient(145deg, #020617, #0f172a)",
+  border: "1px solid #334155",
+  color: "#f8fafc",
+  fontSize: 24,
+  cursor: "pointer",
+},
+
+goalCard: {
+  display: "grid",
+  gridTemplateColumns: "1fr 120px 1fr",
+  alignItems: "center",
+  gap: 12,
+  background: "radial-gradient(circle at center, rgba(74,222,128,0.08), rgba(2,6,23,0.96) 55%)",
+  border: "1px solid #334155",
+  borderRadius: 18,
+  padding: "24px 18px 18px",
+  marginBottom: 18,
+},
+
+goalLeft: {
+  textAlign: "left",
+},
+
+goalRight: {
+  textAlign: "right",
+},
+
+goalBig: {
+  fontSize: 34,
+  fontWeight: 900,
+  color: "#f8fafc",
+  fontFamily: "Impact, Arial Black, sans-serif",
+},
+
+goalUnit: {
+  marginLeft: 6,
+  fontSize: 15,
+  fontWeight: 800,
+  color: "#f8fafc",
+  fontFamily: "monospace",
+},
+
+goalLabel: {
+  marginTop: 6,
+  fontSize: 11,
+  color: "#94a3b8",
+  letterSpacing: 1.5,
+  fontFamily: "monospace",
+},
+
+goalCircle: {
+  width: 110,
+  height: 110,
+  borderRadius: "50%",
+  border: "2px solid #1e293b",
+  background: "radial-gradient(circle, #020617 45%, #0f172a 100%)",
+  display: "flex",
+  flexDirection: "column",
+  alignItems: "center",
+  justifyContent: "center",
+  justifySelf: "center",
+  boxShadow: "0 0 0 6px rgba(74,222,128,0.08), inset 0 0 24px rgba(74,222,128,0.12)",
+},
+
+goalPct: {
+  fontSize: 29,
+  fontWeight: 900,
+  color: "#4ade80",
+  fontFamily: "monospace",
+},
+
+goalCircleLabel: {
+  fontSize: 11,
+  color: "#cbd5e1",
+  letterSpacing: 1.5,
+  fontFamily: "monospace",
+},
+
+goalBarFull: {
+  gridColumn: "1 / 4",
+  height: 8,
+  background: "#111827",
+  border: "1px solid #1f2937",
+  borderRadius: 999,
+  overflow: "hidden",
+  marginTop: 8,
+},
+
+goalBarFill: {
+  height: "100%",
+  background: "linear-gradient(90deg, #16a34a, #86efac)",
+  borderRadius: 999,
+},
+
+goalBarLabels: {
+  gridColumn: "1 / 4",
+  display: "flex",
+  justifyContent: "space-between",
+  color: "#94a3b8",
+  fontFamily: "monospace",
+  fontSize: 11,
+  letterSpacing: 1,
+},};
