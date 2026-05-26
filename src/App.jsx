@@ -1252,10 +1252,12 @@ axionText: {
 },
 heroHeader: {
   display: "flex",
-  justifyContent: "space-between",
-  alignItems: "flex-start",
+  flexDirection: "column",
+  alignItems: "center",
+  justifyContent: "center",
   marginBottom: 22,
   gap: 12,
+  textAlign: "center",
 },
 
 axionMain: {
