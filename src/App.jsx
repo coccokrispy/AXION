@@ -1210,6 +1210,7 @@ heroHeader: {
 },
 
 axionMain: {
+  marginTop: 22,
   fontSize: 54,
   lineHeight: 0.9,
   fontWeight: 900,
