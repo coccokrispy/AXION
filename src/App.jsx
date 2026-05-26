@@ -145,7 +145,7 @@ export default function App() {
   const [tab, setTab] = useState("dashboard");
   const [weightForm, setWeightForm]   = useState({ date: todayISO(), weight: "", type: "morning", note: "" });
   const [doseForm, setDoseForm]       = useState({ date: todayISO(), dose: "", note: "" });
-  const [foodForm, setFoodForm]       = useState({ date: todayISO(), item: "", calories: "", protein: "" });
+  const [foodForm, setFoodForm]       = useState({ date: todayISO(), item: "", calories: "", protein: "", carbs: "", fat: "" });
   const [workoutForm, setWorkoutForm] = useState({ date: todayISO(), type: "", minutes: "", note: "" });
   const [saved, setSaved] = useState("");
   const [showSettings, setShowSettings] = useState(false);
