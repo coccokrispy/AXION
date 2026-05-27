@@ -163,9 +163,12 @@ export default function App() {
   const [aiInsight, setAiInsight] = useState("");
   const [setupForm, setSetupForm] = useState({
   name: "",
+  heightFeet: "",
+  heightInches: "",
   startWeight: "",
   targetWeight: "",
-  startDate: todayISO()
+  startDate: todayISO(),
+  activityLevel: "moderate"
 });
 
   const sortedWeights = useMemo(
@@ -341,6 +344,20 @@ Clinical but warm. Pure prose, no bullets. Reference specific numbers.`;
 
   const TABS = ["dashboard", "weight", "doses", "peptides", "food", "workouts", "supplements", "calculator"];
   const ICONS = { dashboard: "⚡", weight: "⚖️", doses: "💉", peptides: "🧬", food: "🥩", workouts: "🏋️", supplements: "💊", calculator: "🧮" };
+  const activityMultipliers = {
+  sedentary: 11,
+  light: 12,
+  moderate: 13,
+  active: 14,
+  very_active: 15
+};
+
+const estimatedCalories = setupForm.startWeight
+  ? Math.round(
+      (Number(setupForm.startWeight) *
+        activityMultipliers[setupForm.activityLevel]) - 500
+    )
+  : 0;
   if (!HAS_SETUP) {
   return (
     <div style={S.page}>
@@ -354,7 +371,35 @@ Clinical but warm. Pure prose, no bullets. Reference specific numbers.`;
             value={setupForm.name}
             onChange={e => setSetupForm({...setupForm, name: e.target.value})}
           />
+          <label style={S.label}>Height</label>
 
+<div style={{ display: "flex", gap: 8 }}>
+  <input
+    style={S.input}
+    type="number"
+    placeholder="Feet"
+    value={setupForm.heightFeet}
+    onChange={e =>
+      setSetupForm({
+        ...setupForm,
+        heightFeet: e.target.value
+      })
+    }
+  />
+
+  <input
+    style={S.input}
+    type="number"
+    placeholder="Inches"
+    value={setupForm.heightInches}
+    onChange={e =>
+      setSetupForm({
+        ...setupForm,
+        heightInches: e.target.value
+      })
+    }
+  />
+</div>
           <label style={S.label}>Starting Weight</label>
           <input
             style={S.input}
@@ -378,15 +423,94 @@ Clinical but warm. Pure prose, no bullets. Reference specific numbers.`;
             value={setupForm.startDate}
             onChange={e => setSetupForm({...setupForm, startDate: e.target.value})}
           />
+          <label style={S.label}>Activity Level</label>
+
+<select
+  style={S.input}
+  value={setupForm.activityLevel}
+  onChange={e =>
+    setSetupForm({
+      ...setupForm,
+      activityLevel: e.target.value
+    })
+  }
+>
+  <option value="sedentary">
+    Sedentary (desk job)
+  </option>
+
+  <option value="light">
+    Light (1–3 days/wk)
+  </option>
+
+  <option value="moderate">
+    Moderate (3–5 days/wk)
+  </option>
+
+  <option value="active">
+    Active (6–7 days/wk)
+  </option>
+
+  <option value="very_active">
+    Very active (2x/day)
+  </option>
+</select>
+
+{estimatedCalories > 0 && (
+  <div style={S.setupEstimate}>
+    📊 Your estimated daily target:
+    {" "}
+    {estimatedCalories}
+    {" "}
+    calories for ~1 lb/week loss.
+    Adjustable later.
+  </div>
+)}
 
           <button
             style={S.btn}
             onClick={() => {
-              localStorage.setItem("tracker_name", setupForm.name);
-              localStorage.setItem("tracker_start_weight", setupForm.startWeight);
-              localStorage.setItem("tracker_target_weight", setupForm.targetWeight);
-              localStorage.setItem("tracker_start_date", setupForm.startDate);
-              localStorage.setItem("tracker_setup_complete", "true");
+            localStorage.setItem("tracker_name", setupForm.name);
+
+localStorage.setItem(
+  "tracker_height_feet",
+  setupForm.heightFeet
+);
+
+localStorage.setItem(
+  "tracker_height_inches",
+  setupForm.heightInches
+);
+
+localStorage.setItem(
+  "tracker_start_weight",
+  setupForm.startWeight
+);
+
+localStorage.setItem(
+  "tracker_target_weight",
+  setupForm.targetWeight
+);
+
+localStorage.setItem(
+  "tracker_start_date",
+  setupForm.startDate
+);
+
+localStorage.setItem(
+  "tracker_activity_level",
+  setupForm.activityLevel
+);
+
+localStorage.setItem(
+  "tracker_calorie_target",
+  estimatedCalories
+);
+
+localStorage.setItem(
+  "tracker_setup_complete",
+  "true"
+);
 
               location.reload();
             }}
@@ -1407,4 +1531,15 @@ goalBarLabels: {
   fontFamily: "monospace",
   fontSize: 11,
   letterSpacing: 1,
+},setupEstimate: {
+  marginTop: 16,
+  padding: 14,
+  borderRadius: 16,
+  border: "1px solid #4ade80",
+  background: "rgba(20,83,45,0.18)",
+  color: "#4ade80",
+  fontSize: 14,
+  lineHeight: 1.5,
+  fontFamily: "monospace",
+  boxShadow: "0 0 18px rgba(74,222,128,0.12)",
 },};
