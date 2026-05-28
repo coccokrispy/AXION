@@ -437,7 +437,7 @@ const estimatedCalories = setupForm.startWeight
   <option value="active">Active — 6–7 workouts/week</option>
   <option value="very_active">Very active — hard training/physical job</option>
 </select>
-          <label style={S.label}>Activity Level</label>
+      label style={S.label}>Activity Level</label>
 
 <select
   style={S.input}
@@ -450,23 +450,23 @@ const estimatedCalories = setupForm.startWeight
   }
 >
   <option value="sedentary">
-    Sedentary (desk job)
+    Sedentary — little/no exercise
   </option>
 
   <option value="light">
-    Light (1–3 days/wk)
+    Light — 1–3 workouts/week
   </option>
 
   <option value="moderate">
-    Moderate (3–5 days/wk)
+    Moderate — 3–5 workouts/week
   </option>
 
   <option value="active">
-    Active (6–7 days/wk)
+    Active — 6–7 workouts/week
   </option>
 
   <option value="very_active">
-    Very active (2x/day)
+    Very active — hard training/physical job
   </option>
 </select>
 
