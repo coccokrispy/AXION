@@ -1803,14 +1803,25 @@ goalBarLabels: {
   fontFamily: "monospace",
   fontSize: 11,
   letterSpacing: 1,
-},setupEstimate: {
+},
+
+setupEstimate: {
   marginTop: 16,
   padding: 14,
   borderRadius: 16,
   border: "1px solid #4ade80",
   background: "rgba(20,83,45,0.18)",
   color: "#4ade80",
-  
+  fontSize: 14,
+  lineHeight: 1.5,
+  fontFamily: "monospace",
+  boxShadow: "0 0 18px rgba(74,222,128,0.12)",
+},
+
+lineChartWrap: {
+  width: "100%",
+  overflowX: "hidden",
+},
 
 lineChartSvg: {
   width: "100%",
