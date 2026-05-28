@@ -728,8 +728,7 @@ localStorage.setItem(
 
     <span>{TARGET_WEIGHT} LBS</span>
   </div>
-</div>
-      <div style={S.goalPredictionInline}>
+<div style={S.goalPredictionInline}>
   <div style={S.goalPredictionInlineItem}>
     <span style={S.goalPredictionInlineLabel}>
       PROJECTED GOAL
@@ -765,7 +764,6 @@ localStorage.setItem(
   </div>
 </div>
     
-
      <nav style={S.tabs}>
   {TABS.map(t => {
     const Icon = ICONS[t];
