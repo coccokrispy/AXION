@@ -222,6 +222,53 @@ export default function App() {
   const activePeptides = (peptides || []).filter(p => p.status === "active");
   const plannedPeptides = (peptides || []).filter(p => p.status === "planned");
   const nextDoses = getNextDoseDays();
+  const recentWeights = sortedWeights.slice(-8);
+
+const recentWeightLoss =
+  recentWeights.length >= 2
+    ? Number(recentWeights[0].weight) - Number(recentWeights[recentWeights.length - 1].weight)
+    : 0;
+
+const recentDays =
+  recentWeights.length >= 2
+    ? Math.max(1, daysBetween(recentWeights[0].date, recentWeights[recentWeights.length - 1].date))
+    : 7;
+
+const weightBasedWeeklyLoss =
+  recentWeights.length >= 2
+    ? (recentWeightLoss / recentDays) * 7
+    : avgPerWeek;
+
+const last7Foods = (foods || []).filter(f => {
+  const d = new Date(f.date);
+  const cutoff = new Date();
+  cutoff.setDate(cutoff.getDate() - 7);
+  return d >= cutoff;
+});
+
+const avgDailyCalories =
+  last7Foods.length > 0
+    ? Math.round(last7Foods.reduce((sum, f) => sum + Number(f.calories || 0), 0) / 7)
+    : null;
+
+const calorieTarget = Number(localStorage.getItem("tracker_calorie_target")) || null;
+
+const foodAdjustment =
+  avgDailyCalories && calorieTarget
+    ? Math.max(-0.5, Math.min(0.5, ((calorieTarget - avgDailyCalories) / 3500) * 7))
+    : 0;
+
+const projectedWeeklyLoss = Math.max(
+  0.25,
+  Math.min(3, weightBasedWeeklyLoss + foodAdjustment)
+);
+
+const projectedWeeksToGoal = Math.ceil(
+  Math.max(0, Number(latestWeight.weight) - TARGET_WEIGHT) / projectedWeeklyLoss
+);
+
+const projectedGoalDate = new Date();
+projectedGoalDate.setDate(projectedGoalDate.getDate() + projectedWeeksToGoal * 7);
 
   function flash(msg) { setSaved(msg); setTimeout(() => setSaved(""), 2000); }
 
@@ -680,6 +727,28 @@ localStorage.setItem(
 </span>
 
     <span>{TARGET_WEIGHT} LBS</span>
+  </div>
+</div>
+      <div style={S.goalPrediction}>
+  <div style={S.goalPredictionItem}>
+    <span style={S.goalPredictionLabel}>Projected Goal</span>
+    <strong>
+      {projectedGoalDate.toLocaleDateString("en-US", {
+        month: "short",
+        day: "numeric",
+        year: "2-digit"
+      })}
+    </strong>
+  </div>
+
+  <div style={S.goalPredictionItem}>
+    <span style={S.goalPredictionLabel}>Pace</span>
+    <strong>{projectedWeeklyLoss.toFixed(1)} lb/wk</strong>
+  </div>
+
+  <div style={S.goalPredictionItem}>
+    <span style={S.goalPredictionLabel}>Weeks Left</span>
+    <strong>{projectedWeeksToGoal}</strong>
   </div>
 </div>
 
@@ -1740,4 +1809,31 @@ lineChartSvg: {
   height: 190,
   display: "block",
 },
+}, goalPrediction: {
+  gridColumn: "1 / -1",
+  display: "grid",
+  gridTemplateColumns: "1fr 1fr 1fr",
+  gap: 10,
+  marginTop: 16,
+  paddingTop: 14,
+  borderTop: "1px solid rgba(74,222,128,0.22)",
+},
+
+goalPredictionItem: {
+  background: "rgba(0,0,0,0.42)",
+  border: "1px solid rgba(74,222,128,0.18)",
+  borderRadius: 14,
+  padding: "10px 8px",
+  textAlign: "center",
+  boxShadow: "inset 0 0 14px rgba(74,222,128,0.04)",
+},
+
+goalPredictionLabel: {
+  display: "block",
+  fontSize: 9,
+  color: "#94a3b8",
+  textTransform: "uppercase",
+  letterSpacing: 1,
+  fontFamily: "monospace",
+  marginBottom: 5,
 },};
