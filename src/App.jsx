@@ -789,21 +789,7 @@ localStorage.setItem(
           {sortedWeights.length > 1 && (
             <div style={S.panel}>
               <h2 style={S.panelTitle}>Weight Trend</h2>
-              <div style={S.chartArea}>
-                {sortedWeights.map(w => {
-                  const min = Math.min(...sortedWeights.map(x => x.weight));
-                  const max = Math.max(...sortedWeights.map(x => x.weight));
-                  const pct = 10 + ((w.weight - min) / Math.max(0.1, max - min)) * 80;
-                  return (
-                    <div key={w.id} style={S.barCol} title={`${w.date}: ${w.weight} lbs`}>
-                      <div style={{ ...S.barFill, height: `${pct}%` }} />
-                      <div style={S.barLabel}>{w.weight}</div>
-                      <div style={S.barDate}>{w.date.slice(5)}</div>
-                    </div>
-                  );
-                })}
-              </div>
-            </div>
+              <WeightLineChart weights={sortedWeights} />
           )}
 
           <div style={S.guardrail}>
@@ -1013,7 +999,97 @@ localStorage.setItem(
     </div>
   );
 }
+function WeightLineChart({ weights }) {
+  const points = weights.slice(-8);
 
+  const values = points.map(w => Number(w.weight));
+
+  const min = Math.min(...values) - 1;
+  const max = Math.max(...values) + 1;
+
+  const width = 360;
+  const height = 180;
+  const pad = 28;
+
+  const x = i =>
+    pad + (i / Math.max(1, points.length - 1)) * (width - pad * 2);
+
+  const y = weight =>
+    height -
+    pad -
+    ((weight - min) / Math.max(1, max - min)) *
+      (height - pad * 2);
+
+  const line = points
+    .map((p, i) => `${x(i)},${y(Number(p.weight))}`)
+    .join(" ");
+
+  return (
+    <div style={S.lineChartWrap}>
+      <svg
+        viewBox={`0 0 ${width} ${height}`}
+        style={S.lineChartSvg}
+      >
+        {[0, 1, 2, 3].map(i => {
+          const yy =
+            pad + i * ((height - pad * 2) / 3);
+
+          return (
+            <line
+              key={i}
+              x1={pad}
+              y1={yy}
+              x2={width - pad}
+              y2={yy}
+              stroke="rgba(74,222,128,0.12)"
+              strokeWidth="1"
+            />
+          );
+        })}
+
+        <polyline
+          points={line}
+          fill="none"
+          stroke="#4ade80"
+          strokeWidth="3"
+          strokeLinecap="round"
+          strokeLinejoin="round"
+        />
+
+        {points.map((p, i) => (
+          <g key={p.id || i}>
+            <circle
+              cx={x(i)}
+              cy={y(Number(p.weight))}
+              r="4"
+              fill="#4ade80"
+            />
+
+            <text
+              x={x(i)}
+              y={y(Number(p.weight)) - 10}
+              textAnchor="middle"
+              fill="#e2e8f0"
+              fontSize="10"
+            >
+              {p.weight}
+            </text>
+
+            <text
+              x={x(i)}
+              y={height - 6}
+              textAnchor="middle"
+              fill="#94a3b8"
+              fontSize="9"
+            >
+              {p.date.slice(5)}
+            </text>
+          </g>
+        ))}
+      </svg>
+    </div>
+  );
+}
 function PeptidesPanel({ peptides, setPeptides }) {
   const [showAdd, setShowAdd] = useState(false);
   const [selectedLib, setSelectedLib] = useState(null);
@@ -1646,5 +1722,14 @@ goalBarLabels: {
   fontSize: 14,
   lineHeight: 1.5,
   fontFamily: "monospace",
-  boxShadow: "0 0 18px rgba(74,222,128,0.12)",
+  boxShadow: "0 0 18px rgba(74,222,128,0.12)", lineChartWrap: {
+  width: "100%",
+  overflowX: "hidden",
+},
+
+lineChartSvg: {
+  width: "100%",
+  height: 190,
+  display: "block",
+},
 },};
