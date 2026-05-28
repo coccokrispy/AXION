@@ -786,11 +786,12 @@ localStorage.setItem(
             )}
           </div>
 
-          {sortedWeights.length > 1 && (
-            <div style={S.panel}>
-              <h2 style={S.panelTitle}>Weight Trend</h2>
-              <WeightLineChart weights={sortedWeights} />
-          )}
+         {sortedWeights.length > 1 && (
+  <div style={S.panel}>
+    <h2 style={S.panelTitle}>Weight Trend</h2>
+    <WeightLineChart weights={sortedWeights} />
+  </div>
+)}
 
           <div style={S.guardrail}>
             <span style={{ fontSize: 18 }}>⚠️</span>
