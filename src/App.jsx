@@ -906,7 +906,7 @@ localStorage.setItem(
                 <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 10, marginBottom: 12 }}>
                   <div style={S.aiStatBox}>
                     <div style={S.aiStatLabel}>Calories</div>
-                    <div style={{ fontSize: 28, fontWeight: 900, color: "#f59e0b" }}>{aiResult.calories_mid}</div>
+                    <div style={{ fontSize: 28, fontWeight: 900, color: "4ade80" }}>{aiResult.calories_mid}</div>
                     <div style={{ fontSize: 11, color: "#64748b", fontFamily: "monospace" }}>{aiResult.calories_low}–{aiResult.calories_high}</div>
                   </div>
                   <div style={S.aiStatBox}>
