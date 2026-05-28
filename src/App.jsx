@@ -426,6 +426,18 @@ const estimatedCalories = setupForm.startWeight
             onChange={e => setSetupForm({...setupForm, startDate: e.target.value})}
           />
           <label style={S.label}>Activity Level</label>
+<select
+  style={S.input}
+  value={setupForm.activityLevel}
+  onChange={e => setSetupForm({...setupForm, activityLevel: e.target.value})}
+>
+  <option value="sedentary">Sedentary — little/no exercise</option>
+  <option value="light">Light — 1–3 workouts/week</option>
+  <option value="moderate">Moderate — 3–5 workouts/week</option>
+  <option value="active">Active — 6–7 workouts/week</option>
+  <option value="very_active">Very active — hard training/physical job</option>
+</select>
+          <label style={S.label}>Activity Level</label>
 
 <select
   style={S.input}
