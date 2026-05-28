@@ -1,4 +1,20 @@
-import { useMemo, useState, useEffect, useCallback } from "react";
+import {
+  useMemo,
+  useState,
+  useEffect,
+  useCallback
+} from "react";
+
+import {
+  Zap,
+  Scale,
+  Syringe,
+  Dna,
+  Beef,
+  Dumbbell,
+  Pill,
+  Calculator
+} from "lucide-react";
 
 // ─────────────────────────────────────────────────────────────────────
 // MICHAEL'S PROTOCOL
@@ -368,16 +384,7 @@ Clinical but warm. Pure prose, no bullets. Reference specific numbers.`;
   }
 
   const TABS = ["dashboard", "weight", "doses", "peptides", "food", "workouts", "supplements", "calculator"];
-  const ICONS = {
-  dashboard: "⚡",
-  weight: "▣",
-  doses: "⟡",
-  peptides: "⌬",
-  food: "◒",
-  workouts: "▥",
-  supplements: "◐",
-  calculator: "▦"
-};
+
   const activityMultipliers = {
   sedentary: 11,
   light: 12,
@@ -677,12 +684,32 @@ localStorage.setItem(
 </div>
 
       <nav style={S.tabs}>
-        {TABS.map(t => (
-          <button key={t} onClick={() => setTab(t)} style={tab === t ? S.activeTab : S.tab}>
-            <span style={{ fontSize: 16 }}>{ICONS[t]}</span>
-            <span style={{ fontSize: 11, textTransform: "capitalize" }}>{t}</span>
-          </button>
-        ))}
+       {TABS.map(t => {
+  const Icon = ICONS[t];
+
+  return (
+    <button
+      key={t}
+      onClick={() => setTab(t)}
+      style={tab === t ? S.activeTab : S.tab}
+    >
+      <Icon
+        size={28}
+        strokeWidth={1.8}
+        color={tab === t ? "#4ade80" : "#e2e8f0"}
+      />
+
+      <span
+        style={{
+          fontSize: 11,
+          textTransform: "capitalize"
+        }}
+      >
+        {t}
+      </span>
+    </button>
+  );
+})}
       </nav>
 
       {tab === "dashboard" && (
