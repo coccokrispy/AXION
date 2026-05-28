@@ -594,14 +594,11 @@ localStorage.setItem(
   <div>
     <div style={S.axionMain}>AXION</div>
 
-    <p style={S.heroSub}>
-      START: {START_WEIGHT} LBS · {fmtDate(START_DATE).toUpperCase()} · GOAL: {TARGET_WEIGHT} LBS
-      <span style={{ color: "#4ade80" }}> ·</span>
-    </p>
-
-    <p style={S.heroDose}>
-      WK {currentWeek} · <span style={{ color: "#fb7185" }}>{currentDose}mg/DOSE</span>
-    </p>
+    header style={S.heroHeader}>
+  <div>
+    <div style={S.axionMain}>AXION</div>
+  </div>
+</header>
   </div>
 
   
