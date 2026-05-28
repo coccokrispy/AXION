@@ -256,12 +256,20 @@ export default function App() {
   function remove(setter, list, id) { setter((list || []).filter(x => x.id !== id)); }
 
   async function lookupCalories() {
-    if (!aiQuery.trim()) return;
-    if (!apiKey) { setAiError("Add your Anthropic API key in Settings (⚙️) to use AI features."); return; }
-    setAiLoading(true); setAiError(""); setAiResult(null);
-    try {
-      const data = await callClaude(apiKey, {
-        system: `You are a nutrition estimator for fat-loss tracking. The user describes food in natural language.
+  if (!aiQuery.trim()) return;
+
+  if (!apiKey) {
+    setAiError("Add your Anthropic API key in Settings (⚙️) to use AI features.");
+    return;
+  }
+
+  setAiLoading(true);
+  setAiError("");
+  setAiResult(null);
+
+  try {
+    const data = await callClaude(apiKey, {
+      system: `You are a nutrition estimator for fat-loss tracking. The user describes food in natural language.
 
 Be conservative: if there is uncertainty about portion size, fat content, cooking oil, sauces, breading, cheese, dressing, or preparation, choose the higher realistic estimate. Do not undercount.
 
@@ -270,21 +278,39 @@ For meats, assume cooked weight unless the user clearly says raw. For restaurant
 Return ONLY valid JSON with no extra text, backticks, or explanation.
 
 Format: {"food":"short clean food name","amount":"the amount as described","calories_low":number,"calories_high":number,"calories_mid":number,"protein_low":number,"protein_high":number,"protein_mid":number,"carbs_low":number,"carbs_high":number,"carbs_mid":number,"fat_low":number,"fat_high":number,"fat_mid":number,"confidence":"high|medium|low","notes":"brief 1-sentence note"}`,
-        messages: [{ role: "user", content: aiQuery }];
-      const text = data.content.map(b => b.text || "").join("");
-      const parsed = JSON.parse(text.replace(/```json|```/g, "").trim());
-      setAiResult(parsed);
-      setFoodForm(f => ({ 
-  ...f, 
-  item: parsed.food + " (" + parsed.amount + ")", 
-  calories: String(parsed.calories_mid), 
-  protein: String(parsed.protein_mid),
-  carbs: String(parsed.carbs_mid),
-  fat: String(parsed.fat_mid)
-}));
-    } catch (e) { setAiError("Lookup failed: " + e.message); }
-    setAiLoading(false);
+      messages: [
+        {
+          role: "user",
+          content: aiQuery
+        }
+      ]
+    });
+
+    const text = data.content
+      .map(b => b.text || "")
+      .join("");
+
+    const parsed = JSON.parse(
+      text.replace(/```json|```/g, "").trim()
+    );
+
+    setAiResult(parsed);
+
+    setFoodForm(f => ({
+      ...f,
+      item: parsed.food + " (" + parsed.amount + ")",
+      calories: String(parsed.calories_mid),
+      protein: String(parsed.protein_mid),
+      carbs: String(parsed.carbs_mid),
+      fat: String(parsed.fat_mid)
+    }));
+
+  } catch (e) {
+    setAiError("Lookup failed: " + e.message);
   }
+
+  setAiLoading(false);
+}
 
   async function scanLabel() {
     if (!labelImage) return;
