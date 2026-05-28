@@ -1813,7 +1813,10 @@ goalBarLabels: {
   fontSize: 14,
   lineHeight: 1.5,
   fontFamily: "monospace",
-  boxShadow: "0 0 18px rgba(74,222,128,0.12)", lineChartWrap: {
+  boxShadow: "0 0 18px rgba(74,222,128,0.12)",
+},
+
+lineChartWrap: {
   width: "100%",
   overflowX: "hidden",
 },
@@ -1823,6 +1826,7 @@ lineChartSvg: {
   height: 190,
   display: "block",
 },
+
 goalPredictionInline: {
   gridColumn: "1 / -1",
   display: "grid",
@@ -1851,4 +1855,5 @@ goalPredictionInlineValue: {
   fontSize: 20,
   fontWeight: 900,
   lineHeight: 1.1,
-},}, 
+},
+};}, 
