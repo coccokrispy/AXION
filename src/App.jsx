@@ -462,7 +462,7 @@ const estimatedCalories = setupForm.startWeight
   <option value="active">Active — 6–7 workouts/week</option>
   <option value="very_active">Very active — hard training/physical job</option>
 </select>
-      label style={S.label}>Activity Level</label>
+      
 
 <select
   style={S.input}
