@@ -13,7 +13,8 @@ import {
   Utensils,
   Dumbbell,
   Pill,
-  Calculator
+  Calculator,
+  Settings
 } from "lucide-react";
 
 
@@ -643,16 +644,20 @@ localStorage.setItem(
   </div>
 </header>
       <div style={{ position: "absolute", top: 50, right: 18 }}>
-  <button
-    onClick={() => {
-      setTempKey(apiKey);
-      setShowSettings(true);
-    }}
-    style={S.heroGear}
-    title="Settings"
-  >
-    ⚙️
-  </button>
+ <button
+  onClick={() => {
+    setTempKey(apiKey);
+    setShowSettings(true);
+  }}
+  style={S.heroGear}
+  title="Settings"
+>
+  <Settings
+    size={22}
+    strokeWidth={2.2}
+    color="#4ade80"
+  />
+</button>
 </div>
 
       {showSettings && (
@@ -1699,12 +1704,25 @@ heroDose: {
 heroGear: {
   width: 54,
   height: 54,
-  borderRadius: 12,
-  background: "linear-gradient(145deg, #020617, #0f172a)",
-  border: "1px solid #334155",
-  color: "#f8fafc",
-  fontSize: 24,
+  borderRadius: 16,
+
+  background:
+    "linear-gradient(145deg, rgba(0,0,0,0.96), rgba(20,83,45,0.32))",
+
+  border: "1px solid rgba(74,222,128,0.35)",
+
+  display: "flex",
+  alignItems: "center",
+  justifyContent: "center",
+
   cursor: "pointer",
+
+  boxShadow:
+    "0 0 22px rgba(74,222,128,0.18), inset 0 0 12px rgba(74,222,128,0.05)",
+
+  backdropFilter: "blur(10px)",
+
+  transition: "all 0.18s ease",
 },
 
 goalCard: {
