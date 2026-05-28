@@ -368,7 +368,16 @@ Clinical but warm. Pure prose, no bullets. Reference specific numbers.`;
   }
 
   const TABS = ["dashboard", "weight", "doses", "peptides", "food", "workouts", "supplements", "calculator"];
-  const ICONS = { dashboard: "⚡", weight: "⚖️", doses: "💉", peptides: "🧬", food: "🥩", workouts: "🏋️", supplements: "💊", calculator: "🧮" };
+  const ICONS = {
+  dashboard: "⚡",
+  weight: "▣",
+  doses: "⟡",
+  peptides: "⌬",
+  food: "◒",
+  workouts: "▥",
+  supplements: "◐",
+  calculator: "▦"
+};
   const activityMultipliers = {
   sedentary: 11,
   light: 12,
