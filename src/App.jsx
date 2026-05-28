@@ -371,30 +371,7 @@ const estimatedCalories = setupForm.startWeight
             value={setupForm.name}
             onChange={e => setSetupForm({...setupForm, name: e.target.value})}
           />
-          <label style={S.label}>Activity Level</label>
-
-<select
-  style={S.input}
-  value={setupForm.activityLevel}
-  onChange={e =>
-    setSetupForm({
-      ...setupForm,
-      activityLevel: e.target.value
-    })
-  }
->
-  <option value="sedentary">Sedentary (desk job)</option>
-  <option value="light">Light (1–3 days/wk)</option>
-  <option value="moderate">Moderate (3–5 days/wk)</option>
-  <option value="active">Active (6–7 days/wk)</option>
-  <option value="very_active">Very active (2x/day)</option>
-</select>
-
-{estimatedCalories > 0 && (
-  <div style={S.setupEstimate}>
-    📊 Your estimated daily target: {estimatedCalories} calories for ~1 lb/week loss. Adjustable later.
-  </div>
-)}
+  
           <label style={S.label}>Height</label>
           
 
