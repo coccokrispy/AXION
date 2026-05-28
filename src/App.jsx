@@ -715,15 +715,22 @@ localStorage.setItem(
       {tab === "dashboard" && (
         <>
           <div style={S.grid}>
-            <StatCard label="Current" value={`${latestWeight.weight}`} unit="lbs" color="#4ade80" />
-            <StatCard label="Lowest" value={`${lowestWeight}`} unit="lbs" color="#34d399" />
-            <StatCard label="Lost" value={`${totalLost.toFixed(1)}`} unit="lbs" color="#f59e0b" />
-            <StatCard label="% Body Wt" value={`${pctLost(latestWeight.weight)}`} unit="%" color="#f59e0b" />
-            <StatCard label="Avg/wk" value={`${avgPerWeek.toFixed(2)}`} unit="lbs" color="#60a5fa" />
-            <StatCard label={`To ${TARGET_WEIGHT}`} value={`${remainingToGoal.toFixed(1)}`} unit="lbs" color="#a78bfa" />
-            <StatCard label="Reta Total" value={`${totalReta.toFixed(3)}`} unit="mg" color="#fb7185" />
-            <StatCard label="Today Protein" value={`${todayProtein}`} unit="g" color="#4ade80" />
-          </div>
+  <StatCard label="Current" value={`${latestWeight.weight}`} unit="lbs" color="#4ade80" />
+  
+  <StatCard label="Lowest" value={`${lowestWeight}`} unit="lbs" color="#4ade80" />
+  
+  <StatCard label="Lost" value={`${totalLost.toFixed(1)}`} unit="lbs" color="#4ade80" />
+  
+  <StatCard label="% Body Wt" value={`${pctLost(latestWeight.weight)}`} unit="%" color="#4ade80" />
+  
+  <StatCard label="Avg/wk" value={`${avgPerWeek.toFixed(2)}`} unit="lbs" color="#4ade80" />
+  
+  <StatCard label={`To ${TARGET_WEIGHT}`} value={`${remainingToGoal.toFixed(1)}`} unit="lbs" color="#4ade80" />
+  
+  <StatCard label="Reta Total" value={`${totalReta.toFixed(3)}`} unit="mg" color="#4ade80" />
+  
+  <StatCard label="Today Protein" value={`${todayProtein}`} unit="g" color="#4ade80" />
+</div>
 
           <div style={S.panel}>
             <div style={S.panelTitle}>💉 Next Doses · {currentDose}mg each</div>
