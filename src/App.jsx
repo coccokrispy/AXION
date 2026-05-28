@@ -684,34 +684,34 @@ localStorage.setItem(
   </div>
 </div>
 
-      <nav style={S.tabs}>
-       {TABS.map(t => {
-  const Icon = ICONS[t];
+     <nav style={S.tabs}>
+  {TABS.map(t => {
+    const Icon = ICONS[t];
 
-  return (
-    <button
-      key={t}
-      onClick={() => setTab(t)}
-      style={tab === t ? S.activeTab : S.tab}
-    >
-      <Icon
-        size={28}
-        strokeWidth={1.8}
-        color={tab === t ? "#4ade80" : "#e2e8f0"}
-      />
-
-      <span
-        style={{
-          fontSize: 11,
-          textTransform: "capitalize"
-        }}
+    return (
+      <button
+        key={t}
+        onClick={() => setTab(t)}
+        style={tab === t ? S.activeTab : S.tab}
       >
-        {t}
-      </span>
-    </button>
-  );
-})}
-      </nav>
+        <Icon
+          size={28}
+          strokeWidth={1.8}
+          color={tab === t ? "#4ade80" : "#e2e8f0"}
+        />
+
+        <span
+          style={{
+            fontSize: 11,
+            textTransform: "capitalize"
+          }}
+        >
+          {t}
+        </span>
+      </button>
+    );
+  })}
+</nav>
 
       {tab === "dashboard" && (
         <>
