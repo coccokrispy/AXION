@@ -676,8 +676,8 @@ localStorage.setItem(
     <span>{START_WEIGHT} LBS</span>
 
     <span style={{ color: "#4ade80" }}>
-      {progressPct.toFixed(1)}% TO GOAL
-    </span>
+  CURRENT: {latestWeight.weight} LBS
+</span>
 
     <span>{TARGET_WEIGHT} LBS</span>
   </div>
