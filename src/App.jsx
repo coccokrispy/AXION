@@ -269,9 +269,8 @@ For meats, assume cooked weight unless the user clearly says raw. For restaurant
 
 Return ONLY valid JSON with no extra text, backticks, or explanation.
 
-Format: {"food":"short clean food name","amount":"the amount as described","calories_low":number,"calories_high":number,"calories_mid":number,"protein_low":number,"protein_high":number,"protein_mid":number,"carbs_low":number,"carbs_high":number,"carbs_mid":number,"fat_low":number,"fat_high":number,"fat_mid":number,"confidence":"high|medium|low","notes":"brief 1-sentence note"}`
-        messages: [{ role: "user", content: aiQuery }]
-      });
+Format: {"food":"short clean food name","amount":"the amount as described","calories_low":number,"calories_high":number,"calories_mid":number,"protein_low":number,"protein_high":number,"protein_mid":number,"carbs_low":number,"carbs_high":number,"carbs_mid":number,"fat_low":number,"fat_high":number,"fat_mid":number,"confidence":"high|medium|low","notes":"brief 1-sentence note"}`,
+        messages: [{ role: "user", content: aiQuery }];
       const text = data.content.map(b => b.text || "").join("");
       const parsed = JSON.parse(text.replace(/```json|```/g, "").trim());
       setAiResult(parsed);
