@@ -593,15 +593,7 @@ localStorage.setItem(
       <header style={S.heroHeader}>
   <div>
     <div style={S.axionMain}>AXION</div>
-
-    header style={S.heroHeader}>
-  <div>
-    <div style={S.axionMain}>AXION</div>
   </div>
-</header>
-  </div>
-
-  
 </header>
       <div style={{ position: "absolute", top: 50, right: 18 }}>
   <button
