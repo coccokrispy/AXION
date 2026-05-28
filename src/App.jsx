@@ -679,7 +679,7 @@ localStorage.setItem(
         </div>
       )}
 
-      <div style={S.goalCard}>
+     <div style={S.goalCard}>
   <div style={S.goalLeft}>
     <div>
       <span style={S.goalBig}>{START_WEIGHT}</span>
@@ -723,44 +723,46 @@ localStorage.setItem(
     <span>{START_WEIGHT} LBS</span>
 
     <span style={{ color: "#4ade80" }}>
-  CURRENT: {latestWeight.weight} LBS
-</span>
+      CURRENT: {latestWeight.weight} LBS
+    </span>
 
     <span>{TARGET_WEIGHT} LBS</span>
   </div>
-<div style={S.goalPredictionInline}>
-  <div style={S.goalPredictionInlineItem}>
-    <span style={S.goalPredictionInlineLabel}>
-      PROJECTED GOAL
-    </span>
 
-    <strong style={S.goalPredictionInlineValue}>
-      {projectedGoalDate.toLocaleDateString("en-US", {
-        month: "short",
-        day: "numeric",
-        year: "2-digit"
-      })}
-    </strong>
-  </div>
+  <div style={S.goalPredictionInline}>
+    <div style={S.goalPredictionInlineItem}>
+      <span style={S.goalPredictionInlineLabel}>
+        PROJECTED GOAL
+      </span>
 
-  <div style={S.goalPredictionInlineItem}>
-    <span style={S.goalPredictionInlineLabel}>
-      PACE
-    </span>
+      <strong style={S.goalPredictionInlineValue}>
+        {projectedGoalDate.toLocaleDateString("en-US", {
+          month: "short",
+          day: "numeric",
+          year: "2-digit"
+        })}
+      </strong>
+    </div>
 
-    <strong style={S.goalPredictionInlineValue}>
-      {projectedWeeklyLoss.toFixed(1)} lb/wk
-    </strong>
-  </div>
+    <div style={S.goalPredictionInlineItem}>
+      <span style={S.goalPredictionInlineLabel}>
+        PACE
+      </span>
 
-  <div style={S.goalPredictionInlineItem}>
-    <span style={S.goalPredictionInlineLabel}>
-      WEEKS LEFT
-    </span>
+      <strong style={S.goalPredictionInlineValue}>
+        {projectedWeeklyLoss.toFixed(1)} lb/wk
+      </strong>
+    </div>
 
-    <strong style={S.goalPredictionInlineValue}>
-      {projectedWeeksToGoal}
-    </strong>
+    <div style={S.goalPredictionInlineItem}>
+      <span style={S.goalPredictionInlineLabel}>
+        WEEKS LEFT
+      </span>
+
+      <strong style={S.goalPredictionInlineValue}>
+        {projectedWeeksToGoal}
+      </strong>
+    </div>
   </div>
 </div>
     
