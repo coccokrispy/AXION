@@ -10,7 +10,7 @@ import {
   Scale,
   Syringe,
   Dna,
-  Beef,
+  Utensils,
   Dumbbell,
   Pill,
   Calculator
