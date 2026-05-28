@@ -729,10 +729,13 @@ localStorage.setItem(
     <span>{TARGET_WEIGHT} LBS</span>
   </div>
 </div>
-      <div style={S.goalPrediction}>
-  <div style={S.goalPredictionItem}>
-    <span style={S.goalPredictionLabel}>Projected Goal</span>
-    <strong>
+      <div style={S.goalPredictionInline}>
+  <div style={S.goalPredictionInlineItem}>
+    <span style={S.goalPredictionInlineLabel}>
+      PROJECTED GOAL
+    </span>
+
+    <strong style={S.goalPredictionInlineValue}>
       {projectedGoalDate.toLocaleDateString("en-US", {
         month: "short",
         day: "numeric",
@@ -741,16 +744,27 @@ localStorage.setItem(
     </strong>
   </div>
 
-  <div style={S.goalPredictionItem}>
-    <span style={S.goalPredictionLabel}>Pace</span>
-    <strong>{projectedWeeklyLoss.toFixed(1)} lb/wk</strong>
+  <div style={S.goalPredictionInlineItem}>
+    <span style={S.goalPredictionInlineLabel}>
+      PACE
+    </span>
+
+    <strong style={S.goalPredictionInlineValue}>
+      {projectedWeeklyLoss.toFixed(1)} lb/wk
+    </strong>
   </div>
 
-  <div style={S.goalPredictionItem}>
-    <span style={S.goalPredictionLabel}>Weeks Left</span>
-    <strong>{projectedWeeksToGoal}</strong>
+  <div style={S.goalPredictionInlineItem}>
+    <span style={S.goalPredictionInlineLabel}>
+      WEEKS LEFT
+    </span>
+
+    <strong style={S.goalPredictionInlineValue}>
+      {projectedWeeksToGoal}
+    </strong>
   </div>
 </div>
+    
 
      <nav style={S.tabs}>
   {TABS.map(t => {
@@ -1809,31 +1823,32 @@ lineChartSvg: {
   height: 190,
   display: "block",
 },
-}, goalPrediction: {
+goalPredictionInline: {
   gridColumn: "1 / -1",
   display: "grid",
   gridTemplateColumns: "1fr 1fr 1fr",
   gap: 10,
-  marginTop: 16,
-  paddingTop: 14,
-  borderTop: "1px solid rgba(74,222,128,0.22)",
+  marginTop: 18,
+  paddingTop: 16,
+  borderTop: "1px solid rgba(74,222,128,0.18)",
 },
 
-goalPredictionItem: {
-  background: "rgba(0,0,0,0.42)",
-  border: "1px solid rgba(74,222,128,0.18)",
-  borderRadius: 14,
-  padding: "10px 8px",
+goalPredictionInlineItem: {
   textAlign: "center",
-  boxShadow: "inset 0 0 14px rgba(74,222,128,0.04)",
 },
 
-goalPredictionLabel: {
+goalPredictionInlineLabel: {
   display: "block",
+  color: "#64748b",
   fontSize: 9,
-  color: "#94a3b8",
-  textTransform: "uppercase",
-  letterSpacing: 1,
+  letterSpacing: 2,
   fontFamily: "monospace",
-  marginBottom: 5,
-},};
+  marginBottom: 6,
+},
+
+goalPredictionInlineValue: {
+  color: "#f8fafc",
+  fontSize: 20,
+  fontWeight: 900,
+  lineHeight: 1.1,
+},}, 
