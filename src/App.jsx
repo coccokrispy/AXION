@@ -63,6 +63,147 @@ const PEPTIDE_PRESETS = [
   { name: "Ipamorelin",  commonDoses: [100, 200, 300],           unit: "mcg" },
   { name: "Custom",      commonDoses: [],                        unit: "mg" },
 ];
+const SUPPLEMENT_LIBRARY = {
+
+  Vitamins: [
+    "Vitamin A",
+    "Vitamin B1 (Thiamine)",
+    "Vitamin B2 (Riboflavin)",
+    "Vitamin B3 (Niacin)",
+    "Vitamin B5 (Pantothenic Acid)",
+    "Vitamin B6",
+    "Vitamin B7 (Biotin)",
+    "Vitamin B9 (Folate)",
+    "Vitamin B12",
+    "Vitamin C",
+    "Vitamin D3",
+    "Vitamin E",
+    "Vitamin K2",
+    "Multivitamin"
+  ],
+
+  Minerals: [
+    "Magnesium Glycinate",
+    "Magnesium Citrate",
+    "Magnesium Threonate",
+    "Zinc",
+    "Iron",
+    "Calcium",
+    "Potassium",
+    "Selenium",
+    "Copper",
+    "Chromium",
+    "Iodine",
+    "Manganese",
+    "Boron"
+  ],
+
+  Performance: [
+    "Creatine Monohydrate",
+    "Protein Powder",
+    "Electrolytes",
+    "Beta Alanine",
+    "L-Citrulline",
+    "L-Arginine",
+    "L-Carnitine",
+    "Taurine",
+    "Glutamine",
+    "EAAs",
+    "BCAAs",
+    "Beet Root",
+    "HMB",
+    "Betaine"
+  ],
+
+  HeartHealth: [
+    "Fish Oil",
+    "Omega-3",
+    "Krill Oil",
+    "CoQ10",
+    "Garlic Extract",
+    "Red Yeast Rice",
+    "Hawthorn Berry",
+    "Cod Liver Oil"
+  ],
+
+  Sleep: [
+    "Melatonin",
+    "L-Theanine",
+    "GABA",
+    "5-HTP",
+    "Valerian Root",
+    "Passionflower",
+    "Chamomile"
+  ],
+
+  GutHealth: [
+    "Probiotic",
+    "Prebiotic Fiber",
+    "Digestive Enzymes",
+    "Psyllium Husk",
+    "Apple Cider Vinegar",
+    "Slippery Elm",
+    "Aloe Vera",
+    "Fiber Supplement"
+  ],
+
+  Longevity: [
+    "NAC",
+    "Alpha Lipoic Acid",
+    "Resveratrol",
+    "Quercetin",
+    "Astaxanthin",
+    "Berberine",
+    "Milk Thistle",
+    "TUDCA",
+    "PQQ",
+    "Spermidine",
+    "NMN",
+    "Nicotinamide Riboside (NR)"
+  ],
+
+  WeightLoss: [
+    "Green Tea Extract",
+    "Glucomannan",
+    "CLA",
+    "Caffeine"
+  ],
+
+  JointHealth: [
+    "Collagen",
+    "Glucosamine",
+    "Chondroitin",
+    "MSM",
+    "Hyaluronic Acid",
+    "Turmeric"
+  ],
+
+  HormoneSupport: [
+    "DHEA",
+    "Pregnenolone",
+    "DIM",
+    "Tongkat Ali",
+    "Fadogia Agrestis",
+    "Saw Palmetto",
+    "Maca Root"
+  ],
+
+  Herbs: [
+    "Ashwagandha",
+    "Rhodiola",
+    "Ginseng",
+    "Holy Basil",
+    "Ginkgo Biloba",
+    "Elderberry",
+    "Echinacea"
+  ],
+
+  Other: [
+    "MCT Oil",
+    "CBD",
+    "Custom"
+  ]
+};
 
 // ─────────────────────────────────────────────────────────────────────
 // HELPERS
