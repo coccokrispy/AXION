@@ -1387,12 +1387,17 @@ localStorage.setItem(
 ).map(item => (
   <button
     key={item}
-    onClick={() =>
+    onClick={() => {
+  if (selectedSuppCategory === "MY_SUPPLEMENTS") {
+    flash(item);
+    return;
+  }
+
   setPendingSupplement({
     name: item,
     category: selectedSuppCategory
-  })
-}
+  });
+}}
     style={{
       background: "#020617",
       border: "1px solid rgba(74,222,128,0.18)",
