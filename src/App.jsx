@@ -1381,7 +1381,10 @@ localStorage.setItem(
 )}
 
         <div style={{ display: "grid", gap: 10 }}>
-          {SUPPLEMENT_LIBRARY[selectedSuppCategory].map(item => (
+          {(selectedSuppCategory === "MY_SUPPLEMENTS"
+  ? mySupplements.map(s => s.name)
+  : SUPPLEMENT_LIBRARY[selectedSuppCategory]
+).map(item => (
   <button
     key={item}
     onClick={() =>
