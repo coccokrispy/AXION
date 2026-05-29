@@ -303,6 +303,7 @@ export default function App() {
   const [apiKey, setApiKey]     = useApiKey();
 
   const [tab, setTab] = useState("dashboard");
+  const [selectedSuppCategory, setSelectedSuppCategory] = useState(null);
   const [weightForm, setWeightForm]   = useState({ date: todayISO(), weight: "", type: "morning", note: "" });
   const [doseForm, setDoseForm]       = useState({ date: todayISO(), dose: "", note: "" });
   const [foodForm, setFoodForm]       = useState({ date: todayISO(), item: "", calories: "", protein: "", carbs: "", fat: "" });
@@ -1200,21 +1201,88 @@ localStorage.setItem(
   <div style={S.panel}>
     <h2 style={S.panelTitle}>💊 Supplement Library</h2>
 
-    <div style={{ marginTop: 16 }}>
-      <label style={S.label}>Category</label>
+    {!selectedSuppCategory && (
+      <div
+        style={{
+          display: "grid",
+          gridTemplateColumns: "1fr 1fr",
+          gap: 12,
+          marginTop: 16
+        }}
+      >
+        {Object.keys(SUPPLEMENT_LIBRARY).map(category => (
+          <button
+            key={category}
+            onClick={() => setSelectedSuppCategory(category)}
+            style={{
+              background: "linear-gradient(145deg, rgba(0,0,0,0.95), rgba(20,83,45,0.28))",
+              border: "1px solid rgba(74,222,128,0.25)",
+              borderRadius: 16,
+              padding: 16,
+              color: "#f8fafc",
+              textAlign: "left",
+              cursor: "pointer",
+              boxShadow: "0 0 18px rgba(74,222,128,0.10)"
+            }}
+          >
+            <div style={{ fontSize: 15, fontWeight: 900 }}>
+              {category.replace(/([A-Z])/g, " $1").trim()}
+            </div>
 
-      <select style={S.input}>
-        <option>Vitamins</option>
-        <option>Minerals</option>
-        <option>Performance</option>
-        <option>Sleep</option>
-        <option>Heart Health</option>
-        <option>Gut Health</option>
-        <option>Longevity</option>
-        <option>Other</option>
-      </select>
-    </div>
+            <div
+              style={{
+                marginTop: 6,
+                fontSize: 11,
+                color: "#94a3b8",
+                fontFamily: "monospace"
+              }}
+            >
+              {SUPPLEMENT_LIBRARY[category].length} OPTIONS
+            </div>
+          </button>
+        ))}
+      </div>
+    )}
 
+    {selectedSuppCategory && (
+      <div style={{ marginTop: 16 }}>
+        <button
+          onClick={() => setSelectedSuppCategory(null)}
+          style={{
+            ...S.btn,
+            gridColumn: "unset",
+            marginBottom: 14,
+            background: "#020617",
+            border: "1px solid rgba(74,222,128,0.35)",
+            color: "#4ade80"
+          }}
+        >
+          ← Back to Categories
+        </button>
+
+        <h3 style={{ ...S.panelTitle, fontSize: 16 }}>
+          {selectedSuppCategory.replace(/([A-Z])/g, " $1").trim()}
+        </h3>
+
+        <div style={{ display: "grid", gap: 10 }}>
+          {SUPPLEMENT_LIBRARY[selectedSuppCategory].map(item => (
+            <div
+              key={item}
+              style={{
+                background: "#020617",
+                border: "1px solid rgba(74,222,128,0.18)",
+                borderRadius: 14,
+                padding: "12px 14px",
+                color: "#e2e8f0",
+                fontWeight: 700
+              }}
+            >
+              {item}
+            </div>
+          ))}
+        </div>
+      </div>
+    )}
   </div>
 )}
 
