@@ -306,6 +306,7 @@ export default function App() {
   const [mySupplements, setMySupplements] = usePersistedState("my_supplements", []);
   const [selectedSuppCategory, setSelectedSuppCategory] = useState(null);
   const [pendingSupplement, setPendingSupplement] = useState(null);
+  const [showSupplementSetup, setShowSupplementSetup] = useState(false);
   const [suppSetupForm, setSuppSetupForm] = useState({
   dose: "",
   unit: "mg",
@@ -1375,14 +1376,9 @@ localStorage.setItem(
           ...S.btn,
           flex: 1
         }}
-        onClick={() => {
-          addMySupplement(
-            pendingSupplement.name,
-            pendingSupplement.category
-          );
-
-          setPendingSupplement(null);
-        }}
+       onClick={() => {
+  setShowSupplementSetup(true);
+}}
       >
         Add Supplement
       </button>
