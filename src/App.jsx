@@ -1295,20 +1295,23 @@ localStorage.setItem(
 
         <div style={{ display: "grid", gap: 10 }}>
           {SUPPLEMENT_LIBRARY[selectedSuppCategory].map(item => (
-            <div
-              key={item}
-              style={{
-                background: "#020617",
-                border: "1px solid rgba(74,222,128,0.18)",
-                borderRadius: 14,
-                padding: "12px 14px",
-                color: "#e2e8f0",
-                fontWeight: 700
-              }}
-            >
-              {item}
-            </div>
-          ))}
+  <button
+    key={item}
+    onClick={() => addMySupplement(item, selectedSuppCategory)}
+    style={{
+      background: "#020617",
+      border: "1px solid rgba(74,222,128,0.18)",
+      borderRadius: 14,
+      padding: "12px 14px",
+      color: "#e2e8f0",
+      fontWeight: 700,
+      textAlign: "left",
+      cursor: "pointer"
+    }}
+  >
+    {item}
+  </button>
+))}
         </div>
       </div>
     )}
