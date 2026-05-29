@@ -1323,6 +1323,62 @@ localStorage.setItem(
         <h3 style={{ ...S.panelTitle, fontSize: 16 }}>
           {selectedSuppCategory.replace(/([A-Z])/g, " $1").trim()}
         </h3>
+        {pendingSupplement && (
+  <div
+    style={{
+      marginBottom: 14,
+      padding: 14,
+      borderRadius: 14,
+      border: "1px solid rgba(74,222,128,0.25)",
+      background: "#020617"
+    }}
+  >
+    <div
+      style={{
+        fontWeight: 800,
+        color: "#f8fafc",
+        marginBottom: 12
+      }}
+    >
+      Add "{pendingSupplement.name}" to My Supplements?
+    </div>
+
+    <div
+      style={{
+        display: "flex",
+        gap: 10
+      }}
+    >
+      <button
+        style={{
+          ...S.btn,
+          flex: 1,
+          background: "#7f1d1d"
+        }}
+        onClick={() => setPendingSupplement(null)}
+      >
+        Cancel
+      </button>
+
+      <button
+        style={{
+          ...S.btn,
+          flex: 1
+        }}
+        onClick={() => {
+          addMySupplement(
+            pendingSupplement.name,
+            pendingSupplement.category
+          );
+
+          setPendingSupplement(null);
+        }}
+      >
+        Add Supplement
+      </button>
+    </div>
+  </div>
+)}
 
         <div style={{ display: "grid", gap: 10 }}>
           {SUPPLEMENT_LIBRARY[selectedSuppCategory].map(item => (
