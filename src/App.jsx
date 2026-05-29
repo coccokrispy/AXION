@@ -1055,11 +1055,11 @@ localStorage.setItem(
           <LogList items={[...(workouts || [])].sort((a,b) => new Date(b.date)-new Date(a.date))} render={w => <><b style={{ color: "#60a5fa" }}>{w.type}</b> · {w.date} · {w.minutes} min{w.note ? ` · ${w.note}` : ""}</>} onRemove={id => remove(setWorkouts, workouts, id)} />
         </div>
       )}
-<h2 style={S.panelTitle}>💊 Supplement Library</h2>
       {tab === "supplements" && (
-        <div style={S.panel}>
-       
-      )}
+  <div style={S.panel}>
+    <h2 style={S.panelTitle}>💊 Supplement Library</h2>
+  </div>
+)}
 
       {tab === "calculator" && <PeptideCalculator />}
     </div>
