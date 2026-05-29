@@ -303,6 +303,8 @@ export default function App() {
   const [apiKey, setApiKey]     = useApiKey();
 
   const [tab, setTab] = useState("dashboard");
+  const [mySupplements, setMySupplements] = usePersistedState("my_supplements", []);
+  const [selectedSuppCategory, setSelectedSuppCategory] = useState(null);
   const [selectedSuppCategory, setSelectedSuppCategory] = useState(null);
   const [weightForm, setWeightForm]   = useState({ date: todayISO(), weight: "", type: "morning", note: "" });
   const [doseForm, setDoseForm]       = useState({ date: todayISO(), dose: "", note: "" });
@@ -414,6 +416,33 @@ const projectedGoalDate = new Date();
 projectedGoalDate.setDate(projectedGoalDate.getDate() + projectedWeeksToGoal * 7);
 
   function flash(msg) { setSaved(msg); setTimeout(() => setSaved(""), 2000); }
+  function flash(msg) {
+  setSaved(msg);
+  setTimeout(() => setSaved(""), 2000);
+}
+
+function addMySupplement(name, category) {
+  const alreadySaved = mySupplements.some(
+    s => s.name === name
+  );
+
+  if (alreadySaved) {
+    flash("Already in My Supplements");
+    return;
+  }
+
+  setMySupplements([
+    ...mySupplements,
+    {
+      id: uid(),
+      name,
+      category,
+      dateAdded: todayISO()
+    }
+  ]);
+
+  flash("Supplement saved ✓");
+}
 
   function addWeight() {
     if (!weightForm.weight) return;
