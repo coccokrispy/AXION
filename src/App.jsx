@@ -1384,7 +1384,14 @@ localStorage.setItem(
       </button>
     </div>
   </div>
+{pendingSupplement && (
+  CONFIRMATION BOX CODE
 )}
+
+{showSupplementSetup && pendingSupplement && (
+  SETUP FORM CODE
+)}
+ )}
 
         <div style={{ display: "grid", gap: 10 }}>
           {(selectedSuppCategory === "MY_SUPPLEMENTS"
