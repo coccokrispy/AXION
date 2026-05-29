@@ -1321,8 +1321,10 @@ localStorage.setItem(
         </button>
 
         <h3 style={{ ...S.panelTitle, fontSize: 16 }}>
-          {selectedSuppCategory.replace(/([A-Z])/g, " $1").trim()}
-        </h3>
+  {selectedSuppCategory === "MY_SUPPLEMENTS"
+    ? "My Supplements"
+    : selectedSuppCategory.replace(/([A-Z])/g, " $1").trim()}
+</h3>
         {pendingSupplement && (
   <div
     style={{
