@@ -304,8 +304,8 @@ export default function App() {
 
   const [tab, setTab] = useState("dashboard");
   const [mySupplements, setMySupplements] = usePersistedState("my_supplements", []);
-  
   const [selectedSuppCategory, setSelectedSuppCategory] = useState(null);
+  const [pendingSupplement, setPendingSupplement] = useState(null);
   const [weightForm, setWeightForm]   = useState({ date: todayISO(), weight: "", type: "morning", note: "" });
   const [doseForm, setDoseForm]       = useState({ date: todayISO(), dose: "", note: "" });
   const [foodForm, setFoodForm]       = useState({ date: todayISO(), item: "", calories: "", protein: "", carbs: "", fat: "" });
@@ -1328,7 +1328,12 @@ localStorage.setItem(
           {SUPPLEMENT_LIBRARY[selectedSuppCategory].map(item => (
   <button
     key={item}
-    onClick={() => addMySupplement(item, selectedSuppCategory)}
+    onClick={() =>
+  setPendingSupplement({
+    name: item,
+    category: selectedSuppCategory
+  })
+}
     style={{
       background: "#020617",
       border: "1px solid rgba(74,222,128,0.18)",
