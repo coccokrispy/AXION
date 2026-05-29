@@ -415,7 +415,7 @@ const projectedWeeksToGoal = Math.ceil(
 const projectedGoalDate = new Date();
 projectedGoalDate.setDate(projectedGoalDate.getDate() + projectedWeeksToGoal * 7);
 
-  function flash(msg) { setSaved(msg); setTimeout(() => setSaved(""), 2000); }
+  
   function flash(msg) {
   setSaved(msg);
   setTimeout(() => setSaved(""), 2000);
