@@ -306,6 +306,14 @@ export default function App() {
   const [mySupplements, setMySupplements] = usePersistedState("my_supplements", []);
   const [selectedSuppCategory, setSelectedSuppCategory] = useState(null);
   const [pendingSupplement, setPendingSupplement] = useState(null);
+  const [suppSetupForm, setSuppSetupForm] = useState({
+  dose: "",
+  unit: "mg",
+  schedule: "Daily",
+  time: "Morning",
+  days: [],
+  note: ""
+});
   const [weightForm, setWeightForm]   = useState({ date: todayISO(), weight: "", type: "morning", note: "" });
   const [doseForm, setDoseForm]       = useState({ date: todayISO(), dose: "", note: "" });
   const [foodForm, setFoodForm]       = useState({ date: todayISO(), item: "", calories: "", protein: "", carbs: "", fat: "" });
