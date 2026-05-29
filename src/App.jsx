@@ -304,7 +304,7 @@ export default function App() {
 
   const [tab, setTab] = useState("dashboard");
   const [mySupplements, setMySupplements] = usePersistedState("my_supplements", []);
-  const [selectedSuppCategory, setSelectedSuppCategory] = useState(null);
+  
   const [selectedSuppCategory, setSelectedSuppCategory] = useState(null);
   const [weightForm, setWeightForm]   = useState({ date: todayISO(), weight: "", type: "morning", note: "" });
   const [doseForm, setDoseForm]       = useState({ date: todayISO(), dose: "", note: "" });
