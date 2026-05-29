@@ -1055,40 +1055,10 @@ localStorage.setItem(
           <LogList items={[...(workouts || [])].sort((a,b) => new Date(b.date)-new Date(a.date))} render={w => <><b style={{ color: "#60a5fa" }}>{w.type}</b> · {w.date} · {w.minutes} min{w.note ? ` · ${w.note}` : ""}</>} onRemove={id => remove(setWorkouts, workouts, id)} />
         </div>
       )}
-
+<h2 style={S.panelTitle}>💊 Supplement Library</h2>
       {tab === "supplements" && (
         <div style={S.panel}>
-          <h2 style={S.panelTitle}>💊 Protocol Overview</h2>
-          <div style={S.suppCard}>
-            <div style={{ ...S.suppDot, background: "#fb7185" }} />
-            <div>
-              <div style={S.suppName}>Retatrutide <span style={{ fontSize: 11, color: "#4ade80", fontFamily: "monospace", marginLeft: 6 }}>ACTIVE</span></div>
-              <div style={S.suppNote}>Current: {currentDose}mg · Sun + Thu @ 19:00 · Total cumulative: {totalReta.toFixed(3)}mg.</div>
-            </div>
-          </div>
-          {plannedPeptides.map(p => (
-            <div key={p.id} style={S.suppCard}>
-              <div style={{ ...S.suppDot, background: p.color }} />
-              <div>
-                <div style={S.suppName}>{p.name} <span style={{ fontSize: 11, color: "#fbbf24", fontFamily: "monospace", marginLeft: 6 }}>PLANNED</span></div>
-                <div style={S.suppNote}>Starts {fmtDate(p.startDate)} · {p.doseAmount}{p.doseUnit} {p.frequency}. {p.notes}</div>
-              </div>
-            </div>
-          ))}
-          {activePeptides.filter(p => p.name !== "Retatrutide").map(p => (
-            <div key={p.id} style={S.suppCard}>
-              <div style={{ ...S.suppDot, background: p.color }} />
-              <div>
-                <div style={S.suppName}>{p.name} <span style={{ fontSize: 11, color: "#4ade80", fontFamily: "monospace", marginLeft: 6 }}>ACTIVE</span></div>
-                <div style={S.suppNote}>{p.doseAmount}{p.doseUnit} {p.frequency} · Started {fmtDate(p.startDate)}. {p.notes}</div>
-              </div>
-            </div>
-          ))}
-          <div style={S.guardrail}>
-            <span style={{ fontSize: 18 }}>🧠</span>
-            <span>Hydration first, protein non-negotiable, sleep is a tool, carbs not the enemy when training hard.</span>
-          </div>
-        </div>
+       
       )}
 
       {tab === "calculator" && <PeptideCalculator />}
