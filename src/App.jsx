@@ -1229,42 +1229,37 @@ localStorage.setItem(
 {tab === "supplements" && (
   <div style={S.panel}>
     <h2 style={S.panelTitle}>💊 Supplement Library</h2>
-    <div
+    <button
+  onClick={() => setSelectedSuppCategory("MY_SUPPLEMENTS")}
   style={{
+    width: "100%",
     marginTop: 14,
     marginBottom: 18,
-    padding: 14,
-    borderRadius: 18,
-    border: "1px solid rgba(74,222,128,0.28)",
-    background: "linear-gradient(145deg, rgba(0,0,0,0.92), rgba(20,83,45,0.22))"
+    background: "linear-gradient(145deg, rgba(0,0,0,0.95), rgba(20,83,45,0.28))",
+    border: "1px solid rgba(74,222,128,0.25)",
+    borderRadius: 16,
+    padding: 16,
+    color: "#f8fafc",
+    textAlign: "left",
+    cursor: "pointer",
+    boxShadow: "0 0 18px rgba(74,222,128,0.10)"
   }}
 >
-  <label style={S.label}>My Supplements</label>
+  <div style={{ fontSize: 15, fontWeight: 900 }}>
+    My Supplements
+  </div>
 
-  <select
-    style={S.input}
-    value=""
-    onChange={(e) => {
-      const selected = mySupplements.find(s => s.id === Number(e.target.value));
-      if (selected) {
-        // next step will open logging form here
-        flash(`${selected.name} selected`);
-      }
+  <div
+    style={{
+      marginTop: 6,
+      fontSize: 11,
+      color: "#94a3b8",
+      fontFamily: "monospace"
     }}
   >
-    <option value="">
-      {mySupplements.length === 0
-        ? "No supplements saved yet"
-        : "Select saved supplement"}
-    </option>
-
-    {mySupplements.map(s => (
-      <option key={s.id} value={s.id}>
-        {s.name}
-      </option>
-    ))}
-  </select>
-</div>
+    {mySupplements.length} SAVED
+  </div>
+</button>
 
     {!selectedSuppCategory && (
       <div
