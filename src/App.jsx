@@ -1229,6 +1229,56 @@ localStorage.setItem(
 {tab === "supplements" && (
   <div style={S.panel}>
     <h2 style={S.panelTitle}>💊 Supplement Library</h2>
+    <div
+  style={{
+    marginTop: 14,
+    marginBottom: 18,
+    padding: 14,
+    borderRadius: 18,
+    border: "1px solid rgba(74,222,128,0.28)",
+    background: "linear-gradient(145deg, rgba(0,0,0,0.92), rgba(20,83,45,0.22))",
+    textAlign: "center"
+  }}
+>
+  <div
+    style={{
+      color: "#4ade80",
+      fontWeight: 900,
+      marginBottom: 10
+    }}
+  >
+    MY SUPPLEMENTS
+  </div>
+
+  {mySupplements.length === 0 ? (
+    <div style={{ color: "#64748b" }}>
+      No supplements saved yet
+    </div>
+  ) : (
+    <div
+      style={{
+        display: "flex",
+        flexWrap: "wrap",
+        justifyContent: "center",
+        gap: 8
+      }}
+    >
+      {mySupplements.map(s => (
+        <div
+          key={s.id}
+          style={{
+            border: "1px solid rgba(74,222,128,0.3)",
+            borderRadius: 999,
+            padding: "8px 12px",
+            background: "rgba(74,222,128,0.08)"
+          }}
+        >
+          {s.name}
+        </div>
+      ))}
+    </div>
+  )}
+</div>
 
     {!selectedSuppCategory && (
       <div
