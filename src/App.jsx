@@ -1246,7 +1246,7 @@ localStorage.setItem(
           <LogList items={[...(workouts || [])].sort((a,b) => new Date(b.date)-new Date(a.date))} render={w => <><b style={{ color: "#60a5fa" }}>{w.type}</b> · {w.date} · {w.minutes} min{w.note ? ` · ${w.note}` : ""}</>} onRemove={id => remove(setWorkouts, workouts, id)} />
         </div>
       )}
-{tab === "supplements" && ( {tab === "supplements" && (
+{tab === "supplements" && (
   <div style={S.panel}>
     <h2 style={S.panelTitle}>💊 Supplements</h2>
 
@@ -1369,32 +1369,6 @@ localStorage.setItem(
 
   </div>
 )}
-  <div style={S.panel}>
-    <h2 style={S.panelTitle}>💊 Supplements</h2>
-
-    {(suppView === "my" || suppView === "cats" || suppView === "items") && (
-      <div style={{ marginBottom: 18 }}>
-        <div style={{ fontSize: 11, color: "#64748b", fontFamily: "monospace", letterSpacing: 1, marginBottom: 10 }}>MY SUPPLEMENTS</div>
-        {mySupplements.length === 0 && (
-          <div style={{ color: "#475569", fontSize: 13, fontFamily: "monospace", padding: "12px 0" }}>None saved yet. Browse the library below.</div>
-        )}
-        {mySupplements.map(s => {
-          const taken = takenToday.includes(s.id);
-          return (
-            <div key={s.id} style={{ display: "flex", alignItems: "center", gap: 10, background: taken ? "#052e16" : "#020617", border: `1px solid ${taken ? "#166534" : "#1e293b"}`, borderRadius: 12, padding: "10px 14px", marginBottom: 8, cursor: "pointer" }}
-              onClick={() => { setEditingSupp(s); setSuppForm({ dose: s.dose === "—" ? "" : s.dose, unit: s.unit || "mg", schedule: s.schedule, time: s.time }); setSuppView("detail"); }}>
-              <div style={{ flex: 1 }}>
-                <div style={{ fontWeight: 700, fontSize: 14, color: "#e2e8f0" }}>{s.name}</div>
-                <div style={{ fontSize: 11, color: "#64748b", fontFamily: "monospace", marginTop: 2 }}>
-                  {s.dose}{s.unit} · {s.schedule} · {s.time}
-                </div>
-                {taken && <div style={{ fontSize: 10, color: "#4ade80", fontFamily: "monospace", marginTop: 3 }}>✓ TAKEN TODAY</div>}
-              </div>
-              <button
-                onClick={e => { e.stopPropagation(); toggleTaken(s.id); }}
-                style={{ width: 34, height: 34, borderRadius: "50%", border: `1px solid ${taken ? "#4ade80" : "#334155"}`, background: taken ? "#14532d" : "transparent", cursor: "pointer", display: "flex", alignItems: "center", justifyContent: "center", fontSize: 16, color: taken ? "#4ade80" : "#475569", flexShrink: 0 }}
-  
-
       {tab === "calculator" && <PeptideCalculator />}
     </div>
   );
