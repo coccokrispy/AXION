@@ -1246,7 +1246,129 @@ localStorage.setItem(
           <LogList items={[...(workouts || [])].sort((a,b) => new Date(b.date)-new Date(a.date))} render={w => <><b style={{ color: "#60a5fa" }}>{w.type}</b> · {w.date} · {w.minutes} min{w.note ? ` · ${w.note}` : ""}</>} onRemove={id => remove(setWorkouts, workouts, id)} />
         </div>
       )}
+     {tab === "supplements" && (
+  <div style={S.panel}>
+    <h2 style={S.panelTitle}>💊 Supplements</h2>
 
+    {(suppView === "my" || suppView === "cats" || suppView === "items") && (
+      <div style={{ marginBottom: 18 }}>
+        <div style={{ fontSize: 11, color: "#64748b", fontFamily: "monospace", letterSpacing: 1, marginBottom: 10 }}>MY SUPPLEMENTS</div>
+        {mySupplements.length === 0 && (
+          <div style={{ color: "#475569", fontSize: 13, fontFamily: "monospace", padding: "12px 0" }}>None saved yet. Browse the library below.</div>
+        )}
+        {mySupplements.map(s => {
+          const taken = takenToday.includes(s.id);
+          return (
+            <div key={s.id} style={{ display: "flex", alignItems: "center", gap: 10, background: taken ? "#052e16" : "#020617", border: `1px solid ${taken ? "#166534" : "#1e293b"}`, borderRadius: 12, padding: "10px 14px", marginBottom: 8, cursor: "pointer" }}
+              onClick={() => { setEditingSupp(s); setSuppForm({ dose: s.dose === "—" ? "" : s.dose, unit: s.unit || "mg", schedule: s.schedule, time: s.time }); setSuppView("detail"); }}>
+              <div style={{ flex: 1 }}>
+                <div style={{ fontWeight: 700, fontSize: 14, color: "#e2e8f0" }}>{s.name}</div>
+                <div style={{ fontSize: 11, color: "#64748b", fontFamily: "monospace", marginTop: 2 }}>
+                  {s.dose}{s.unit} · {s.schedule} · {s.time}
+                </div>
+                {taken && <div style={{ fontSize: 10, color: "#4ade80", fontFamily: "monospace", marginTop: 3 }}>✓ TAKEN TODAY</div>}
+              </div>
+              <button
+                onClick={e => { e.stopPropagation(); toggleTaken(s.id); }}
+                style={{ width: 34, height: 34, borderRadius: "50%", border: `1px solid ${taken ? "#4ade80" : "#334155"}`, background: taken ? "#14532d" : "transparent", cursor: "pointer", display: "flex", alignItems: "center", justifyContent: "center", fontSize: 16, color: taken ? "#4ade80" : "#475569", flexShrink: 0 }}
+                title={taken ? "Mark not taken" : "Mark as taken"}
+              >✓</button>
+            </div>
+          );
+        })}
+      </div>
+    )}
+
+    {suppView === "detail" && editingSupp && (
+      <div>
+        <div style={{ fontWeight: 800, fontSize: 16, color: "#f8fafc", marginBottom: 14 }}>{editingSupp.name}</div>
+        <div style={S.form}>
+          <label style={S.label}>Dose</label>
+          <div style={{ display: "flex", gap: 6 }}>
+            <input style={{ ...S.input, flex: 1 }} type="number" placeholder="500" value={suppForm.dose} onChange={e => setSuppForm({ ...suppForm, dose: e.target.value })} />
+            <select style={{ ...S.input, width: 80 }} value={suppForm.unit} onChange={e => setSuppForm({ ...suppForm, unit: e.target.value })}>
+              {["mg","mcg","g","IU","mL"].map(u => <option key={u}>{u}</option>)}
+            </select>
+          </div>
+          <label style={S.label}>Schedule</label>
+          <select style={S.input} value={suppForm.schedule} onChange={e => setSuppForm({ ...suppForm, schedule: e.target.value })}>
+            {["Daily","Twice daily","Every other day","Weekly","As needed"].map(o => <option key={o}>{o}</option>)}
+          </select>
+          <label style={S.label}>Time</label>
+          <select style={S.input} value={suppForm.time} onChange={e => setSuppForm({ ...suppForm, time: e.target.value })}>
+            {["Morning","Afternoon","Evening","Night","With meals","Pre-workout","Post-workout"].map(o => <option key={o}>{o}</option>)}
+          </select>
+        </div>
+        <div style={{ display: "flex", gap: 8, marginTop: 8 }}>
+          <button style={{ ...S.btn, gridColumn: "unset", flex: 1, background: "#7f1d1d" }} onClick={() => deleteSupp(editingSupp.id)}>Remove</button>
+          <button style={{ ...S.btn, gridColumn: "unset", flex: 1 }} onClick={saveSuppEdit}>Save changes</button>
+        </div>
+        <button style={{ ...S.btn, gridColumn: "unset", width: "100%", marginTop: 8, background: "#1e293b", color: "#94a3b8" }} onClick={() => { setSuppView("my"); setEditingSupp(null); }}>Cancel</button>
+      </div>
+    )}
+
+    {suppView === "add" && pendingSupp && (
+      <div>
+        <div style={{ fontWeight: 800, fontSize: 15, color: "#f8fafc", marginBottom: 14 }}>Add {pendingSupp.name}</div>
+        <div style={S.form}>
+          <label style={S.label}>Dose</label>
+          <div style={{ display: "flex", gap: 6 }}>
+            <input style={{ ...S.input, flex: 1 }} type="number" placeholder="500" value={suppForm.dose} onChange={e => setSuppForm({ ...suppForm, dose: e.target.value })} />
+            <select style={{ ...S.input, width: 80 }} value={suppForm.unit} onChange={e => setSuppForm({ ...suppForm, unit: e.target.value })}>
+              {["mg","mcg","g","IU","mL"].map(u => <option key={u}>{u}</option>)}
+            </select>
+          </div>
+          <label style={S.label}>Schedule</label>
+          <select style={S.input} value={suppForm.schedule} onChange={e => setSuppForm({ ...suppForm, schedule: e.target.value })}>
+            {["Daily","Twice daily","Every other day","Weekly","As needed"].map(o => <option key={o}>{o}</option>)}
+          </select>
+          <label style={S.label}>Time</label>
+          <select style={S.input} value={suppForm.time} onChange={e => setSuppForm({ ...suppForm, time: e.target.value })}>
+            {["Morning","Afternoon","Evening","Night","With meals","Pre-workout","Post-workout"].map(o => <option key={o}>{o}</option>)}
+          </select>
+        </div>
+        <div style={{ display: "flex", gap: 8, marginTop: 8 }}>
+          <button style={{ ...S.btn, gridColumn: "unset", flex: 1, background: "#1e293b", color: "#94a3b8" }} onClick={() => { setSuppView("items"); setPendingSupp(null); }}>Cancel</button>
+          <button style={{ ...S.btn, gridColumn: "unset", flex: 1 }} onClick={addSupplement}>Save supplement</button>
+        </div>
+      </div>
+    )}
+
+    {(suppView === "my" || suppView === "cats") && (
+      <>
+        <div style={{ fontSize: 11, color: "#64748b", fontFamily: "monospace", letterSpacing: 1, marginBottom: 10, marginTop: 4 }}>LIBRARY</div>
+        {suppView === "cats" && (
+          <button style={{ ...S.btn, gridColumn: "unset", background: "#020617", border: "1px solid #334155", color: "#94a3b8", marginBottom: 10 }} onClick={() => setSuppView("my")}>← Back</button>
+        )}
+        <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 10 }}>
+          {Object.keys(SUPPLEMENT_LIBRARY).map(cat => (
+            <button key={cat} onClick={() => { setSuppActiveCat(cat); setSuppView("items"); }}
+              style={{ background: "#020617", border: "1px solid rgba(74,222,128,0.18)", borderRadius: 14, padding: 14, color: "#f8fafc", textAlign: "left", cursor: "pointer" }}>
+              <div style={{ fontSize: 14, fontWeight: 700 }}>{cat.replace(/([A-Z])/g, " $1").trim()}</div>
+              <div style={{ marginTop: 4, fontSize: 11, color: "#64748b", fontFamily: "monospace" }}>{SUPPLEMENT_LIBRARY[cat].length} options</div>
+            </button>
+          ))}
+        </div>
+      </>
+    )}
+
+    {suppView === "items" && suppActiveCat && (
+      <>
+        <button style={{ ...S.btn, gridColumn: "unset", background: "#020617", border: "1px solid #334155", color: "#94a3b8", marginBottom: 12 }} onClick={() => setSuppView("cats")}>← Back</button>
+        <div style={{ fontSize: 13, fontWeight: 700, color: "#94a3b8", fontFamily: "monospace", marginBottom: 10 }}>{suppActiveCat.replace(/([A-Z])/g," $1").trim()}</div>
+        <div style={{ display: "flex", flexDirection: "column", gap: 8 }}>
+          {SUPPLEMENT_LIBRARY[suppActiveCat].map(item => (
+            <button key={item} onClick={() => { setPendingSupp({ name: item, category: suppActiveCat }); setSuppForm({ dose: "", unit: "mg", schedule: "Daily", time: "Morning" }); setSuppView("add"); }}
+              style={{ background: "#020617", border: "1px solid rgba(74,222,128,0.18)", borderRadius: 12, padding: "11px 14px", color: "#e2e8f0", fontWeight: 700, textAlign: "left", cursor: "pointer" }}>
+              {item}
+            </button>
+          ))}
+        </div>
+      </>
+    )}
+
+  </div>
+)}
     
       {tab === "calculator" && <PeptideCalculator />}
     </div>
