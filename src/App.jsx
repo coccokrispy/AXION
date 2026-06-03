@@ -574,35 +574,104 @@ export default function App() {
             <button style={DS.btn} onClick={addWeight}>+ Add Weight</button>
           </div>
           {weightDays.length===0&&<div style={{color:"#475569",padding:16,textAlign:"center"}}>No entries yet</div>}
-          {weightDays.map(day=>{
-            const entries=weightsByDay[day];
-            const avg=(entries.reduce((s,e)=>s+Number(e.weight),0)/entries.length).toFixed(1);
-            const isOpen=expandedWeightDay===day;
-            return(
-              <div key={day} style={{background:"#020617",border:`1px solid ${isOpen?theme.primary+"66":"#1e293b"}`,borderRadius:12,marginBottom:8,overflow:"hidden"}}>
-                <button onClick={()=>setExpandedWeightDay(isOpen?null:day)} style={{width:"100%",background:"none",border:"none",padding:"12px 14px",cursor:"pointer",display:"flex",justifyContent:"space-between",alignItems:"center"}}>
-                  <div style={{textAlign:"left"}}>
-                    <div style={{fontWeight:700,color:"#e2e8f0",fontSize:14}}>{new Date(day+"T12:00:00").toLocaleDateString("en-US",{weekday:"short",month:"short",day:"numeric"})}</div>
-                    <div style={{fontSize:11,color:"#64748b",fontFamily:"monospace"}}>{entries.length} entr{entries.length===1?"y":"ies"} · avg {avg} lbs</div>
-                  </div>
-                  <div style={{display:"flex",alignItems:"center",gap:8}}>
-                    <span style={{fontSize:16,fontWeight:900,color:theme.primary}}>{avg} lbs</span>
-                    {isOpen?<ChevronUp size={16} color="#64748b"/>:<ChevronDown size={16} color="#64748b"/>}
-                  </div>
-                </button>
-                {isOpen&&(
-                  <div style={{padding:"0 14px 12px"}}>
-                    {entries.map(e=>(
-                      <div key={e.id} style={{display:"flex",justifyContent:"space-between",alignItems:"center",padding:"8px 0",borderTop:"1px solid #1e293b"}}>
-                        <div><span style={{color:theme.primary,fontWeight:700}}>{e.weight} lbs</span><span style={{color:"#64748b",fontSize:11,fontFamily:"monospace",marginLeft:8}}>{e.type}{e.note?` · ${e.note}`:""}</span></div>
-                        <button style={{background:"transparent",color:"#ef4444",border:"1px solid #450a0a",borderRadius:6,cursor:"pointer",padding:"3px 8px",fontSize:11}} onClick={()=>setWeights((weights||[]).filter(x=>x.id!==e.id))}>✕</button>
-                      </div>
-                    ))}
-                  </div>
-                )}
+{(()=>{
+  const currentMonth=todayISO().slice(0,7);
+  const monthMap={};
+  weightDays.forEach(day=>{
+    const m=day.slice(0,7);
+    if(!monthMap[m])monthMap[m]=[];
+    monthMap[m].push(day);
+  });
+  const months=Object.keys(monthMap).sort((a,b)=>b.localeCompare(a));
+  return months.map(month=>{
+    const days=monthMap[month];
+    const isCurrent=month===currentMonth;
+    const monthLabel=new Date(month+"-01T12:00:00").toLocaleDateString("en-US",{month:"long",year:"numeric"});
+    const monthEntries=days.flatMap(d=>weightsByDay[d]);
+    const monthAvg=(monthEntries.reduce((s,e)=>s+Number(e.weight),0)/monthEntries.length).toFixed(1);
+    const isMonthOpen=expandedWeightDay===("month_"+month);
+
+    if(isCurrent){
+      return days.map(day=>{
+        const entries=weightsByDay[day];
+        const avg=(entries.reduce((s,e)=>s+Number(e.weight),0)/entries.length).toFixed(1);
+        const isOpen=expandedWeightDay===day;
+        return(
+          <div key={day} style={{background:"#020617",border:`1px solid ${isOpen?theme.primary+"66":"#1e293b"}`,borderRadius:12,marginBottom:8,overflow:"hidden"}}>
+            <button onClick={()=>setExpandedWeightDay(isOpen?null:day)} style={{width:"100%",background:"none",border:"none",padding:"12px 14px",cursor:"pointer",display:"flex",justifyContent:"space-between",alignItems:"center"}}>
+              <div style={{textAlign:"left"}}>
+                <div style={{fontWeight:700,color:"#e2e8f0",fontSize:14}}>{new Date(day+"T12:00:00").toLocaleDateString("en-US",{weekday:"short",month:"short",day:"numeric"})}</div>
+                <div style={{fontSize:11,color:"#64748b",fontFamily:"monospace"}}>{entries.length} entr{entries.length===1?"y":"ies"} · avg {avg} lbs</div>
               </div>
-            );
-          })}
+              <div style={{display:"flex",alignItems:"center",gap:8}}>
+                <span style={{fontSize:16,fontWeight:900,color:theme.primary}}>{avg} lbs</span>
+                {isOpen?<ChevronUp size={16} color="#64748b"/>:<ChevronDown size={16} color="#64748b"/>}
+              </div>
+            </button>
+            {isOpen&&(
+              <div style={{padding:"0 14px 12px"}}>
+                {entries.map(e=>(
+                  <div key={e.id} style={{display:"flex",justifyContent:"space-between",alignItems:"center",padding:"8px 0",borderTop:"1px solid #1e293b"}}>
+                    <div><span style={{color:theme.primary,fontWeight:700}}>{e.weight} lbs</span><span style={{color:"#64748b",fontSize:11,fontFamily:"monospace",marginLeft:8}}>{e.type}{e.note?` · ${e.note}`:""}</span></div>
+                    <button style={{background:"transparent",color:"#ef4444",border:"1px solid #450a0a",borderRadius:6,cursor:"pointer",padding:"3px 8px",fontSize:11}} onClick={()=>setWeights((weights||[]).filter(x=>x.id!==e.id))}>✕</button>
+                  </div>
+                ))}
+              </div>
+            )}
+          </div>
+        );
+      });
+    }
+
+    return(
+      <div key={month} style={{marginBottom:8}}>
+        <button onClick={()=>setExpandedWeightDay(isMonthOpen?null:"month_"+month)} style={{width:"100%",background:`linear-gradient(145deg,#020617,${theme.primary}11)`,border:`1px solid ${isMonthOpen?theme.primary+"66":theme.border}`,borderRadius:12,padding:"14px 16px",cursor:"pointer",display:"flex",justifyContent:"space-between",alignItems:"center"}}>
+          <div style={{textAlign:"left"}}>
+            <div style={{fontWeight:700,color:theme.primary,fontSize:15}}>{monthLabel}</div>
+            <div style={{fontSize:11,color:"#64748b",fontFamily:"monospace",marginTop:2}}>{monthEntries.length} entries · {days.length} days · avg {monthAvg} lbs</div>
+          </div>
+          <div style={{display:"flex",alignItems:"center",gap:8}}>
+            <span style={{fontSize:14,fontWeight:900,color:"#94a3b8"}}>{monthAvg} lbs</span>
+            {isMonthOpen?<ChevronUp size={16} color={theme.primary}/>:<ChevronDown size={16} color={theme.primary}/>}
+          </div>
+        </button>
+        {isMonthOpen&&(
+          <div style={{paddingLeft:8,marginTop:4}}>
+            {days.map(day=>{
+              const entries=weightsByDay[day];
+              const avg=(entries.reduce((s,e)=>s+Number(e.weight),0)/entries.length).toFixed(1);
+              const isOpen=expandedWeightDay===day;
+              return(
+                <div key={day} style={{background:"#020617",border:`1px solid ${isOpen?theme.primary+"66":"#1e293b"}`,borderRadius:10,marginBottom:6,overflow:"hidden"}}>
+                  <button onClick={()=>setExpandedWeightDay(isOpen?null:day)} style={{width:"100%",background:"none",border:"none",padding:"10px 14px",cursor:"pointer",display:"flex",justifyContent:"space-between",alignItems:"center"}}>
+                    <div style={{textAlign:"left"}}>
+                      <div style={{fontWeight:700,color:"#e2e8f0",fontSize:13}}>{new Date(day+"T12:00:00").toLocaleDateString("en-US",{weekday:"short",month:"short",day:"numeric"})}</div>
+                      <div style={{fontSize:11,color:"#64748b",fontFamily:"monospace"}}>{entries.length} entr{entries.length===1?"y":"ies"} · avg {avg} lbs</div>
+                    </div>
+                    <div style={{display:"flex",alignItems:"center",gap:8}}>
+                      <span style={{fontSize:14,fontWeight:900,color:theme.primary}}>{avg} lbs</span>
+                      {isOpen?<ChevronUp size={14} color="#64748b"/>:<ChevronDown size={14} color="#64748b"/>}
+                    </div>
+                  </button>
+                  {isOpen&&(
+                    <div style={{padding:"0 14px 10px"}}>
+                      {entries.map(e=>(
+                        <div key={e.id} style={{display:"flex",justifyContent:"space-between",alignItems:"center",padding:"8px 0",borderTop:"1px solid #1e293b"}}>
+                          <div><span style={{color:theme.primary,fontWeight:700}}>{e.weight} lbs</span><span style={{color:"#64748b",fontSize:11,fontFamily:"monospace",marginLeft:8}}>{e.type}{e.note?` · ${e.note}`:""}</span></div>
+                          <button style={{background:"transparent",color:"#ef4444",border:"1px solid #450a0a",borderRadius:6,cursor:"pointer",padding:"3px 8px",fontSize:11}} onClick={()=>setWeights((weights||[]).filter(x=>x.id!==e.id))}>✕</button>
+                        </div>
+                      ))}
+                    </div>
+                  )}
+                </div>
+              );
+            })}
+          </div>
+        )}
+      </div>
+    );
+  });
+})()}
         </div>
       )}
 
