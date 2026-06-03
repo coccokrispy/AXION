@@ -105,18 +105,6 @@ const SUPPLEMENT_LIBRARY = {
 const ALL_SUPPLEMENTS = Object.values(SUPPLEMENT_LIBRARY).flat();
 const ALL_PEPTIDES = Object.values(PEPTIDE_LIBRARY).flat();
 
-const CALC_PRESETS = [
-  { name:"Retatrutide", commonDoses:[0.5,1.0,2.0,3.0,5.0], unit:"mg" },
-  { name:"Semaglutide", commonDoses:[0.25,0.5,1.0,2.0], unit:"mg" },
-  { name:"Tirzepatide", commonDoses:[2.5,5.0,10.0,15.0], unit:"mg" },
-  { name:"MOTS-c", commonDoses:[5.0,10.0], unit:"mg" },
-  { name:"BPC-157", commonDoses:[250,500,1000], unit:"mcg" },
-  { name:"TB-500", commonDoses:[2.0,5.0,10.0], unit:"mg" },
-  { name:"CJC-1295", commonDoses:[1.0,2.0], unit:"mg" },
-  { name:"Ipamorelin", commonDoses:[100,200,300], unit:"mcg" },
-  { name:"Custom", commonDoses:[], unit:"mg" },
-];
-
 function todayISO() { return new Date().toISOString().slice(0,10); }
 function daysBetween(a,b) { return Math.max(0,Math.floor((new Date(b)-new Date(a))/86400000)); }
 function weeksBetween(a,b) { return Math.max(1,daysBetween(a,b)/7); }
@@ -164,20 +152,6 @@ function SearchBar({placeholder,value,onChange,onClear,accent}) {
   );
 }
 
-function LogList({items,render,onRemove}) {
-  if(!items.length) return <div style={{color:"#475569",padding:16,textAlign:"center",fontFamily:"monospace",fontSize:13}}>No entries yet</div>;
-  return (
-    <div style={{display:"flex",flexDirection:"column",gap:6}}>
-      {items.map(item=>(
-        <div key={item.id} style={{display:"flex",justifyContent:"space-between",alignItems:"center",gap:10,background:"#020617",border:"1px solid #1e293b",borderRadius:8,padding:"10px 12px",fontSize:13}}>
-          <span style={{flex:1,lineHeight:1.5}}>{render(item)}</span>
-          <button style={{background:"transparent",color:"#ef4444",border:"1px solid #450a0a",borderRadius:6,cursor:"pointer",padding:"3px 8px",fontSize:11,flexShrink:0}} onClick={()=>onRemove(item.id)}>✕</button>
-        </div>
-      ))}
-    </div>
-  );
-}
-
 function WeightLineChart({weights,color}) {
   const points=weights.slice(-10);
   if(points.length<2) return null;
@@ -207,6 +181,7 @@ function WeightLineChart({weights,color}) {
     </div>
   );
 }
+
 function PeptideCalculator({theme,DS}) {
   const [syringe,setSyringe]=useState(null);
   const [vialMg,setVialMg]=useState(null);
@@ -215,7 +190,6 @@ function PeptideCalculator({theme,DS}) {
   const [customBac,setCustomBac]=useState("");
   const [dose,setDose]=useState(null);
   const [customDose,setCustomDose]=useState("");
-
   const vN=parseFloat(vialMg==="other"?customVial:vialMg)||0;
   const bN=parseFloat(bacMl==="other"?customBac:bacMl)||0;
   const dN=parseFloat(dose==="other"?customDose:dose)||0;
@@ -225,60 +199,10 @@ function PeptideCalculator({theme,DS}) {
   const pct=syringe?(injectU/parseFloat(syringe))*100:0;
   const overLimit=pct>100;
   const valid=conc>0&&dN>0&&injectMl>0&&syringe;
-
-  const selBtn=(active)=>({
-    padding:"10px 14px",borderRadius:10,cursor:"pointer",fontFamily:"monospace",fontSize:13,fontWeight:700,
-    border:`2px solid ${active?theme.primary:theme.border}`,
-    background:active?theme.primary+"22":"#020617",
-    color:active?theme.primary:"#94a3b8",transition:"all 0.15s"
-  });
-
-  const Syringe30=()=>(
-    <svg viewBox="0 0 80 50" style={{width:80,height:50,display:"block",margin:"4px auto 0"}}>
-      <rect x="8" y="10" width="50" height="14" rx="3" fill="none" stroke={theme.primary} strokeWidth="2"/>
-      <rect x="10" y="12" width="14" height="10" rx="1" fill={theme.primary+"44"}/>
-      <line x1="24" y1="12" x2="24" y2="22" stroke={theme.primary} strokeWidth="1.5"/>
-      <line x1="38" y1="12" x2="38" y2="22" stroke={theme.primary} strokeWidth="1.5"/>
-      <line x1="52" y1="12" x2="52" y2="22" stroke={theme.primary} strokeWidth="1.5"/>
-      <polygon points="58,14 58,18 70,16" fill={theme.primary}/>
-      <rect x="4" y="7" width="4" height="20" rx="1" fill={theme.primary}/>
-      <rect x="1" y="8" width="6" height="3" rx="1" fill={theme.primary}/>
-      <rect x="1" y="23" width="6" height="3" rx="1" fill={theme.primary}/>
-      <text x="40" y="44" textAnchor="middle" fill="#94a3b8" fontSize="11" fontFamily="monospace" fontWeight="700">30 units</text>
-    </svg>
-  );
-  const Syringe50=()=>(
-    <svg viewBox="0 0 80 50" style={{width:80,height:50,display:"block",margin:"4px auto 0"}}>
-      <rect x="4" y="10" width="56" height="14" rx="3" fill="none" stroke={theme.primary} strokeWidth="2"/>
-      <rect x="6" y="12" width="12" height="10" rx="1" fill={theme.primary+"44"}/>
-      <line x1="18" y1="12" x2="18" y2="22" stroke={theme.primary} strokeWidth="1.5"/>
-      <line x1="30" y1="12" x2="30" y2="22" stroke={theme.primary} strokeWidth="1.5"/>
-      <line x1="42" y1="12" x2="42" y2="22" stroke={theme.primary} strokeWidth="1.5"/>
-      <line x1="54" y1="12" x2="54" y2="22" stroke={theme.primary} strokeWidth="1.5"/>
-      <polygon points="60,14 60,18 74,16" fill={theme.primary}/>
-      <rect x="1" y="7" width="3" height="20" rx="1" fill={theme.primary}/>
-      <rect x="0" y="8" width="5" height="3" rx="1" fill={theme.primary}/>
-      <rect x="0" y="23" width="5" height="3" rx="1" fill={theme.primary}/>
-      <text x="40" y="44" textAnchor="middle" fill="#94a3b8" fontSize="11" fontFamily="monospace" fontWeight="700">50 units</text>
-    </svg>
-  );
-  const Syringe100=()=>(
-    <svg viewBox="0 0 80 50" style={{width:80,height:50,display:"block",margin:"4px auto 0"}}>
-      <rect x="4" y="10" width="56" height="14" rx="3" fill="none" stroke={theme.primary} strokeWidth="2"/>
-      <rect x="6" y="12" width="10" height="10" rx="1" fill={theme.primary+"44"}/>
-      <line x1="16" y1="12" x2="16" y2="22" stroke={theme.primary} strokeWidth="1.5"/>
-      <line x1="26" y1="12" x2="26" y2="22" stroke={theme.primary} strokeWidth="1.5"/>
-      <line x1="36" y1="12" x2="36" y2="22" stroke={theme.primary} strokeWidth="1.5"/>
-      <line x1="46" y1="12" x2="46" y2="22" stroke={theme.primary} strokeWidth="1.5"/>
-      <line x1="56" y1="12" x2="56" y2="22" stroke={theme.primary} strokeWidth="1.5"/>
-      <polygon points="60,14 60,18 76,16" fill={theme.primary}/>
-      <rect x="1" y="7" width="3" height="20" rx="1" fill={theme.primary}/>
-      <rect x="0" y="8" width="5" height="3" rx="1" fill={theme.primary}/>
-      <rect x="0" y="23" width="5" height="3" rx="1" fill={theme.primary}/>
-      <text x="40" y="44" textAnchor="middle" fill="#94a3b8" fontSize="11" fontFamily="monospace" fontWeight="700">100 units</text>
-    </svg>
-  );
-
+  const selBtn=(active)=>({padding:"10px 14px",borderRadius:10,cursor:"pointer",fontFamily:"monospace",fontSize:13,fontWeight:700,border:`2px solid ${active?theme.primary:theme.border}`,background:active?theme.primary+"22":"#020617",color:active?theme.primary:"#94a3b8",transition:"all 0.15s"});
+  const Syringe30=()=>(<svg viewBox="0 0 80 50" style={{width:80,height:50,display:"block",margin:"4px auto 0"}}><rect x="8" y="10" width="50" height="14" rx="3" fill="none" stroke={theme.primary} strokeWidth="2"/><rect x="10" y="12" width="14" height="10" rx="1" fill={theme.primary+"44"}/><line x1="24" y1="12" x2="24" y2="22" stroke={theme.primary} strokeWidth="1.5"/><line x1="38" y1="12" x2="38" y2="22" stroke={theme.primary} strokeWidth="1.5"/><line x1="52" y1="12" x2="52" y2="22" stroke={theme.primary} strokeWidth="1.5"/><polygon points="58,14 58,18 70,16" fill={theme.primary}/><rect x="4" y="7" width="4" height="20" rx="1" fill={theme.primary}/><rect x="1" y="8" width="6" height="3" rx="1" fill={theme.primary}/><rect x="1" y="23" width="6" height="3" rx="1" fill={theme.primary}/><text x="40" y="44" textAnchor="middle" fill="#94a3b8" fontSize="11" fontFamily="monospace" fontWeight="700">30 units</text></svg>);
+  const Syringe50=()=>(<svg viewBox="0 0 80 50" style={{width:80,height:50,display:"block",margin:"4px auto 0"}}><rect x="4" y="10" width="56" height="14" rx="3" fill="none" stroke={theme.primary} strokeWidth="2"/><rect x="6" y="12" width="12" height="10" rx="1" fill={theme.primary+"44"}/><line x1="18" y1="12" x2="18" y2="22" stroke={theme.primary} strokeWidth="1.5"/><line x1="30" y1="12" x2="30" y2="22" stroke={theme.primary} strokeWidth="1.5"/><line x1="42" y1="12" x2="42" y2="22" stroke={theme.primary} strokeWidth="1.5"/><line x1="54" y1="12" x2="54" y2="22" stroke={theme.primary} strokeWidth="1.5"/><polygon points="60,14 60,18 74,16" fill={theme.primary}/><rect x="1" y="7" width="3" height="20" rx="1" fill={theme.primary}/><rect x="0" y="8" width="5" height="3" rx="1" fill={theme.primary}/><rect x="0" y="23" width="5" height="3" rx="1" fill={theme.primary}/><text x="40" y="44" textAnchor="middle" fill="#94a3b8" fontSize="11" fontFamily="monospace" fontWeight="700">50 units</text></svg>);
+  const Syringe100=()=>(<svg viewBox="0 0 80 50" style={{width:80,height:50,display:"block",margin:"4px auto 0"}}><rect x="4" y="10" width="56" height="14" rx="3" fill="none" stroke={theme.primary} strokeWidth="2"/><rect x="6" y="12" width="10" height="10" rx="1" fill={theme.primary+"44"}/><line x1="16" y1="12" x2="16" y2="22" stroke={theme.primary} strokeWidth="1.5"/><line x1="26" y1="12" x2="26" y2="22" stroke={theme.primary} strokeWidth="1.5"/><line x1="36" y1="12" x2="36" y2="22" stroke={theme.primary} strokeWidth="1.5"/><line x1="46" y1="12" x2="46" y2="22" stroke={theme.primary} strokeWidth="1.5"/><line x1="56" y1="12" x2="56" y2="22" stroke={theme.primary} strokeWidth="1.5"/><polygon points="60,14 60,18 76,16" fill={theme.primary}/><rect x="1" y="7" width="3" height="20" rx="1" fill={theme.primary}/><rect x="0" y="8" width="5" height="3" rx="1" fill={theme.primary}/><rect x="0" y="23" width="5" height="3" rx="1" fill={theme.primary}/><text x="40" y="44" textAnchor="middle" fill="#94a3b8" fontSize="11" fontFamily="monospace" fontWeight="700">100 units</text></svg>);
   return (
     <div>
       <div style={DS.panel}>
@@ -296,36 +220,28 @@ function PeptideCalculator({theme,DS}) {
         <div style={{marginBottom:24}}>
           <div style={{fontSize:11,color:"#64748b",fontFamily:"monospace",textTransform:"uppercase",letterSpacing:1.5,marginBottom:12}}>Step 2 — Vial size (mg)</div>
           <div style={{display:"flex",gap:8,flexWrap:"wrap"}}>
-            {["5","10","15","other"].map(v=>(
-              <button key={v} onClick={()=>setVialMg(v)} style={selBtn(vialMg===v)}>{v==="other"?"Other":v+" mg"}</button>
-            ))}
+            {["5","10","15","other"].map(v=>(<button key={v} onClick={()=>setVialMg(v)} style={selBtn(vialMg===v)}>{v==="other"?"Other":v+" mg"}</button>))}
           </div>
           {vialMg==="other"&&<input style={{...DS.input,marginTop:10}} type="number" step="0.5" placeholder="Enter mg..." value={customVial} onChange={e=>setCustomVial(e.target.value)}/>}
         </div>
         <div style={{marginBottom:24}}>
           <div style={{fontSize:11,color:"#64748b",fontFamily:"monospace",textTransform:"uppercase",letterSpacing:1.5,marginBottom:12}}>Step 3 — Bacteriostatic water (mL)</div>
           <div style={{display:"flex",gap:8,flexWrap:"wrap"}}>
-            {["1","2","3","5","other"].map(v=>(
-              <button key={v} onClick={()=>setBacMl(v)} style={selBtn(bacMl===v)}>{v==="other"?"Other":v+" mL"}</button>
-            ))}
+            {["1","2","3","5","other"].map(v=>(<button key={v} onClick={()=>setBacMl(v)} style={selBtn(bacMl===v)}>{v==="other"?"Other":v+" mL"}</button>))}
           </div>
           {bacMl==="other"&&<input style={{...DS.input,marginTop:10}} type="number" step="0.5" placeholder="Enter mL..." value={customBac} onChange={e=>setCustomBac(e.target.value)}/>}
         </div>
         <div style={{marginBottom:24}}>
           <div style={{fontSize:11,color:"#64748b",fontFamily:"monospace",textTransform:"uppercase",letterSpacing:1.5,marginBottom:12}}>Step 4 — Dose per injection (mg)</div>
           <div style={{display:"flex",gap:8,flexWrap:"wrap"}}>
-            {["0.25","0.50","0.75","1.00","other"].map(v=>(
-              <button key={v} onClick={()=>setDose(v)} style={selBtn(dose===v)}>{v==="other"?"Other":v+" mg"}</button>
-            ))}
+            {["0.25","0.50","0.75","1.00","other"].map(v=>(<button key={v} onClick={()=>setDose(v)} style={selBtn(dose===v)}>{v==="other"?"Other":v+" mg"}</button>))}
           </div>
           {dose==="other"&&<input style={{...DS.input,marginTop:10}} type="number" step="0.025" placeholder="Enter mg..." value={customDose} onChange={e=>setCustomDose(e.target.value)}/>}
         </div>
         {valid&&(
           <div style={{background:`linear-gradient(145deg,#020617,${theme.primary}11)`,border:`1px solid ${theme.primary}66`,borderRadius:16,padding:20,marginTop:8}}>
             {overLimit?(
-              <div style={{background:"#450a0a",border:"1px solid #ef4444",borderRadius:10,padding:14,marginBottom:16,color:"#ef4444",fontFamily:"monospace",fontSize:13,fontWeight:700,textAlign:"center"}}>
-                ⚠️ Syringe volume not sufficient. Use a larger syringe or adjust amounts.
-              </div>
+              <div style={{background:"#450a0a",border:"1px solid #ef4444",borderRadius:10,padding:14,marginBottom:16,color:"#ef4444",fontFamily:"monospace",fontSize:13,fontWeight:700,textAlign:"center"}}>⚠️ Syringe volume not sufficient. Use a larger syringe or adjust amounts.</div>
             ):(
               <div style={{textAlign:"center",marginBottom:20}}>
                 <div style={{fontSize:13,color:"#94a3b8",fontFamily:"monospace",marginBottom:8}}>To have a dose of <b style={{color:theme.primary}}>{dN} mg</b> pull the syringe to</div>
@@ -445,14 +361,12 @@ export default function App() {
   const projectedWeeksToGoal=avgPerWeek>0?Math.ceil(Math.max(0,Number(latestWeight.weight)-TARGET_WEIGHT)/avgPerWeek):999;
   const projectedGoalDate=new Date();projectedGoalDate.setDate(projectedGoalDate.getDate()+projectedWeeksToGoal*7);
 
-  // Weekly summary
   const weekStart=new Date();weekStart.setDate(weekStart.getDate()-weekStart.getDay());weekStart.setHours(0,0,0,0);
   const thisWeekWorkouts=(workouts||[]).filter(w=>new Date(w.date)>=weekStart);
   const thisWeekMins=thisWeekWorkouts.reduce((s,w)=>s++(w.minutes||0),0);
   const thisWeekFoods=(foods||[]).filter(f=>new Date(f.date)>=weekStart);
   const thisWeekAvgCals=thisWeekFoods.length>0?Math.round(thisWeekFoods.reduce((s,f)=>s++(f.calories||0),0)/Math.max(1,new Set(thisWeekFoods.map(f=>f.date)).size)):null;
 
-  // Weight trend arrows
   const weightsByDay=useMemo(()=>{const map={};(weights||[]).forEach(w=>{if(!map[w.date])map[w.date]=[];map[w.date].push(w);});return map;},[weights]);
   const weightDays=useMemo(()=>Object.keys(weightsByDay).sort((a,b)=>new Date(b)-new Date(a)),[weightsByDay]);
 
@@ -472,19 +386,17 @@ export default function App() {
   const streak=useMemo(()=>{
     const allDates=new Set([...(weights||[]).map(w=>w.date),...(foods||[]).map(f=>f.date),...(workouts||[]).map(w=>w.date),...Object.values(peptideLogs||{}).flat().map(l=>l.date)]);
     let count=0;let d=new Date();
-const todayStr=d.toISOString().slice(0,10);
+    const todayStr=d.toISOString().slice(0,10);
     if(!allDates.has(todayStr)){d.setDate(d.getDate()-1);}
     for(let i=0;i<3650;i++){const iso=d.toISOString().slice(0,10);if(allDates.has(iso)){count++;d.setDate(d.getDate()-1);}else break;}
     return count;
   },[weights,foods,workouts,peptideLogs]);
 
-  // Milestone detection
   useEffect(()=>{
     if(totalLost<=0)return;
     const earned=MILESTONES.filter(m=>{
       if(m.lbs)return totalLost>=m.lbs;
-      if(m.pct&&m.pct<=50)return progressPct>=m.pct;
-      if(m.pct&&m.pct>50)return progressPct>=m.pct;
+      if(m.pct)return progressPct>=m.pct;
       return false;
     });
     const key="axion_milestones_seen";
@@ -545,17 +457,6 @@ const todayStr=d.toISOString().slice(0,10);
   }
 
   async function scanLabel(){
-    if(!labelImage||!apiKey){setAiScanError("Add API key in Settings.");return;}
-    setAiScanLoading(true);setAiScanError("");
-    try{
-      const base64=labelImage.split(",")[1];const mediaType=labelImage.split(";")[0].split(":")[1];
-      const data=await callClaude(apiKey,{system:`Nutrition analyst. Identify this food/label. Return ONLY JSON: {"food":"name","brand":"brand or null","per_100g":{"calories":n,"protein":n,"carbs":n,"fat":n,"fiber":n,"sugar":n,"sodium":n},"serving_sizes":[{"label":"1 serving (Xg)","weight_g":X}],"notes":"how identified"}`,messages:[{role:"user",content:[{type:"image",source:{type:"base64",media_type:mediaType,data:base64}},{type:"text",text:scanServingNote?`I had approximately: ${scanServingNote}`:"Identify this food and give nutrition facts per 100g."}]}]});
-      const parsed=JSON.parse(data.content.map(b=>b.text||"").join("").replace(/```json|```/g,"").trim());
-      setFoodSearchResults(parsed);setFoodMode("search");setLabelImage(null);
-    }catch(e){setAiScanError("Scan failed: "+e.message);}
-    setAiScanLoading(false);
-  }
-async function scanLabel(){
     if(!labelImage||!apiKey){setAiScanError("Add API key in Settings.");return;}
     setAiScanLoading(true);setAiScanError("");
     try{
@@ -640,58 +541,7 @@ async function scanLabel(){
   const pill={background:"#0f172a",border:"1px solid #1e293b",color:"#64748b",borderRadius:20,padding:"5px 12px",cursor:"pointer",fontSize:12,fontFamily:"monospace"};
   const formGrid={display:"grid",gridTemplateColumns:"120px 1fr",gap:"8px 12px",alignItems:"center",marginBottom:16};
   const formLabel={fontSize:11,color:"#64748b",fontFamily:"monospace",textTransform:"uppercase",letterSpacing:1,textAlign:"right"};
-  function toggleTaken(id){setTakenToday(prev=>prev.includes(id)?prev.filter(x=>x!==id):[...prev,id]);}
 
-  function addSupplement(){
-    if(!pendingSupp)return;
-    setMySupplements(prev=>[...prev,{id:uid(),name:pendingSupp.name,category:pendingSupp.category,dose:suppForm.dose||"—",unit:suppForm.dose?suppForm.unit:"",schedule:suppForm.schedule,time:suppForm.time}]);
-    setSuppView("my");setPendingSupp(null);setSuppForm({dose:"",unit:"mg",schedule:"Daily",time:"Morning"});
-  }
-  function saveSuppEdit(){setMySupplements(prev=>prev.map(s=>s.id===editingSupp.id?{...s,dose:suppForm.dose||"—",unit:suppForm.dose?suppForm.unit:"",schedule:suppForm.schedule,time:suppForm.time}:s));setEditingSupp(null);setSuppView("my");}
-  function deleteSupp(id){setMySupplements(prev=>prev.filter(s=>s.id!==id));setTakenToday(prev=>prev.filter(x=>x!==id));setEditingSupp(null);setSuppView("my");}
-
-  function addPeptideToStack(){
-    if(!pendingPep)return;
-    setPeptideStack(prev=>[...prev,{id:uid(),name:pendingPep.name,category:pendingPep.category,desc:pendingPep.desc,dose:pepForm.dose||"—",unit:pepForm.unit||pendingPep.unit||"mg",frequency:pepForm.frequency||pendingPep.frequency||"",cycle:pepForm.cycle||pendingPep.cycle||"",notes:pepForm.notes,status:pepForm.status,dateAdded:todayISO()}]);
-    setPepView("stack");setPendingPep(null);setPepForm({dose:"",unit:"mg",frequency:"",cycle:"",notes:"",status:"active"});
-    flash("Peptide added ✓");
-  }
-  function savePepEdit(){setPeptideStack(prev=>prev.map(p=>p.id===editingPep.id?{...p,dose:pepForm.dose||"—",unit:pepForm.unit,frequency:pepForm.frequency,cycle:pepForm.cycle,notes:pepForm.notes,status:pepForm.status}:p));setEditingPep(null);setPepView("stack");}
-  function deletePep(id){setPeptideStack(prev=>prev.filter(p=>p.id!==id));setPeptideLogs(prev=>{const n={...prev};delete n[id];return n;});setEditingPep(null);setPepView("stack");}
-  function logPeptideDose(peptideId){if(!doseForm.dose)return;setPeptideLogs(prev=>({...prev,[peptideId]:[...(prev[peptideId]||[]),{id:uid(),date:doseForm.date,dose:+doseForm.dose,note:doseForm.note}]}));setDoseForm({date:todayISO(),dose:"",note:""});flash("Dose logged ✓");}
-  function removePeptideDose(peptideId,entryId){setPeptideLogs(prev=>({...prev,[peptideId]:(prev[peptideId]||[]).filter(e=>e.id!==entryId)}));}
-
-  async function getAIInsight(){
-    if(sortedWeights.length<2||!apiKey){setAiInsight(!apiKey?"Add API key in Settings.":"Add a second weight entry to unlock.");return;}
-    setInsightLoading(true);setAiInsight("");
-    const activeStack=(peptideStack||[]).filter(p=>p.status==="active").map(p=>`${p.name} ${p.dose}${p.unit} ${p.frequency}`).join(", ");
-    const recentFoods=(foods||[]).slice(-5).map(f=>`${f.item} (${f.calories}cal/${f.protein}p)`).join(", ");
-    const recentWorkouts=(workouts||[]).slice(-5).map(w=>`${w.type} ${w.minutes}min${w.intensity?" "+w.intensity:""}`).join(", ");
-    try{
-      const data=await callClaude(apiKey,{messages:[{role:"user",content:`Clinical health analyst. Peptide stack: ${activeStack||"none"}. Weight: ${START_WEIGHT}->${latestWeight.weight}lbs (${totalLost.toFixed(1)}lbs lost, ${pctLost(latestWeight.weight)}%). Week ${currentWeek}, ${activePhase.phase} phase. Avg loss: ${avgPerWeek.toFixed(2)} lbs/wk. Streak: ${streak} days. Food: ${recentFoods||"none"}. Training: ${recentWorkouts||"none"}. Write 3-4 sentence personalized breakdown. Clinical but motivating. Reference specific numbers.`}]});
-      setAiInsight(data.content?.map(b=>b.text||"").join("")||"Unable to generate insight.");
-    }catch(e){setAiInsight("Insight unavailable: "+e.message);}
-    setInsightLoading(false);
-  }
-
-  const TABS=["dashboard","weight","doses","peptides","food","workouts","supplements","calculator"];
-  const ICONS={dashboard:Zap,weight:Scale,doses:Syringe,peptides:Dna,food:Utensils,workouts:Dumbbell,supplements:Pill,calculator:Calculator};
-
-  const DS={
-    page:{minHeight:"100vh",background:`radial-gradient(circle at top,${theme.bg} 0%,#020403 24%,#000000 72%)`,color:"#f8fafc",padding:"42px 12px 48px",fontFamily:"Inter,Arial,sans-serif",maxWidth:430,margin:"0 auto"},
-    panel:{background:"linear-gradient(145deg,rgba(0,0,0,0.98),rgba(2,8,5,0.98))",border:`1px solid ${theme.border}`,borderRadius:26,padding:20,marginBottom:18,boxShadow:`0 0 26px ${theme.glow}`},
-    card:{background:"linear-gradient(145deg,rgba(0,0,0,0.98),rgba(2,8,5,0.98))",border:`1px solid ${theme.border}`,borderRadius:22,padding:18,boxShadow:`0 0 22px ${theme.glow}`},
-    btn:{gridColumn:"2",background:`linear-gradient(135deg,${theme.primaryDark},${theme.primary})`,color:"#020617",border:"none",borderRadius:12,padding:"12px 16px",cursor:"pointer",fontWeight:900,fontSize:14,fontFamily:"monospace",letterSpacing:1,marginTop:4,boxShadow:`0 0 22px ${theme.glowStrong}`},
-    input:{background:"#000000",border:`1px solid ${theme.border}`,color:"#f8fafc",borderRadius:12,padding:"11px 13px",fontSize:14,fontFamily:"Inter,Arial,sans-serif",width:"100%",boxSizing:"border-box",outline:"none"},
-    activeTab:{flex:"1 1 80px",display:"flex",flexDirection:"column",alignItems:"center",gap:8,padding:"17px 8px",background:`linear-gradient(145deg,rgba(0,0,0,1),${theme.tabBg})`,border:`1px solid ${theme.primary}`,borderRadius:20,cursor:"pointer",color:theme.primary,fontFamily:"monospace",boxShadow:`0 0 24px ${theme.glowStrong}`,transform:"translateY(-2px)",transition:"all 0.18s ease"},
-    pillActive:{background:"#1e3a5f",border:`1px solid ${theme.primary}`,color:theme.primary,borderRadius:20,padding:"5px 12px",cursor:"pointer",fontSize:12,fontFamily:"monospace"},
-    goalBarFill:{height:"100%",background:`linear-gradient(90deg,${theme.primaryDark},${theme.primary})`,borderRadius:999},
-    goalCircle:{width:110,height:110,borderRadius:"50%",border:"2px solid #1e293b",background:"radial-gradient(circle,#020617 45%,#0f172a 100%)",display:"flex",flexDirection:"column",alignItems:"center",justifyContent:"center",justifySelf:"center",boxShadow:`0 0 0 6px ${theme.glow},inset 0 0 24px ${theme.glow}`},
-  };
-
-  const pill={background:"#0f172a",border:"1px solid #1e293b",color:"#64748b",borderRadius:20,padding:"5px 12px",cursor:"pointer",fontSize:12,fontFamily:"monospace"};
-  const formGrid={display:"grid",gridTemplateColumns:"120px 1fr",gap:"8px 12px",alignItems:"center",marginBottom:16};
-  const formLabel={fontSize:11,color:"#64748b",fontFamily:"monospace",textTransform:"uppercase",letterSpacing:1,textAlign:"right"};
   if(!HAS_SETUP){
     return (
       <div style={DS.page}>
@@ -745,8 +595,6 @@ async function scanLabel(){
 
   return (
     <div style={DS.page}>
-
-      {/* MILESTONE CELEBRATION */}
       {milestone&&(
         <div style={{position:"fixed",top:0,left:0,right:0,bottom:0,background:"rgba(0,0,0,0.85)",display:"flex",alignItems:"center",justifyContent:"center",zIndex:300,padding:24}}>
           <div style={{background:`linear-gradient(145deg,#020617,${theme.primary}22)`,border:`2px solid ${theme.primary}`,borderRadius:24,padding:32,textAlign:"center",maxWidth:320,boxShadow:`0 0 60px ${theme.glowStrong}`}}>
@@ -778,8 +626,7 @@ async function scanLabel(){
             <div style={{display:"flex",gap:8,marginBottom:20}}>
               {Object.entries(THEMES).map(([k,t])=>(
                 <button key={k} onClick={()=>setThemeName(k)} style={{flex:1,padding:"10px 4px",borderRadius:10,border:`2px solid ${themeName===k?t.primary:"#1e293b"}`,background:themeName===k?t.primary+"22":"#020617",cursor:"pointer",color:t.primary,fontSize:10,fontFamily:"monospace",fontWeight:700}}>
-                  <div style={{width:16,height:16,borderRadius:"50%",background:t.primary,margin:"0 auto 4px"}}/>
-                  {t.label}
+                  <div style={{width:16,height:16,borderRadius:"50%",background:t.primary,margin:"0 auto 4px"}}/>{t.label}
                 </button>
               ))}
             </div>
@@ -822,35 +669,20 @@ async function scanLabel(){
 
       {/* DASHBOARD */}
       {tab==="dashboard"&&<>
-
-        {/* Empty state for new users */}
         {sortedWeights.length===0&&(
           <div style={{...DS.panel,borderLeft:`4px solid ${theme.primary}`,marginBottom:14}}>
             <div style={{fontSize:15,fontWeight:700,color:theme.primary,marginBottom:8}}>👋 Welcome to AXION</div>
             <div style={{fontSize:13,color:"#94a3b8",lineHeight:1.7}}>Start by logging your weight in the <b style={{color:"#f8fafc"}}>Weight</b> tab, then add your peptide stack in <b style={{color:"#f8fafc"}}>Peptides</b>. Log food daily to keep your streak alive.</div>
           </div>
         )}
-
-        {/* STAT CARDS */}
         <div style={{display:"grid",gridTemplateColumns:"repeat(auto-fit,minmax(140px,1fr))",gap:10,marginBottom:14}}>
-          {[
-            ["Current",sortedWeights.length?`${latestWeight.weight}`:"--","lbs"],
-            ["Lowest",sortedWeights.length?`${lowestWeight}`:"--","lbs"],
-            ["Lost",totalLost>0?`${totalLost.toFixed(1)}`:"0.0","lbs"],
-            ["% BW",totalLost>0?`${pctLost(latestWeight.weight)}`:"0.0","%"],
-            ["Avg/wk",avgPerWeek>0?`${avgPerWeek.toFixed(2)}`:"--","lbs"],
-            [`To ${TARGET_WEIGHT}`,remainingToGoal>0?`${remainingToGoal.toFixed(1)}`:"0.0","lbs"],
-            ["Protein",todayProtein>0?`${todayProtein}`:"--","g"],
-            ["Calories",todayCals>0?`${todayCals}`:"--","kcal"],
-          ].map(([l,v,u])=>(
+          {[["Current",sortedWeights.length?`${latestWeight.weight}`:"--","lbs"],["Lowest",sortedWeights.length?`${lowestWeight}`:"--","lbs"],["Lost",totalLost>0?`${totalLost.toFixed(1)}`:"0.0","lbs"],["% BW",totalLost>0?`${pctLost(latestWeight.weight)}`:"0.0","%"],["Avg/wk",avgPerWeek>0?`${avgPerWeek.toFixed(2)}`:"--","lbs"],[`To ${TARGET_WEIGHT}`,remainingToGoal>0?`${remainingToGoal.toFixed(1)}`:"0.0","lbs"],["Protein",todayProtein>0?`${todayProtein}`:"--","g"],["Calories",todayCals>0?`${todayCals}`:"--","kcal"]].map(([l,v,u])=>(
             <div key={l} style={DS.card}>
               <div style={{fontSize:10,color:"#475569",textTransform:"uppercase",letterSpacing:1.5,fontFamily:"monospace",marginBottom:4}}>{l}</div>
               <div style={{fontSize:22,fontWeight:900,lineHeight:1,color:v==="--"?"#334155":theme.primary}}>{v}<span style={{fontSize:13,fontWeight:400,color:v==="--"?"#334155":undefined}}> {u}</span></div>
             </div>
           ))}
         </div>
-
-        {/* STREAK */}
         <div style={DS.panel}>
           <div style={{display:"flex",alignItems:"center",gap:16}}>
             <Flame size={36} color={streak>0?theme.primary:"#334155"}/>
@@ -858,21 +690,13 @@ async function scanLabel(){
               <div style={{fontSize:36,fontWeight:900,color:streak>0?theme.primary:"#334155",lineHeight:1,fontFamily:"monospace"}}>{streak}</div>
               <div style={{fontSize:11,color:"#94a3b8",fontFamily:"monospace",letterSpacing:1.5,marginTop:4}}>DAY STREAK</div>
             </div>
-            <div style={{marginLeft:"auto",fontSize:11,color:"#475569",fontFamily:"monospace",textAlign:"right",lineHeight:1.6}}>
-              {streak===0?"Log something today\nto start your streak":streak>=7?`🔥 ${streak} days strong!`:"Log weight, food,\nworkouts or doses\nto keep it going"}
-            </div>
+            <div style={{marginLeft:"auto",fontSize:11,color:"#475569",fontFamily:"monospace",textAlign:"right",lineHeight:1.6}}>{streak===0?"Log something today to start your streak":streak>=7?`🔥 ${streak} days strong!`:"Log weight, food, workouts or doses to keep it going"}</div>
           </div>
         </div>
-
-        {/* WEEKLY SUMMARY */}
         <div style={DS.panel}>
           <h2 style={{margin:"0 0 14px",fontSize:15,fontWeight:700,color:"#94a3b8",fontFamily:"monospace"}}>📅 This Week</h2>
           <div style={{display:"grid",gridTemplateColumns:"repeat(3,1fr)",gap:10}}>
-            {[
-              ["Workouts",`${thisWeekWorkouts.length}`,"sessions"],
-              ["Training",`${thisWeekMins}`,"min"],
-              ["Avg Cals",thisWeekAvgCals?`${thisWeekAvgCals}`:"--","kcal/day"],
-            ].map(([l,v,u])=>(
+            {[["Workouts",`${thisWeekWorkouts.length}`,"sessions"],["Training",`${thisWeekMins}`,"min"],["Avg Cals",thisWeekAvgCals?`${thisWeekAvgCals}`:"--","kcal/day"]].map(([l,v,u])=>(
               <div key={l} style={{background:"#020617",border:`1px solid ${theme.border}`,borderRadius:14,padding:12,textAlign:"center"}}>
                 <div style={{fontSize:10,color:"#475569",textTransform:"uppercase",letterSpacing:1,fontFamily:"monospace",marginBottom:4}}>{l}</div>
                 <div style={{fontSize:20,fontWeight:900,color:v==="--"?"#334155":theme.primary,fontFamily:"monospace"}}>{v}</div>
@@ -892,8 +716,6 @@ async function scanLabel(){
             </div>
           )}
         </div>
-
-        {/* ACTIVE PEPTIDES */}
         {(peptideStack||[]).filter(p=>p.status==="active").length>0&&(
           <div style={DS.panel}>
             <h2 style={{margin:"0 0 14px",fontSize:15,fontWeight:700,color:"#94a3b8",fontFamily:"monospace"}}>🧬 Active Peptides</h2>
@@ -911,29 +733,19 @@ async function scanLabel(){
             })}
           </div>
         )}
-
-        {/* AI INSIGHT */}
         <div style={DS.panel}>
           <div style={{display:"flex",justifyContent:"space-between",alignItems:"center",marginBottom:12}}>
             <h2 style={{margin:0,fontSize:15,fontWeight:700,color:"#94a3b8",fontFamily:"monospace"}}>🧠 AI Health Breakdown</h2>
             <button onClick={getAIInsight} disabled={insightLoading||sortedWeights.length<2} style={{background:"#1e3a5f",color:"#60a5fa",border:"1px solid #60a5fa",borderRadius:10,padding:"6px 14px",cursor:"pointer",fontFamily:"monospace",fontSize:11,fontWeight:700,opacity:insightLoading?0.6:1}}>{insightLoading?"ANALYZING...":"GENERATE"}</button>
           </div>
-          {aiInsight
-            ?<div style={{background:"#020617",border:"1px solid #1e3a5f",borderRadius:10,padding:14,color:"#cbd5e1",fontSize:13,lineHeight:1.7}}>{aiInsight}</div>
-            :<div style={{color:"#475569",fontSize:12,fontFamily:"monospace",fontStyle:"italic"}}>{sortedWeights.length<2?"Add a second weight entry to unlock.":!apiKey?"Add API key in ⚙️ Settings.":"Click GENERATE for your personalized breakdown."}</div>
-          }
+          {aiInsight?<div style={{background:"#020617",border:"1px solid #1e3a5f",borderRadius:10,padding:14,color:"#cbd5e1",fontSize:13,lineHeight:1.7}}>{aiInsight}</div>:<div style={{color:"#475569",fontSize:12,fontFamily:"monospace",fontStyle:"italic"}}>{sortedWeights.length<2?"Add a second weight entry to unlock.":!apiKey?"Add API key in ⚙️ Settings.":"Click GENERATE for your personalized breakdown."}</div>}
         </div>
-
-        {/* WEIGHT TREND */}
-        {sortedWeights.length>1
-          ?<div style={DS.panel}><h2 style={{margin:"0 0 14px",fontSize:15,fontWeight:700,color:"#94a3b8",fontFamily:"monospace"}}>Weight Trend</h2><WeightLineChart weights={sortedWeights} color={theme.primary}/></div>
-          :<div style={{...DS.panel,textAlign:"center",color:"#334155",fontFamily:"monospace",fontSize:13}}>Log at least 2 weight entries to see your trend chart.</div>
-        }
-
+        {sortedWeights.length>1?<div style={DS.panel}><h2 style={{margin:"0 0 14px",fontSize:15,fontWeight:700,color:"#94a3b8",fontFamily:"monospace"}}>Weight Trend</h2><WeightLineChart weights={sortedWeights} color={theme.primary}/></div>:<div style={{...DS.panel,textAlign:"center",color:"#334155",fontFamily:"monospace",fontSize:13}}>Log at least 2 weight entries to see your trend chart.</div>}
         <div style={{background:"#0f172a",border:"1px solid #854d0e",borderLeft:"4px solid #f59e0b",borderRadius:10,padding:14,color:"#94a3b8",fontSize:13,display:"flex",gap:10,alignItems:"flex-start",marginBottom:14}}>
           <span style={{fontSize:18}}>⚠️</span><span>If energy tanks, digestion stalls, or workouts fall apart — hydrate, hit protein, add carbs, sleep, keep dose changes disciplined.</span>
         </div>
       </>}
+
       {/* WEIGHT */}
       {tab==="weight"&&(
         <div style={DS.panel}>
@@ -948,19 +760,11 @@ async function scanLabel(){
             <label style={formLabel}>Note</label><input style={DS.input} placeholder="Optional" value={weightForm.note} onChange={e=>setWeightForm({...weightForm,note:e.target.value})}/>
             <button style={DS.btn} onClick={addWeight}>+ Add Weight</button>
           </div>
-
-          {weightDays.length===0&&(
-            <div style={{color:"#475569",padding:16,textAlign:"center",fontFamily:"monospace",fontSize:13}}>No entries yet. Log your first weight above.</div>
-          )}
-
+          {weightDays.length===0&&(<div style={{color:"#475569",padding:16,textAlign:"center",fontFamily:"monospace",fontSize:13}}>No entries yet. Log your first weight above.</div>)}
           {(()=>{
             const currentMonth=todayISO().slice(0,7);
             const monthMap={};
-            weightDays.forEach(day=>{
-              const m=day.slice(0,7);
-              if(!monthMap[m])monthMap[m]=[];
-              monthMap[m].push(day);
-            });
+            weightDays.forEach(day=>{const m=day.slice(0,7);if(!monthMap[m])monthMap[m]=[];monthMap[m].push(day);});
             const months=Object.keys(monthMap).sort((a,b)=>b.localeCompare(a));
             return months.map(month=>{
               const days=monthMap[month];
@@ -969,7 +773,6 @@ async function scanLabel(){
               const monthEntries=days.flatMap(d=>weightsByDay[d]);
               const monthAvg=(monthEntries.reduce((s,e)=>s+Number(e.weight),0)/monthEntries.length).toFixed(1);
               const isMonthOpen=expandedWeightDay===("month_"+month);
-
               if(isCurrent){
                 return days.map(day=>{
                   const entries=weightsByDay[day];
@@ -1005,7 +808,6 @@ async function scanLabel(){
                   );
                 });
               }
-
               return(
                 <div key={month} style={{marginBottom:8}}>
                   <button onClick={()=>setExpandedWeightDay(isMonthOpen?null:"month_"+month)} style={{width:"100%",background:`linear-gradient(145deg,#020617,${theme.primary}11)`,border:`1px solid ${isMonthOpen?theme.primary+"66":theme.border}`,borderRadius:12,padding:"14px 16px",cursor:"pointer",display:"flex",justifyContent:"space-between",alignItems:"center"}}>
@@ -1065,11 +867,7 @@ async function scanLabel(){
       {/* DOSES */}
       {tab==="doses"&&(
         <div>
-          {(peptideStack||[]).length===0&&(
-            <div style={{...DS.panel,textAlign:"center",color:"#475569",fontFamily:"monospace",fontSize:13}}>
-              No peptides in your stack yet.<br/>Add peptides in the 🧬 Peptides tab first.
-            </div>
-          )}
+          {(peptideStack||[]).length===0&&(<div style={{...DS.panel,textAlign:"center",color:"#475569",fontFamily:"monospace",fontSize:13}}>No peptides in your stack yet.<br/>Add peptides in the 🧬 Peptides tab first.</div>)}
           {(peptideStack||[]).map(pep=>{
             const logs=(peptideLogs[pep.id]||[]).slice().sort((a,b)=>new Date(b.date)-new Date(a.date));
             const total=logs.reduce((s,l)=>s+Number(l.dose||0),0);
@@ -1081,13 +879,7 @@ async function scanLabel(){
                   <div style={{flex:1}}>
                     <div style={{fontWeight:700,fontSize:15,color:sc[pep.status]}}>{pep.name}</div>
                     <div style={{display:"flex",alignItems:"center",gap:6,marginTop:4,flexWrap:"wrap"}}>
-                      <input
-                        type="number"
-                        step="0.025"
-                        value={pep.dose==="—"?"":pep.dose}
-                        onChange={e=>setPeptideStack(prev=>prev.map(p=>p.id===pep.id?{...p,dose:e.target.value}:p))}
-                        style={{background:"#0f172a",border:`1px solid ${theme.border}`,color:theme.primary,borderRadius:8,padding:"4px 8px",fontSize:13,fontFamily:"monospace",fontWeight:700,width:80,outline:"none"}}
-                      />
+                      <input type="number" step="0.025" value={pep.dose==="—"?"":pep.dose} onChange={e=>setPeptideStack(prev=>prev.map(p=>p.id===pep.id?{...p,dose:e.target.value}:p))} style={{background:"#0f172a",border:`1px solid ${theme.border}`,color:theme.primary,borderRadius:8,padding:"4px 8px",fontSize:13,fontFamily:"monospace",fontWeight:700,width:80,outline:"none"}}/>
                       <span style={{color:"#64748b",fontSize:12,fontFamily:"monospace"}}>{pep.unit} · {pep.frequency}</span>
                       <span style={{color:"#475569",fontSize:11,fontFamily:"monospace"}}>Total: {total.toFixed(3)}{pep.unit} · {logs.length} doses</span>
                     </div>
@@ -1130,7 +922,6 @@ async function scanLabel(){
               <button onClick={()=>{setPepView("cats");setPepSearch("");}} style={(pepView==="cats"||pepView==="items")?DS.pillActive:pill}>Library</button>
             </div>
           )}
-
           {pepView==="stack"&&<>
             {(peptideStack||[]).length===0&&<div style={{color:"#475569",fontSize:13,fontFamily:"monospace",padding:"12px 0"}}>No peptides yet. Browse the library to add.</div>}
             {(peptideStack||[]).map(p=>{
@@ -1161,7 +952,6 @@ async function scanLabel(){
             })}
             <button style={{...DS.btn,marginTop:8}} onClick={()=>setPepView("cats")}>+ Add Peptide</button>
           </>}
-
           {pepView==="edit"&&editingPep&&(
             <div>
               <div style={{fontWeight:800,fontSize:16,color:"#f8fafc",marginBottom:14}}>{editingPep.name}</div>
@@ -1181,7 +971,6 @@ async function scanLabel(){
               <button style={{...DS.btn,gridColumn:"unset",width:"100%",marginTop:8,background:"#1e293b",color:"#94a3b8"}} onClick={()=>{setPepView("stack");setEditingPep(null);}}>Cancel</button>
             </div>
           )}
-
           {pepView==="cats"&&(
             <>
               <button style={{...DS.btn,gridColumn:"unset",background:"#020617",border:"1px solid #334155",color:"#94a3b8",marginBottom:12}} onClick={()=>setPepView("stack")}>← Back to Stack</button>
@@ -1191,43 +980,24 @@ async function scanLabel(){
                   {pepSearchResults.length===0&&<div style={{color:"#475569",fontSize:13,fontFamily:"monospace"}}>No results for "{pepSearch}"</div>}
                   {pepSearchResults.map(pep=>{
                     const cat=Object.entries(PEPTIDE_LIBRARY).find(([,v])=>v.some(p=>p.name===pep.name))?.[0];
-                    return(
-                      <button key={pep.name} onClick={()=>{setPendingPep({...pep,category:cat});setPepForm({dose:"",unit:pep.unit||"mg",frequency:pep.frequency||"",cycle:pep.cycle||"",notes:"",status:"active"});setPepView("add");}} style={{background:"#020617",border:`1px solid ${theme.primary}33`,borderRadius:12,padding:"12px 14px",color:"#e2e8f0",textAlign:"left",cursor:"pointer"}}>
-                        <div style={{fontWeight:700,fontSize:14}}>{pep.name}</div>
-                        <div style={{fontSize:11,color:"#64748b",fontFamily:"monospace",marginTop:2}}>{pep.typicalDose} · {pep.frequency}</div>
-                        <div style={{fontSize:11,color:"#94a3b8",marginTop:4,lineHeight:1.5}}>{pep.desc}</div>
-                      </button>
-                    );
+                    return(<button key={pep.name} onClick={()=>{setPendingPep({...pep,category:cat});setPepForm({dose:"",unit:pep.unit||"mg",frequency:pep.frequency||"",cycle:pep.cycle||"",notes:"",status:"active"});setPepView("add");}} style={{background:"#020617",border:`1px solid ${theme.primary}33`,borderRadius:12,padding:"12px 14px",color:"#e2e8f0",textAlign:"left",cursor:"pointer"}}><div style={{fontWeight:700,fontSize:14}}>{pep.name}</div><div style={{fontSize:11,color:"#64748b",fontFamily:"monospace",marginTop:2}}>{pep.typicalDose} · {pep.frequency}</div><div style={{fontSize:11,color:"#94a3b8",marginTop:4,lineHeight:1.5}}>{pep.desc}</div></button>);
                   })}
                 </div>
               ):(
                 <div style={{display:"grid",gridTemplateColumns:"1fr 1fr",gap:10}}>
-                  {Object.keys(PEPTIDE_LIBRARY).map(cat=>(
-                    <button key={cat} onClick={()=>{setPepActiveCat(cat);setPepView("items");}} style={{background:"#020617",border:`1px solid ${theme.primary}33`,borderRadius:14,padding:14,color:"#f8fafc",textAlign:"left",cursor:"pointer"}}>
-                      <div style={{fontSize:13,fontWeight:700}}>{cat}</div>
-                      <div style={{marginTop:4,fontSize:11,color:"#64748b",fontFamily:"monospace"}}>{PEPTIDE_LIBRARY[cat].length} peptides</div>
-                    </button>
-                  ))}
+                  {Object.keys(PEPTIDE_LIBRARY).map(cat=>(<button key={cat} onClick={()=>{setPepActiveCat(cat);setPepView("items");}} style={{background:"#020617",border:`1px solid ${theme.primary}33`,borderRadius:14,padding:14,color:"#f8fafc",textAlign:"left",cursor:"pointer"}}><div style={{fontSize:13,fontWeight:700}}>{cat}</div><div style={{marginTop:4,fontSize:11,color:"#64748b",fontFamily:"monospace"}}>{PEPTIDE_LIBRARY[cat].length} peptides</div></button>))}
                 </div>
               )}
             </>
           )}
-
           {pepView==="items"&&pepActiveCat&&(
             <>
               <button style={{...DS.btn,gridColumn:"unset",background:"#020617",border:"1px solid #334155",color:"#94a3b8",marginBottom:12}} onClick={()=>setPepView("cats")}>← Back</button>
               <div style={{display:"flex",flexDirection:"column",gap:8}}>
-                {PEPTIDE_LIBRARY[pepActiveCat].map(pep=>(
-                  <button key={pep.name} onClick={()=>{setPendingPep({...pep,category:pepActiveCat});setPepForm({dose:"",unit:pep.unit||"mg",frequency:pep.frequency||"",cycle:pep.cycle||"",notes:"",status:"active"});setPepView("add");}} style={{background:"#020617",border:`1px solid ${theme.primary}33`,borderRadius:12,padding:"12px 14px",color:"#e2e8f0",textAlign:"left",cursor:"pointer"}}>
-                    <div style={{fontWeight:700,fontSize:14}}>{pep.name}</div>
-                    <div style={{fontSize:11,color:"#64748b",fontFamily:"monospace",marginTop:2}}>{pep.typicalDose} · {pep.frequency}</div>
-                    <div style={{fontSize:11,color:"#94a3b8",marginTop:4,lineHeight:1.5}}>{pep.desc}</div>
-                  </button>
-                ))}
+                {PEPTIDE_LIBRARY[pepActiveCat].map(pep=>(<button key={pep.name} onClick={()=>{setPendingPep({...pep,category:pepActiveCat});setPepForm({dose:"",unit:pep.unit||"mg",frequency:pep.frequency||"",cycle:pep.cycle||"",notes:"",status:"active"});setPepView("add");}} style={{background:"#020617",border:`1px solid ${theme.primary}33`,borderRadius:12,padding:"12px 14px",color:"#e2e8f0",textAlign:"left",cursor:"pointer"}}><div style={{fontWeight:700,fontSize:14}}>{pep.name}</div><div style={{fontSize:11,color:"#64748b",fontFamily:"monospace",marginTop:2}}>{pep.typicalDose} · {pep.frequency}</div><div style={{fontSize:11,color:"#94a3b8",marginTop:4,lineHeight:1.5}}>{pep.desc}</div></button>))}
               </div>
             </>
           )}
-
           {pepView==="add"&&pendingPep&&(
             <div>
               <div style={{fontWeight:800,fontSize:16,color:"#f8fafc",marginBottom:4}}>{pendingPep.name}</div>
@@ -1256,15 +1026,12 @@ async function scanLabel(){
         <div>
           <div style={DS.panel}>
             <div style={{display:"flex",gap:6,marginBottom:16}}>
-              {[["search","🔍 Search"],["ai","📷 Scan"],["manual","✏️ Manual"]].map(([m,l])=>(
-                <button key={m} onClick={()=>setFoodMode(m)} style={{flex:1,padding:"9px 4px",borderRadius:10,border:`1px solid ${foodMode===m?theme.primary:"#334155"}`,background:foodMode===m?theme.primary+"22":"#020617",color:foodMode===m?theme.primary:"#64748b",cursor:"pointer",fontSize:11,fontFamily:"monospace",fontWeight:700}}>{l}</button>
-              ))}
+              {[["search","🔍 Search"],["ai","📷 Scan"],["manual","✏️ Manual"]].map(([m,l])=>(<button key={m} onClick={()=>setFoodMode(m)} style={{flex:1,padding:"9px 4px",borderRadius:10,border:`1px solid ${foodMode===m?theme.primary:"#334155"}`,background:foodMode===m?theme.primary+"22":"#020617",color:foodMode===m?theme.primary:"#64748b",cursor:"pointer",fontSize:11,fontFamily:"monospace",fontWeight:700}}>{l}</button>))}
             </div>
             <div style={{marginBottom:12}}>
               <div style={{fontSize:11,color:"#64748b",fontFamily:"monospace",textTransform:"uppercase",letterSpacing:1,marginBottom:6}}>Date</div>
               <input style={DS.input} type="date" value={foodDate} onChange={e=>setFoodDate(e.target.value)}/>
             </div>
-
             {foodMode==="search"&&<>
               {!apiKey&&<div style={{background:"#451a03",border:"1px solid #fb923c",borderRadius:8,padding:12,marginBottom:12,fontSize:12,color:"#fb923c",fontFamily:"monospace"}}>Add your API key in Settings to enable food search</div>}
               <div style={{display:"flex",gap:8,marginBottom:10}}>
@@ -1281,9 +1048,7 @@ async function scanLabel(){
                     <div style={{marginBottom:12}}>
                       <div style={{fontSize:11,color:"#64748b",fontFamily:"monospace",marginBottom:6,textTransform:"uppercase",letterSpacing:1}}>Quick select serving</div>
                       <div style={{display:"flex",flexWrap:"wrap",gap:6}}>
-                        {foodSearchResults.serving_sizes.map(sv=>(
-                          <button key={sv.label} onClick={()=>{setServingWeight(String(sv.weight_g));setServingUnit("g");}} style={{background:servingWeight===String(sv.weight_g)?theme.primary+"22":"#0f172a",border:`1px solid ${servingWeight===String(sv.weight_g)?theme.primary:"#1e293b"}`,color:servingWeight===String(sv.weight_g)?theme.primary:"#94a3b8",borderRadius:8,padding:"5px 10px",cursor:"pointer",fontSize:12,fontFamily:"monospace"}}>{sv.label}</button>
-                        ))}
+                        {foodSearchResults.serving_sizes.map(sv=>(<button key={sv.label} onClick={()=>{setServingWeight(String(sv.weight_g));setServingUnit("g");}} style={{background:servingWeight===String(sv.weight_g)?theme.primary+"22":"#0f172a",border:`1px solid ${servingWeight===String(sv.weight_g)?theme.primary:"#1e293b"}`,color:servingWeight===String(sv.weight_g)?theme.primary:"#94a3b8",borderRadius:8,padding:"5px 10px",cursor:"pointer",fontSize:12,fontFamily:"monospace"}}>{sv.label}</button>))}
                       </div>
                     </div>
                   )}
@@ -1298,9 +1063,7 @@ async function scanLabel(){
                       <div style={{background:"#0f172a",borderRadius:10,padding:12,marginBottom:12}}>
                         <div style={{fontSize:11,color:"#64748b",fontFamily:"monospace",marginBottom:8,textTransform:"uppercase",letterSpacing:1}}>Nutrition for {servingWeight}{servingUnit}</div>
                         <div style={{display:"grid",gridTemplateColumns:"repeat(4,1fr)",gap:8}}>
-                          {[["Cal",n.calories,""],["Pro",n.protein,"g"],["Carb",n.carbs,"g"],["Fat",n.fat,"g"]].map(([l,v,u])=>(
-                            <div key={l} style={{textAlign:"center"}}><div style={{fontSize:18,fontWeight:900,color:theme.primary}}>{v}<span style={{fontSize:11}}>{u}</span></div><div style={{fontSize:10,color:"#64748b",fontFamily:"monospace"}}>{l}</div></div>
-                          ))}
+                          {[["Cal",n.calories,""],["Pro",n.protein,"g"],["Carb",n.carbs,"g"],["Fat",n.fat,"g"]].map(([l,v,u])=>(<div key={l} style={{textAlign:"center"}}><div style={{fontSize:18,fontWeight:900,color:theme.primary}}>{v}<span style={{fontSize:11}}>{u}</span></div><div style={{fontSize:10,color:"#64748b",fontFamily:"monospace"}}>{l}</div></div>))}
                         </div>
                         {n.fiber>0&&<div style={{fontSize:11,color:"#64748b",fontFamily:"monospace",marginTop:8}}>Fiber: {n.fiber}g · Sugar: {n.sugar}g · Sodium: {n.sodium}mg</div>}
                       </div>
@@ -1311,7 +1074,6 @@ async function scanLabel(){
                 </div>
               )}
             </>}
-
             {foodMode==="ai"&&<>
               {!apiKey&&<div style={{background:"#451a03",border:"1px solid #fb923c",borderRadius:8,padding:12,marginBottom:12,fontSize:12,color:"#fb923c",fontFamily:"monospace"}}>Add your API key in Settings to enable scanning</div>}
               <div style={{display:"flex",gap:8,marginBottom:10}}>
@@ -1330,7 +1092,6 @@ async function scanLabel(){
               )}
               {aiScanError&&<div style={{color:"#ef4444",fontSize:13,fontFamily:"monospace"}}>{aiScanError}</div>}
             </>}
-
             {foodMode==="manual"&&(
               <div style={formGrid}>
                 <label style={formLabel}>Food name</label><input style={DS.input} placeholder="Chicken breast" value={manualFood.item} onChange={e=>setManualFood({...manualFood,item:e.target.value})}/>
@@ -1343,16 +1104,10 @@ async function scanLabel(){
               </div>
             )}
           </div>
-
-          {/* TODAY'S FOOD LOG */}
           <div style={DS.panel}>
             <div style={{display:"flex",justifyContent:"space-between",alignItems:"center",marginBottom:14}}>
-              <h2 style={{margin:0,fontSize:15,fontWeight:700,color:"#94a3b8",fontFamily:"monospace"}}>
-                {showFoodHistory?"All Food History":"Today · "+todayCals+" cal · "+todayProtein+"g protein"}
-              </h2>
-              <button onClick={()=>setShowFoodHistory(h=>!h)} style={{background:"#020617",border:`1px solid ${theme.border}`,color:"#64748b",borderRadius:8,padding:"5px 10px",cursor:"pointer",fontFamily:"monospace",fontSize:11}}>
-                {showFoodHistory?"Today only":"All history"}
-              </button>
+              <h2 style={{margin:0,fontSize:15,fontWeight:700,color:"#94a3b8",fontFamily:"monospace"}}>{showFoodHistory?"All Food History":"Today · "+todayCals+" cal · "+todayProtein+"g protein"}</h2>
+              <button onClick={()=>setShowFoodHistory(h=>!h)} style={{background:"#020617",border:`1px solid ${theme.border}`,color:"#64748b",borderRadius:8,padding:"5px 10px",cursor:"pointer",fontFamily:"monospace",fontSize:11}}>{showFoodHistory?"Today only":"All history"}</button>
             </div>
             {calorieTarget&&!showFoodHistory&&todayCals>0&&(
               <div style={{marginBottom:12}}>
@@ -1381,43 +1136,35 @@ async function scanLabel(){
           </div>
         </div>
       )}
+
       {/* WORKOUTS */}
       {tab==="workouts"&&(
         <div>
           <div style={{display:"grid",gridTemplateColumns:"repeat(3,1fr)",gap:10,marginBottom:14}}>
-            {[
-              ["Today",`${todayMinutes}`,"min"],
-              ["This Week",`${thisWeekMins}`,"min"],
-              ["Total",`${(workouts||[]).length}`,"sessions"],
-            ].map(([l,v,u])=>(
+            {[["Today",`${todayMinutes}`,"min"],["This Week",`${thisWeekMins}`,"min"],["Total",`${(workouts||[]).length}`,"sessions"]].map(([l,v,u])=>(
               <div key={l} style={DS.card}>
                 <div style={{fontSize:10,color:"#475569",textTransform:"uppercase",letterSpacing:1.5,fontFamily:"monospace",marginBottom:4}}>{l}</div>
                 <div style={{fontSize:22,fontWeight:900,color:theme.primary}}>{v}<span style={{fontSize:12,fontWeight:400}}> {u}</span></div>
               </div>
             ))}
           </div>
-
           <div style={DS.panel}>
             <h2 style={{margin:"0 0 16px",fontSize:15,fontWeight:700,color:"#94a3b8",fontFamily:"monospace"}}>💪 Log Workout</h2>
-
             <div style={{marginBottom:14}}>
               <div style={{fontSize:11,color:"#64748b",fontFamily:"monospace",textTransform:"uppercase",letterSpacing:1,marginBottom:6}}>Date</div>
               <input style={{...DS.input,width:"auto",minWidth:160}} type="date" value={workoutForm.date} onChange={e=>setWorkoutForm({...workoutForm,date:e.target.value})}/>
             </div>
-
             <div style={{marginBottom:14}}>
               <div style={{fontSize:11,color:"#64748b",fontFamily:"monospace",textTransform:"uppercase",letterSpacing:1,marginBottom:8}}>Workout Type</div>
               <div style={{display:"flex",flexWrap:"wrap",gap:8,marginBottom:8}}>
                 {[["🏋️","Weights"],["🏃","Run"],["🚴","Bike"],["🏊","Swim"],["⚡","HIIT"],["🚶","Walk"],["🤸","Cardio"],["⚽","Sports"],["🔥","Other"]].map(([icon,label])=>(
-                  <button key={label} onClick={()=>setWorkoutForm({...workoutForm,type:label})}
-                    style={{padding:"8px 12px",borderRadius:10,cursor:"pointer",fontFamily:"monospace",fontSize:12,fontWeight:700,border:`1px solid ${workoutForm.type===label?theme.primary:theme.border}`,background:workoutForm.type===label?theme.primary+"22":"#020617",color:workoutForm.type===label?theme.primary:"#94a3b8",transition:"all 0.15s"}}>
+                  <button key={label} onClick={()=>setWorkoutForm({...workoutForm,type:label,miles:"",runTime:"",runType:"",intensity:"",note:"",calories:""})} style={{padding:"8px 12px",borderRadius:10,cursor:"pointer",fontFamily:"monospace",fontSize:12,fontWeight:700,border:`1px solid ${workoutForm.type===label?theme.primary:theme.border}`,background:workoutForm.type===label?theme.primary+"22":"#020617",color:workoutForm.type===label?theme.primary:"#94a3b8",transition:"all 0.15s"}}>
                     {icon} {label}
                   </button>
                 ))}
               </div>
               <input style={DS.input} placeholder="Or type custom..." value={["Weights","Run","Bike","Swim","HIIT","Walk","Cardio","Sports","Other"].includes(workoutForm.type)?"":workoutForm.type} onChange={e=>setWorkoutForm({...workoutForm,type:e.target.value})}/>
             </div>
-
             <div style={{display:"grid",gridTemplateColumns:"1fr 1fr",gap:10,marginBottom:14}}>
               <div>
                 <div style={{fontSize:11,color:"#64748b",fontFamily:"monospace",textTransform:"uppercase",letterSpacing:1,marginBottom:6}}>Duration (min)</div>
@@ -1428,33 +1175,28 @@ async function scanLabel(){
                 <input style={DS.input} type="number" placeholder="400" value={workoutForm.calories||""} onChange={e=>setWorkoutForm({...workoutForm,calories:e.target.value})}/>
               </div>
             </div>
-
             <div style={{marginBottom:14}}>
               <div style={{fontSize:11,color:"#64748b",fontFamily:"monospace",textTransform:"uppercase",letterSpacing:1,marginBottom:8}}>Intensity</div>
               <div style={{display:"grid",gridTemplateColumns:"repeat(4,1fr)",gap:6}}>
                 {[["Easy","#4ade80"],["Moderate","#f59e0b"],["Hard","#f97316"],["Max","#ef4444"]].map(([level,color])=>(
-                  <button key={level} onClick={()=>setWorkoutForm({...workoutForm,intensity:level})}
-                    style={{padding:"8px 4px",borderRadius:10,cursor:"pointer",fontFamily:"monospace",fontSize:11,fontWeight:700,border:`1px solid ${workoutForm.intensity===level?color:"#1e293b"}`,background:workoutForm.intensity===level?color+"22":"#020617",color:workoutForm.intensity===level?color:"#64748b",transition:"all 0.15s"}}>
+                  <button key={level} onClick={()=>setWorkoutForm({...workoutForm,intensity:level})} style={{padding:"8px 4px",borderRadius:10,cursor:"pointer",fontFamily:"monospace",fontSize:11,fontWeight:700,border:`1px solid ${workoutForm.intensity===level?color:"#1e293b"}`,background:workoutForm.intensity===level?color+"22":"#020617",color:workoutForm.intensity===level?color:"#64748b",transition:"all 0.15s"}}>
                     {level}
                   </button>
                 ))}
               </div>
             </div>
-
             {workoutForm.type==="Weights"&&(
               <div style={{marginBottom:14}}>
                 <div style={{fontSize:11,color:"#64748b",fontFamily:"monospace",textTransform:"uppercase",letterSpacing:1,marginBottom:6}}>Sets / Reps / Notes</div>
                 <input style={DS.input} placeholder='e.g. "Bench 3x8 185lb, Squat 4x5 225lb"' value={workoutForm.note} onChange={e=>setWorkoutForm({...workoutForm,note:e.target.value})}/>
               </div>
             )}
-
             {workoutForm.type==="Run"&&(
               <div style={{marginBottom:14}}>
                 <div style={{fontSize:11,color:"#64748b",fontFamily:"monospace",textTransform:"uppercase",letterSpacing:1,marginBottom:8}}>Run Type</div>
                 <div style={{display:"flex",flexWrap:"wrap",gap:6,marginBottom:12}}>
                   {["Easy Run","Tempo","Intervals","Long Run","Race","Treadmill"].map(rt=>(
-                    <button key={rt} onClick={()=>setWorkoutForm({...workoutForm,runType:rt})}
-                      style={{padding:"7px 12px",borderRadius:10,cursor:"pointer",fontFamily:"monospace",fontSize:11,fontWeight:700,border:`1px solid ${workoutForm.runType===rt?theme.primary:theme.border}`,background:workoutForm.runType===rt?theme.primary+"22":"#020617",color:workoutForm.runType===rt?theme.primary:"#94a3b8",transition:"all 0.15s"}}>
+                    <button key={rt} onClick={()=>setWorkoutForm({...workoutForm,runType:rt})} style={{padding:"7px 12px",borderRadius:10,cursor:"pointer",fontFamily:"monospace",fontSize:11,fontWeight:700,border:`1px solid ${workoutForm.runType===rt?theme.primary:theme.border}`,background:workoutForm.runType===rt?theme.primary+"22":"#020617",color:workoutForm.runType===rt?theme.primary:"#94a3b8",transition:"all 0.15s"}}>
                       {rt}
                     </button>
                   ))}
@@ -1469,54 +1211,50 @@ async function scanLabel(){
                     <input style={DS.input} placeholder="28:30" value={workoutForm.runTime||""} onChange={e=>setWorkoutForm({...workoutForm,runTime:e.target.value})}/>
                   </div>
                 </div>
-                {workoutForm.miles&&workoutForm.runTime&&(()=>{
-                  const parts=workoutForm.runTime.split(":");
-                  const totalMins=parts.length===2?+parts[0]+(+parts[1]/60):+parts[0];
-                  const pace=totalMins/parseFloat(workoutForm.miles);
-                  const paceMin=Math.floor(pace);
-                  const paceSec=Math.round((pace-paceMin)*60).toString().padStart(2,"0");
-                  return(
-                    <div style={{background:`linear-gradient(145deg,#020617,${theme.primary}11)`,border:`1px solid ${theme.primary}44`,borderRadius:12,padding:12,display:"grid",gridTemplateColumns:"1fr 1fr 1fr",gap:8,textAlign:"center",marginBottom:10}}>
-                      {[["Distance",`${parseFloat(workoutForm.miles).toFixed(2)} mi`],["Total Time",workoutForm.runTime],["Avg Pace",`${paceMin}:${paceSec} /mi`]].map(([l,v])=>(
-                        <div key={l}>
-                          <div style={{fontSize:10,color:"#64748b",fontFamily:"monospace",textTransform:"uppercase",letterSpacing:1,marginBottom:4}}>{l}</div>
-                          <div style={{fontSize:15,fontWeight:900,color:theme.primary,fontFamily:"monospace"}}>{v}</div>
-                        </div>
-                      ))}
-                    </div>
-                  );
+                {(()=>{
+                  try{
+                    if(!workoutForm.miles||!workoutForm.runTime)return null;
+                    const milesNum=parseFloat(workoutForm.miles);
+                    const parts=workoutForm.runTime.split(":");
+                    if(parts.length!==2)return null;
+                    const totalMins=+parts[0]+(+parts[1]/60);
+                    if(!milesNum||isNaN(milesNum)||isNaN(totalMins)||totalMins<=0||milesNum<=0)return null;
+                    const pace=totalMins/milesNum;
+                    const paceMin=Math.floor(pace);
+                    const paceSec=Math.round((pace-paceMin)*60).toString().padStart(2,"0");
+                    return(
+                      <div style={{background:`linear-gradient(145deg,#020617,${theme.primary}11)`,border:`1px solid ${theme.primary}44`,borderRadius:12,padding:12,display:"grid",gridTemplateColumns:"1fr 1fr 1fr",gap:8,textAlign:"center",marginBottom:10}}>
+                        {[["Distance",`${milesNum.toFixed(2)} mi`],["Total Time",workoutForm.runTime],["Avg Pace",`${paceMin}:${paceSec} /mi`]].map(([l,v])=>(
+                          <div key={l}>
+                            <div style={{fontSize:10,color:"#64748b",fontFamily:"monospace",textTransform:"uppercase",letterSpacing:1,marginBottom:4}}>{l}</div>
+                            <div style={{fontSize:15,fontWeight:900,color:theme.primary,fontFamily:"monospace"}}>{v}</div>
+                          </div>
+                        ))}
+                      </div>
+                    );
+                  }catch(e){return null;}
                 })()}
               </div>
             )}
-
             {workoutForm.type!=="Weights"&&(
               <div style={{marginBottom:14}}>
                 <div style={{fontSize:11,color:"#64748b",fontFamily:"monospace",textTransform:"uppercase",letterSpacing:1,marginBottom:6}}>Notes</div>
                 <input style={DS.input} placeholder="Energy level, PRs, how it felt..." value={workoutForm.note} onChange={e=>setWorkoutForm({...workoutForm,note:e.target.value})}/>
               </div>
             )}
-
             <button style={{...DS.btn,gridColumn:"unset",width:"100%"}} onClick={addWorkout}>+ Log Workout</button>
           </div>
-
           <div style={DS.panel}>
             <h2 style={{margin:"0 0 14px",fontSize:15,fontWeight:700,color:"#94a3b8",fontFamily:"monospace"}}>Workout History</h2>
             {(workouts||[]).length===0&&<div style={{color:"#475569",fontSize:13,fontFamily:"monospace"}}>No workouts logged yet.</div>}
             {(()=>{
               const sorted=[...(workouts||[])].sort((a,b)=>new Date(b.date)-new Date(a.date));
               const weekMap={};
-              sorted.forEach(w=>{
-                const d=new Date(w.date);
-                const sun=new Date(d);sun.setDate(d.getDate()-d.getDay());
-                const key=sun.toISOString().slice(0,10);
-                if(!weekMap[key])weekMap[key]=[];
-                weekMap[key].push(w);
-              });
+              sorted.forEach(w=>{const d=new Date(w.date);const sun=new Date(d);sun.setDate(d.getDate()-d.getDay());const key=sun.toISOString().slice(0,10);if(!weekMap[key])weekMap[key]=[];weekMap[key].push(w);});
               return Object.entries(weekMap).sort((a,b)=>new Date(b[0])-new Date(a[0])).map(([weekStart,wkWorkouts])=>{
-                const weekEnd=new Date(weekStart);weekEnd.setDate(weekEnd.getDate()+6);
-                const label=`Week of ${new Date(weekStart).toLocaleDateString("en-US",{month:"short",day:"numeric"})}`;
                 const totalMins=wkWorkouts.reduce((s,w)=>s++(w.minutes||0),0);
                 const isCurrentWeek=new Date(weekStart)>=new Date(new Date().setDate(new Date().getDate()-new Date().getDay())-1);
+                const label=`Week of ${new Date(weekStart).toLocaleDateString("en-US",{month:"short",day:"numeric"})}`;
                 return(
                   <div key={weekStart} style={{marginBottom:12}}>
                     <div style={{fontSize:11,color:isCurrentWeek?theme.primary:"#475569",fontFamily:"monospace",textTransform:"uppercase",letterSpacing:1,marginBottom:8,display:"flex",justifyContent:"space-between"}}>
@@ -1532,12 +1270,7 @@ async function scanLabel(){
                               {w.intensity&&<span style={{fontSize:10,fontFamily:"monospace",padding:"2px 8px",borderRadius:20,background:w.intensity==="Easy"?"#14532d":w.intensity==="Moderate"?"#451a03":w.intensity==="Hard"?"#431407":"#450a0a",color:w.intensity==="Easy"?"#4ade80":w.intensity==="Moderate"?"#f59e0b":w.intensity==="Hard"?"#f97316":"#ef4444",border:`1px solid ${w.intensity==="Easy"?"#4ade80":w.intensity==="Moderate"?"#f59e0b":w.intensity==="Hard"?"#f97316":"#ef4444"}`}}>{w.intensity}</span>}
                               {w.runType&&<span style={{fontSize:10,fontFamily:"monospace",color:"#94a3b8"}}>{w.runType}</span>}
                             </div>
-                            <div style={{fontSize:11,color:"#64748b",fontFamily:"monospace"}}>
-                              {w.date} · {w.minutes} min
-                              {w.calories?` · ${w.calories} cal burned`:""}
-                              {w.miles?` · ${w.miles} mi`:""}
-                              {w.runTime?` · ${w.runTime}`:""}
-                            </div>
+                            <div style={{fontSize:11,color:"#64748b",fontFamily:"monospace"}}>{w.date} · {w.minutes} min{w.calories?` · ${w.calories} cal burned`:""}{w.miles?` · ${w.miles} mi`:""}{w.runTime?` · ${w.runTime}`:""}</div>
                             {w.note&&<div style={{fontSize:11,color:"#94a3b8",marginTop:4,fontStyle:"italic"}}>{w.note}</div>}
                           </div>
                           <button style={{background:"transparent",color:"#ef4444",border:"1px solid #450a0a",borderRadius:6,cursor:"pointer",padding:"3px 8px",fontSize:11,flexShrink:0,marginLeft:8}} onClick={()=>setWorkouts((workouts||[]).filter(x=>x.id!==w.id))}>✕</button>
@@ -1556,7 +1289,6 @@ async function scanLabel(){
       {tab==="supplements"&&(
         <div style={DS.panel}>
           <h2 style={{margin:"0 0 14px",fontSize:15,fontWeight:700,color:"#94a3b8",fontFamily:"monospace"}}>💊 Supplements</h2>
-
           {(suppView==="my"||suppView==="cats"||suppView==="items")&&(
             <div style={{marginBottom:18}}>
               <div style={{fontSize:11,color:"#64748b",fontFamily:"monospace",letterSpacing:1,marginBottom:10}}>MY SUPPLEMENTS</div>
@@ -1574,23 +1306,15 @@ async function scanLabel(){
                   </div>
                 );
               })}
-              {mySupplements.length>0&&(
-                <div style={{fontSize:11,color:"#475569",fontFamily:"monospace",textAlign:"center",padding:"8px 0"}}>
-                  {takenToday.filter(id=>mySupplements.find(s=>s.id===id)).length} / {mySupplements.length} taken today
-                </div>
-              )}
+              {mySupplements.length>0&&(<div style={{fontSize:11,color:"#475569",fontFamily:"monospace",textAlign:"center",padding:"8px 0"}}>{takenToday.filter(id=>mySupplements.find(s=>s.id===id)).length} / {mySupplements.length} taken today</div>)}
             </div>
           )}
-
           {suppView==="detail"&&editingSupp&&(
             <div>
               <div style={{fontWeight:800,fontSize:16,color:"#f8fafc",marginBottom:14}}>{editingSupp.name}</div>
               <div style={formGrid}>
                 <label style={formLabel}>Dose</label>
-                <div style={{display:"flex",gap:6}}>
-                  <input style={{...DS.input,flex:1}} type="number" placeholder="500" value={suppForm.dose} onChange={e=>setSuppForm({...suppForm,dose:e.target.value})}/>
-                  <select style={{...DS.input,width:80}} value={suppForm.unit} onChange={e=>setSuppForm({...suppForm,unit:e.target.value})}>{["mg","mcg","g","IU","mL"].map(u=><option key={u}>{u}</option>)}</select>
-                </div>
+                <div style={{display:"flex",gap:6}}><input style={{...DS.input,flex:1}} type="number" placeholder="500" value={suppForm.dose} onChange={e=>setSuppForm({...suppForm,dose:e.target.value})}/><select style={{...DS.input,width:80}} value={suppForm.unit} onChange={e=>setSuppForm({...suppForm,unit:e.target.value})}>{["mg","mcg","g","IU","mL"].map(u=><option key={u}>{u}</option>)}</select></div>
                 <label style={formLabel}>Schedule</label>
                 <select style={DS.input} value={suppForm.schedule} onChange={e=>setSuppForm({...suppForm,schedule:e.target.value})}>{["Daily","Twice daily","Every other day","Weekly","As needed"].map(o=><option key={o}>{o}</option>)}</select>
                 <label style={formLabel}>Time</label>
@@ -1603,16 +1327,12 @@ async function scanLabel(){
               <button style={{...DS.btn,gridColumn:"unset",width:"100%",marginTop:8,background:"#1e293b",color:"#94a3b8"}} onClick={()=>{setSuppView("my");setEditingSupp(null);}}>Cancel</button>
             </div>
           )}
-
           {suppView==="add"&&pendingSupp&&(
             <div>
               <div style={{fontWeight:800,fontSize:15,color:"#f8fafc",marginBottom:14}}>Add {pendingSupp.name}</div>
               <div style={formGrid}>
                 <label style={formLabel}>Dose</label>
-                <div style={{display:"flex",gap:6}}>
-                  <input style={{...DS.input,flex:1}} type="number" placeholder="500" value={suppForm.dose} onChange={e=>setSuppForm({...suppForm,dose:e.target.value})}/>
-                  <select style={{...DS.input,width:80}} value={suppForm.unit} onChange={e=>setSuppForm({...suppForm,unit:e.target.value})}>{["mg","mcg","g","IU","mL"].map(u=><option key={u}>{u}</option>)}</select>
-                </div>
+                <div style={{display:"flex",gap:6}}><input style={{...DS.input,flex:1}} type="number" placeholder="500" value={suppForm.dose} onChange={e=>setSuppForm({...suppForm,dose:e.target.value})}/><select style={{...DS.input,width:80}} value={suppForm.unit} onChange={e=>setSuppForm({...suppForm,unit:e.target.value})}>{["mg","mcg","g","IU","mL"].map(u=><option key={u}>{u}</option>)}</select></div>
                 <label style={formLabel}>Schedule</label>
                 <select style={DS.input} value={suppForm.schedule} onChange={e=>setSuppForm({...suppForm,schedule:e.target.value})}>{["Daily","Twice daily","Every other day","Weekly","As needed"].map(o=><option key={o}>{o}</option>)}</select>
                 <label style={formLabel}>Time</label>
@@ -1624,7 +1344,6 @@ async function scanLabel(){
               </div>
             </div>
           )}
-
           {(suppView==="my"||suppView==="cats")&&(
             <>
               <div style={{fontSize:11,color:"#64748b",fontFamily:"monospace",letterSpacing:1,marginBottom:10,marginTop:4}}>LIBRARY</div>
@@ -1635,34 +1354,22 @@ async function scanLabel(){
                   {suppSearchResults.length===0&&<div style={{color:"#475569",fontSize:13,fontFamily:"monospace"}}>No results for "{suppSearch}"</div>}
                   {suppSearchResults.map(item=>{
                     const cat=Object.entries(SUPPLEMENT_LIBRARY).find(([,v])=>v.includes(item))?.[0];
-                    return(
-                      <button key={item} onClick={()=>{setPendingSupp({name:item,category:cat});setSuppForm({dose:"",unit:"mg",schedule:"Daily",time:"Morning"});setSuppView("add");}} style={{background:"#020617",border:`1px solid ${theme.primary}33`,borderRadius:12,padding:"11px 14px",color:"#e2e8f0",fontWeight:700,textAlign:"left",cursor:"pointer"}}>
-                        {item}<span style={{fontSize:10,color:"#64748b",fontFamily:"monospace",marginLeft:8}}>{cat?.replace(/([A-Z])/g," $1").trim()}</span>
-                      </button>
-                    );
+                    return(<button key={item} onClick={()=>{setPendingSupp({name:item,category:cat});setSuppForm({dose:"",unit:"mg",schedule:"Daily",time:"Morning"});setSuppView("add");}} style={{background:"#020617",border:`1px solid ${theme.primary}33`,borderRadius:12,padding:"11px 14px",color:"#e2e8f0",fontWeight:700,textAlign:"left",cursor:"pointer"}}>{item}<span style={{fontSize:10,color:"#64748b",fontFamily:"monospace",marginLeft:8}}>{cat?.replace(/([A-Z])/g," $1").trim()}</span></button>);
                   })}
                 </div>
               ):(
                 <div style={{display:"grid",gridTemplateColumns:"1fr 1fr",gap:10}}>
-                  {Object.keys(SUPPLEMENT_LIBRARY).map(cat=>(
-                    <button key={cat} onClick={()=>{setSuppActiveCat(cat);setSuppView("items");}} style={{background:"#020617",border:`1px solid ${theme.primary}33`,borderRadius:14,padding:14,color:"#f8fafc",textAlign:"left",cursor:"pointer"}}>
-                      <div style={{fontSize:14,fontWeight:700}}>{cat.replace(/([A-Z])/g," $1").trim()}</div>
-                      <div style={{marginTop:4,fontSize:11,color:"#64748b",fontFamily:"monospace"}}>{SUPPLEMENT_LIBRARY[cat].length} options</div>
-                    </button>
-                  ))}
+                  {Object.keys(SUPPLEMENT_LIBRARY).map(cat=>(<button key={cat} onClick={()=>{setSuppActiveCat(cat);setSuppView("items");}} style={{background:"#020617",border:`1px solid ${theme.primary}33`,borderRadius:14,padding:14,color:"#f8fafc",textAlign:"left",cursor:"pointer"}}><div style={{fontSize:14,fontWeight:700}}>{cat.replace(/([A-Z])/g," $1").trim()}</div><div style={{marginTop:4,fontSize:11,color:"#64748b",fontFamily:"monospace"}}>{SUPPLEMENT_LIBRARY[cat].length} options</div></button>))}
                 </div>
               )}
             </>
           )}
-
           {suppView==="items"&&suppActiveCat&&(
             <>
               <button style={{...DS.btn,gridColumn:"unset",background:"#020617",border:"1px solid #334155",color:"#94a3b8",marginBottom:12}} onClick={()=>setSuppView("cats")}>← Back</button>
               <div style={{fontSize:13,fontWeight:700,color:"#94a3b8",fontFamily:"monospace",marginBottom:10}}>{suppActiveCat.replace(/([A-Z])/g," $1").trim()}</div>
               <div style={{display:"flex",flexDirection:"column",gap:8}}>
-                {SUPPLEMENT_LIBRARY[suppActiveCat].map(item=>(
-                  <button key={item} onClick={()=>{setPendingSupp({name:item,category:suppActiveCat});setSuppForm({dose:"",unit:"mg",schedule:"Daily",time:"Morning"});setSuppView("add");}} style={{background:"#020617",border:`1px solid ${theme.primary}33`,borderRadius:12,padding:"11px 14px",color:"#e2e8f0",fontWeight:700,textAlign:"left",cursor:"pointer"}}>{item}</button>
-                ))}
+                {SUPPLEMENT_LIBRARY[suppActiveCat].map(item=>(<button key={item} onClick={()=>{setPendingSupp({name:item,category:suppActiveCat});setSuppForm({dose:"",unit:"mg",schedule:"Daily",time:"Morning"});setSuppView("add");}} style={{background:"#020617",border:`1px solid ${theme.primary}33`,borderRadius:12,padding:"11px 14px",color:"#e2e8f0",fontWeight:700,textAlign:"left",cursor:"pointer"}}>{item}</button>))}
               </div>
             </>
           )}
