@@ -216,8 +216,7 @@ function PeptideCalculator({theme,DS}) {
       <div style={DS.panel}>
         <h2 style={{margin:"0 0 14px",fontSize:15,fontWeight:700,color:"#94a3b8",fontFamily:"monospace"}}>🧮 Reconstitution Calculator</h2>
        
-          {peptide==="Custom"&&<input style={{...DS.input,marginTop:8}} placeholder="Custom name" value={custom} onChange={e=>setCustom(e.target.value)}/>}
-        </div>
+        
         <div style={{display:"grid",gridTemplateColumns:"repeat(auto-fit,minmax(160px,1fr))",gap:14,marginBottom:16}}>
           <div><div style={{fontSize:10,color:"#64748b",fontFamily:"monospace",textTransform:"uppercase",letterSpacing:1.5,marginBottom:6}}>Vial (mg)</div><input style={{background:"#020617",border:"1px solid #334155",color:"#e2e8f0",borderRadius:8,padding:"9px 12px",fontSize:14,fontFamily:"monospace",width:"100%",boxSizing:"border-box"}} type="number" step="0.5" value={vialMg} onChange={e=>setVialMg(e.target.value)}/></div>
           <div><div style={{fontSize:10,color:"#64748b",fontFamily:"monospace",textTransform:"uppercase",letterSpacing:1.5,marginBottom:6}}>BAC Water (mL)</div><input style={{background:"#020617",border:"1px solid #334155",color:"#e2e8f0",borderRadius:8,padding:"9px 12px",fontSize:14,fontFamily:"monospace",width:"100%",boxSizing:"border-box"}} type="number" step="0.5" value={bacMl} onChange={e=>setBacMl(e.target.value)}/></div>
