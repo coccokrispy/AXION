@@ -1137,7 +1137,7 @@ const [setupForm,setSetupForm]=useState({name:"",heightFeet:"",heightInches:"",s
 
             <div style={{marginBottom:14}}>
               <div style={{fontSize:11,color:"#64748b",fontFamily:"monospace",textTransform:"uppercase",letterSpacing:1,marginBottom:6}}>Date</div>
-              <input style={DS.input} type="date" value={workoutForm.date} onChange={e=>setWorkoutForm({...workoutForm,date:e.target.value})}/>
+              <input style={{...DS.input,width:"auto",minWidth:160}} type="date" value={workoutForm.date} onChange={e=>setWorkoutForm({...workoutForm,date:e.target.value})}/>
             </div>
 
             <div style={{marginBottom:14}}>
