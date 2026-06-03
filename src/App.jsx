@@ -1,5 +1,5 @@
-import { useMemo, useState, useCallback } from "react";
-import { Zap, Scale, Syringe, Dna, Utensils, Dumbbell, Pill, Calculator, Settings, Search, X, ChevronDown, ChevronUp, Flame } from "lucide-react";
+import { useMemo, useState, useCallback, useEffect } from "react";
+import { Zap, Scale, Syringe, Dna, Utensils, Dumbbell, Pill, Calculator, Settings, Search, X, ChevronDown, ChevronUp, Flame, TrendingDown, TrendingUp, Minus, Trophy } from "lucide-react";
 
 const THEMES = {
   green:  { primary:"#4ade80", primaryDark:"#16a34a", border:"rgba(74,222,128,0.28)", glow:"rgba(74,222,128,0.18)", glowStrong:"rgba(74,222,128,0.35)", bg:"rgba(22,163,74,0.18)", tabBg:"rgba(5,46,22,0.92)", label:"Green" },
@@ -8,6 +8,21 @@ const THEMES = {
   purple: { primary:"#a78bfa", primaryDark:"#6d28d9", border:"rgba(167,139,250,0.28)", glow:"rgba(167,139,250,0.18)", glowStrong:"rgba(167,139,250,0.35)", bg:"rgba(109,40,217,0.18)", tabBg:"rgba(20,5,46,0.92)", label:"Purple" },
   red:    { primary:"#f87171", primaryDark:"#b91c1c", border:"rgba(248,113,113,0.28)", glow:"rgba(248,113,113,0.18)", glowStrong:"rgba(248,113,113,0.35)", bg:"rgba(185,28,28,0.18)", tabBg:"rgba(46,5,5,0.92)", label:"Red" },
 };
+
+const MILESTONES = [
+  { lbs:5,   label:"5 LBS DOWN",    emoji:"🔥" },
+  { lbs:10,  label:"10 LBS DOWN",   emoji:"💪" },
+  { lbs:15,  label:"15 LBS DOWN",   emoji:"⚡" },
+  { lbs:20,  label:"20 LBS DOWN",   emoji:"🏆" },
+  { lbs:25,  label:"25 LBS DOWN",   emoji:"🚀" },
+  { lbs:30,  label:"30 LBS DOWN",   emoji:"👑" },
+  { lbs:50,  label:"50 LBS DOWN",   emoji:"🌟" },
+  { pct:10,  label:"10% BODY WT",   emoji:"📉" },
+  { pct:15,  label:"15% BODY WT",   emoji:"💎" },
+  { pct:25,  label:"25% TO GOAL",   emoji:"🎯" },
+  { pct:50,  label:"HALFWAY THERE", emoji:"⚡" },
+  { pct:75,  label:"75% TO GOAL",   emoji:"🏁" },
+];
 
 const HAS_SETUP = localStorage.getItem("tracker_setup_complete") === "true";
 const START_WEIGHT = Number(localStorage.getItem("tracker_start_weight")) || 225;
@@ -150,7 +165,7 @@ function SearchBar({placeholder,value,onChange,onClear,accent}) {
 }
 
 function LogList({items,render,onRemove}) {
-  if(!items.length) return <div style={{color:"#475569",padding:16,textAlign:"center"}}>No entries yet</div>;
+  if(!items.length) return <div style={{color:"#475569",padding:16,textAlign:"center",fontFamily:"monospace",fontSize:13}}>No entries yet</div>;
   return (
     <div style={{display:"flex",flexDirection:"column",gap:6}}>
       {items.map(item=>(
@@ -192,7 +207,6 @@ function WeightLineChart({weights,color}) {
     </div>
   );
 }
-
 function PeptideCalculator({theme,DS}) {
   const [syringe,setSyringe]=useState(null);
   const [vialMg,setVialMg]=useState(null);
@@ -219,7 +233,6 @@ function PeptideCalculator({theme,DS}) {
     color:active?theme.primary:"#94a3b8",transition:"all 0.15s"
   });
 
-  // SVG syringe drawings
   const Syringe30=()=>(
     <svg viewBox="0 0 80 50" style={{width:80,height:50,display:"block",margin:"4px auto 0"}}>
       <rect x="8" y="10" width="50" height="14" rx="3" fill="none" stroke={theme.primary} strokeWidth="2"/>
@@ -270,21 +283,16 @@ function PeptideCalculator({theme,DS}) {
     <div>
       <div style={DS.panel}>
         <h2 style={{margin:"0 0 20px",fontSize:15,fontWeight:700,color:"#94a3b8",fontFamily:"monospace"}}>🧮 Reconstitution Calculator</h2>
-
-        {/* STEP 1 — SYRINGE */}
         <div style={{marginBottom:24}}>
           <div style={{fontSize:11,color:"#64748b",fontFamily:"monospace",textTransform:"uppercase",letterSpacing:1.5,marginBottom:12}}>Step 1 — Syringe size</div>
           <div style={{display:"grid",gridTemplateColumns:"1fr 1fr 1fr",gap:10}}>
             {[["30","0.3 ml",Syringe30],["50","0.5 ml",Syringe50],["100","1.0 ml",Syringe100]].map(([val,label,Img])=>(
               <button key={val} onClick={()=>setSyringe(val)} style={{...selBtn(syringe===val),display:"flex",flexDirection:"column",alignItems:"center",padding:"12px 8px"}}>
-                <Img/>
-                <span style={{marginTop:6,fontSize:12}}>{label}</span>
+                <Img/><span style={{marginTop:6,fontSize:12}}>{label}</span>
               </button>
             ))}
           </div>
         </div>
-
-        {/* STEP 2 — VIAL */}
         <div style={{marginBottom:24}}>
           <div style={{fontSize:11,color:"#64748b",fontFamily:"monospace",textTransform:"uppercase",letterSpacing:1.5,marginBottom:12}}>Step 2 — Vial size (mg)</div>
           <div style={{display:"flex",gap:8,flexWrap:"wrap"}}>
@@ -292,12 +300,8 @@ function PeptideCalculator({theme,DS}) {
               <button key={v} onClick={()=>setVialMg(v)} style={selBtn(vialMg===v)}>{v==="other"?"Other":v+" mg"}</button>
             ))}
           </div>
-          {vialMg==="other"&&(
-            <input style={{...DS.input,marginTop:10}} type="number" step="0.5" placeholder="Enter mg..." value={customVial} onChange={e=>setCustomVial(e.target.value)}/>
-          )}
+          {vialMg==="other"&&<input style={{...DS.input,marginTop:10}} type="number" step="0.5" placeholder="Enter mg..." value={customVial} onChange={e=>setCustomVial(e.target.value)}/>}
         </div>
-
-        {/* STEP 3 — BAC WATER */}
         <div style={{marginBottom:24}}>
           <div style={{fontSize:11,color:"#64748b",fontFamily:"monospace",textTransform:"uppercase",letterSpacing:1.5,marginBottom:12}}>Step 3 — Bacteriostatic water (mL)</div>
           <div style={{display:"flex",gap:8,flexWrap:"wrap"}}>
@@ -305,41 +309,30 @@ function PeptideCalculator({theme,DS}) {
               <button key={v} onClick={()=>setBacMl(v)} style={selBtn(bacMl===v)}>{v==="other"?"Other":v+" mL"}</button>
             ))}
           </div>
-          {bacMl==="other"&&(
-            <input style={{...DS.input,marginTop:10}} type="number" step="0.5" placeholder="Enter mL..." value={customBac} onChange={e=>setCustomBac(e.target.value)}/>
-          )}
+          {bacMl==="other"&&<input style={{...DS.input,marginTop:10}} type="number" step="0.5" placeholder="Enter mL..." value={customBac} onChange={e=>setCustomBac(e.target.value)}/>}
         </div>
-
-        {/* STEP 4 — DOSE */}
         <div style={{marginBottom:24}}>
           <div style={{fontSize:11,color:"#64748b",fontFamily:"monospace",textTransform:"uppercase",letterSpacing:1.5,marginBottom:12}}>Step 4 — Dose per injection (mg)</div>
           <div style={{display:"flex",gap:8,flexWrap:"wrap"}}>
-{["0.25","0.50","0.75","1.00","other"].map(v=>(
+            {["0.25","0.50","0.75","1.00","other"].map(v=>(
               <button key={v} onClick={()=>setDose(v)} style={selBtn(dose===v)}>{v==="other"?"Other":v+" mg"}</button>
             ))}
           </div>
-          {dose==="other"&&(
-            <input style={{...DS.input,marginTop:10}} type="number" step="0.025" placeholder="Enter mg..." value={customDose} onChange={e=>setCustomDose(e.target.value)}/>
-          )}
+          {dose==="other"&&<input style={{...DS.input,marginTop:10}} type="number" step="0.025" placeholder="Enter mg..." value={customDose} onChange={e=>setCustomDose(e.target.value)}/>}
         </div>
-
-        {/* RESULTS */}
         {valid&&(
           <div style={{background:`linear-gradient(145deg,#020617,${theme.primary}11)`,border:`1px solid ${theme.primary}66`,borderRadius:16,padding:20,marginTop:8}}>
             {overLimit?(
               <div style={{background:"#450a0a",border:"1px solid #ef4444",borderRadius:10,padding:14,marginBottom:16,color:"#ef4444",fontFamily:"monospace",fontSize:13,fontWeight:700,textAlign:"center"}}>
-                ⚠️ Syringe volume not sufficient for this dose. Use a larger syringe or adjust your amounts.
+                ⚠️ Syringe volume not sufficient. Use a larger syringe or adjust amounts.
               </div>
             ):(
               <div style={{textAlign:"center",marginBottom:20}}>
-                <div style={{fontSize:13,color:"#94a3b8",fontFamily:"monospace",marginBottom:8}}>
-                  To have a dose of <b style={{color:theme.primary}}>{dN} mg</b> pull the syringe to
-                </div>
+                <div style={{fontSize:13,color:"#94a3b8",fontFamily:"monospace",marginBottom:8}}>To have a dose of <b style={{color:theme.primary}}>{dN} mg</b> pull the syringe to</div>
                 <div style={{fontSize:52,fontWeight:900,color:theme.primary,fontFamily:"monospace",lineHeight:1}}>{injectU.toFixed(1)}</div>
                 <div style={{fontSize:16,color:"#94a3b8",fontFamily:"monospace",marginTop:4}}>units on a {syringe}U syringe</div>
               </div>
             )}
-
             <div style={{display:"grid",gridTemplateColumns:"1fr 1fr",gap:10,marginBottom:16}}>
               {[["Concentration",`${conc.toFixed(4)} mg/mL`,"#60a5fa"],["Inject volume",`${injectMl.toFixed(4)} mL`,theme.primary],["Doses per vial",`${(vN/dN).toFixed(1)}x`,"#a78bfa"],["Syringe fill",`${Math.min(100,pct).toFixed(1)}%`,"#f59e0b"]].map(([l,v,c])=>(
                 <div key={l} style={{background:"#020617",border:"1px solid #1e293b",borderRadius:10,padding:12,textAlign:"center"}}>
@@ -348,8 +341,6 @@ function PeptideCalculator({theme,DS}) {
                 </div>
               ))}
             </div>
-
-            {/* Syringe fill bar */}
             <div style={{display:"flex",justifyContent:"space-between",marginBottom:6}}>
               <span style={{fontSize:10,color:"#64748b",fontFamily:"monospace",textTransform:"uppercase",letterSpacing:1}}>Syringe fill</span>
               <span style={{color:"#f59e0b",fontFamily:"monospace",fontSize:12}}>{Math.min(100,pct).toFixed(1)}%</span>
@@ -359,15 +350,10 @@ function PeptideCalculator({theme,DS}) {
             </div>
           </div>
         )}
-
         {!valid&&(syringe||vialMg||bacMl||dose)&&(
-          <div style={{color:"#475569",padding:16,textAlign:"center",fontFamily:"monospace",fontSize:13,border:"1px dashed #1e293b",borderRadius:12}}>
-            Complete all 4 steps to see your results
-          </div>
+          <div style={{color:"#475569",padding:16,textAlign:"center",fontFamily:"monospace",fontSize:13,border:"1px dashed #1e293b",borderRadius:12}}>Complete all 4 steps to see results</div>
         )}
       </div>
-
-      {/* Storage */}
       <div style={DS.panel}>
         <h2 style={{margin:"0 0 14px",fontSize:15,fontWeight:700,color:"#94a3b8",fontFamily:"monospace"}}>🧊 Storage & Safety</h2>
         {[["Unreconstituted","Freezer (-20°C). Protect from light. Stable 12-24 months."],["Reconstituted","Refrigerate 2-8°C. Stable 4-8 weeks. Label with date."],["BAC Water","0.9% benzyl alcohol. Inject slowly down the side of the vial."],["Mixing","Gently swirl, never shake. Shaking degrades peptides."],["Injection","Subcutaneous into belly, love handles, or thigh. Rotate sites."],["Hygiene","Alcohol swab before each draw. Fresh needle every time."]].map(([t,b])=>(
@@ -379,6 +365,7 @@ function PeptideCalculator({theme,DS}) {
     </div>
   );
 }
+
 export default function App() {
   const [weights,setWeights]=usePersistedState("mr_weights",[]);
   const [peptideStack,setPeptideStack]=usePersistedState("mr_peptide_stack",[]);
@@ -395,7 +382,8 @@ export default function App() {
   const [saved,setSaved]=useState("");
   const [showSettings,setShowSettings]=useState(false);
   const [tempKey,setTempKey]=useState("");
-const [setupForm,setSetupForm]=useState({name:"",heightFeet:"",heightInches:"",startWeight:"",targetWeight:"",startDate:todayISO(),activityLevel:"moderate",agreed:false});
+  const [milestone,setMilestone]=useState(null);
+  const [setupForm,setSetupForm]=useState({name:"",heightFeet:"",heightInches:"",startWeight:"",targetWeight:"",startDate:todayISO(),activityLevel:"moderate",agreed:false});
 
   const [weightForm,setWeightForm]=useState({date:todayISO(),weight:"",type:"morning",note:""});
   const [expandedWeightDay,setExpandedWeightDay]=useState(null);
@@ -413,8 +401,9 @@ const [setupForm,setSetupForm]=useState({name:"",heightFeet:"",heightInches:"",s
   const [aiScanLoading,setAiScanLoading]=useState(false);
   const [aiScanError,setAiScanError]=useState("");
   const [scanServingNote,setScanServingNote]=useState("");
+  const [showFoodHistory,setShowFoodHistory]=useState(false);
 
-  const [workoutForm,setWorkoutForm]=useState({date:todayISO(),type:"",minutes:"",note:""});
+  const [workoutForm,setWorkoutForm]=useState({date:todayISO(),type:"",minutes:"",note:"",calories:"",intensity:"",runType:"",miles:"",runTime:""});
   const [insightLoading,setInsightLoading]=useState(false);
   const [aiInsight,setAiInsight]=useState("");
 
@@ -451,20 +440,64 @@ const [setupForm,setSetupForm]=useState({name:"",heightFeet:"",heightInches:"",s
   const todayProtein=todayFoods.reduce((s,f)=>s++(f.protein||0),0);
   const todayWorkouts=(workouts||[]).filter(w=>w.date===today);
   const todayMinutes=todayWorkouts.reduce((s,w)=>s++(w.minutes||0),0);
+  const calorieTarget=Number(localStorage.getItem("tracker_calorie_target"))||null;
 
-  const pace=avgPerWeek>0?avgPerWeek:0;
-  const projectedWeeksToGoal=pace>0?Math.ceil(Math.max(0,Number(latestWeight.weight)-TARGET_WEIGHT)/pace):999;
+  const projectedWeeksToGoal=avgPerWeek>0?Math.ceil(Math.max(0,Number(latestWeight.weight)-TARGET_WEIGHT)/avgPerWeek):999;
   const projectedGoalDate=new Date();projectedGoalDate.setDate(projectedGoalDate.getDate()+projectedWeeksToGoal*7);
+
+  // Weekly summary
+  const weekStart=new Date();weekStart.setDate(weekStart.getDate()-weekStart.getDay());weekStart.setHours(0,0,0,0);
+  const thisWeekWorkouts=(workouts||[]).filter(w=>new Date(w.date)>=weekStart);
+  const thisWeekMins=thisWeekWorkouts.reduce((s,w)=>s++(w.minutes||0),0);
+  const thisWeekFoods=(foods||[]).filter(f=>new Date(f.date)>=weekStart);
+  const thisWeekAvgCals=thisWeekFoods.length>0?Math.round(thisWeekFoods.reduce((s,f)=>s++(f.calories||0),0)/Math.max(1,new Set(thisWeekFoods.map(f=>f.date)).size)):null;
+
+  // Weight trend arrows
+  const weightsByDay=useMemo(()=>{const map={};(weights||[]).forEach(w=>{if(!map[w.date])map[w.date]=[];map[w.date].push(w);});return map;},[weights]);
+  const weightDays=useMemo(()=>Object.keys(weightsByDay).sort((a,b)=>new Date(b)-new Date(a)),[weightsByDay]);
+
+  const getDayAvg=(day)=>weightsByDay[day]?(weightsByDay[day].reduce((s,e)=>s+Number(e.weight),0)/weightsByDay[day].length):null;
+  const getTrendForDay=(day)=>{
+    const idx=weightDays.indexOf(day);
+    if(idx<0||idx===weightDays.length-1)return null;
+    const prev=weightDays[idx+1];
+    const curr=getDayAvg(day);
+    const prevAvg=getDayAvg(prev);
+    if(!curr||!prevAvg)return null;
+    if(curr<prevAvg-0.1)return "down";
+    if(curr>prevAvg+0.1)return "up";
+    return "flat";
+  };
 
   const streak=useMemo(()=>{
     const allDates=new Set([...(weights||[]).map(w=>w.date),...(foods||[]).map(f=>f.date),...(workouts||[]).map(w=>w.date),...Object.values(peptideLogs||{}).flat().map(l=>l.date)]);
     let count=0;let d=new Date();
+    // Give grace: if today not logged yet, start from yesterday
+    const todayStr=d.toISOString().slice(0,10);
+    if(!allDates.has(todayStr)){d.setDate(d.getDate()-1);}
     while(true){const iso=d.toISOString().slice(0,10);if(allDates.has(iso)){count++;d.setDate(d.getDate()-1);}else break;}
     return count;
   },[weights,foods,workouts,peptideLogs]);
 
-  const weightsByDay=useMemo(()=>{const map={};(weights||[]).forEach(w=>{if(!map[w.date])map[w.date]=[];map[w.date].push(w);});return map;},[weights]);
-  const weightDays=useMemo(()=>Object.keys(weightsByDay).sort((a,b)=>new Date(b)-new Date(a)),[weightsByDay]);
+  // Milestone detection
+  useEffect(()=>{
+    if(totalLost<=0)return;
+    const earned=MILESTONES.filter(m=>{
+      if(m.lbs)return totalLost>=m.lbs;
+      if(m.pct&&m.pct<=50)return progressPct>=m.pct;
+      if(m.pct&&m.pct>50)return progressPct>=m.pct;
+      return false;
+    });
+    const key="axion_milestones_seen";
+    let seen=[];try{seen=JSON.parse(localStorage.getItem(key)||"[]");}catch{}
+    const unseen=earned.filter(m=>!seen.includes(m.label));
+    if(unseen.length>0){
+      setMilestone(unseen[unseen.length-1]);
+      const newSeen=[...seen,...unseen.map(m=>m.label)];
+      localStorage.setItem(key,JSON.stringify(newSeen));
+      setTimeout(()=>setMilestone(null),4000);
+    }
+  },[totalLost,progressPct]);
 
   const suppSearchResults=useMemo(()=>{if(!suppSearch.trim())return[];const q=suppSearch.toLowerCase();return ALL_SUPPLEMENTS.filter(s=>s.toLowerCase().includes(q)).slice(0,20);},[suppSearch]);
   const pepSearchResults=useMemo(()=>{if(!pepSearch.trim())return[];const q=pepSearch.toLowerCase();return ALL_PEPTIDES.filter(p=>p.name.toLowerCase().includes(q)||p.desc.toLowerCase().includes(q)).slice(0,10);},[pepSearch]);
@@ -472,9 +505,14 @@ const [setupForm,setSetupForm]=useState({name:"",heightFeet:"",heightInches:"",s
   const activityMultipliers={sedentary:11,light:12,moderate:13,active:14,very_active:15};
   const estimatedCalories=setupForm.startWeight?Math.round((Number(setupForm.startWeight)*activityMultipliers[setupForm.activityLevel])-500):0;
 
-  function flash(msg){setSaved(msg);setTimeout(()=>setSaved(""),2000);}
+  function flash(msg){setSaved(msg);setTimeout(()=>setSaved(""),2500);}
 
-  function addWeight(){if(!weightForm.weight)return;setWeights([...(weights||[]),{...weightForm,id:uid(),weight:+weightForm.weight}]);setWeightForm({date:todayISO(),weight:"",type:"morning",note:""});flash("Weight saved ✓");}
+  function addWeight(){
+    if(!weightForm.weight)return;
+    setWeights([...(weights||[]),{...weightForm,id:uid(),weight:+weightForm.weight}]);
+    setWeightForm({date:todayISO(),weight:"",type:"morning",note:""});
+    flash("Weight saved ✓");
+  }
 
   function calcNutrition(per100g,weightG){const r=weightG/100;return{calories:Math.round((per100g.calories||0)*r),protein:+((per100g.protein||0)*r).toFixed(1),carbs:+((per100g.carbs||0)*r).toFixed(1),fat:+((per100g.fat||0)*r).toFixed(1),fiber:+((per100g.fiber||0)*r).toFixed(1),sugar:+((per100g.sugar||0)*r).toFixed(1),sodium:+((per100g.sodium||0)*r).toFixed(0)};}
 
@@ -500,7 +538,12 @@ const [setupForm,setSetupForm]=useState({name:"",heightFeet:"",heightInches:"",s
     flash("Food logged ✓");
   }
 
-  function addManualFood(){if(!manualFood.item)return;setFoods(prev=>[...(prev||[]),{id:uid(),date:foodDate,item:manualFood.item,weight_g:null,calories:+(manualFood.calories||0),protein:+(manualFood.protein||0),carbs:+(manualFood.carbs||0),fat:+(manualFood.fat||0),fiber:+(manualFood.fiber||0)}]);setManualFood({item:"",calories:"",protein:"",carbs:"",fat:"",fiber:""});flash("Food logged ✓");}
+  function addManualFood(){
+    if(!manualFood.item)return;
+    setFoods(prev=>[...(prev||[]),{id:uid(),date:foodDate,item:manualFood.item,weight_g:null,calories:+(manualFood.calories||0),protein:+(manualFood.protein||0),carbs:+(manualFood.carbs||0),fat:+(manualFood.fat||0),fiber:+(manualFood.fiber||0)}]);
+    setManualFood({item:"",calories:"",protein:"",carbs:"",fat:"",fiber:""});
+    flash("Food logged ✓");
+  }
 
   async function scanLabel(){
     if(!labelImage||!apiKey){setAiScanError("Add API key in Settings.");return;}
@@ -514,14 +557,29 @@ const [setupForm,setSetupForm]=useState({name:"",heightFeet:"",heightInches:"",s
     setAiScanLoading(false);
   }
 
-  function addWorkout(){if(!workoutForm.type)return;setWorkouts([...(workouts||[]),{...workoutForm,id:uid(),minutes:+(workoutForm.minutes||0),calories:+(workoutForm.calories||0)}]);setWorkoutForm({date:todayISO(),type:"",minutes:"",note:"",calories:"",intensity:"",runType:"",miles:"",runTime:""});flash("Workout saved ✓");}
+  function addWorkout(){
+    if(!workoutForm.type)return;
+    setWorkouts([...(workouts||[]),{...workoutForm,id:uid(),minutes:+(workoutForm.minutes||0),calories:+(workoutForm.calories||0)}]);
+    setWorkoutForm({date:todayISO(),type:"",minutes:"",note:"",calories:"",intensity:"",runType:"",miles:"",runTime:""});
+    flash("Workout saved ✓");
+  }
 
   function toggleTaken(id){setTakenToday(prev=>prev.includes(id)?prev.filter(x=>x!==id):[...prev,id]);}
-  function addSupplement(){if(!pendingSupp)return;setMySupplements(prev=>[...prev,{id:uid(),name:pendingSupp.name,category:pendingSupp.category,dose:suppForm.dose||"—",unit:suppForm.dose?suppForm.unit:"",schedule:suppForm.schedule,time:suppForm.time}]);setSuppView("my");setPendingSupp(null);setSuppForm({dose:"",unit:"mg",schedule:"Daily",time:"Morning"});}
+
+  function addSupplement(){
+    if(!pendingSupp)return;
+    setMySupplements(prev=>[...prev,{id:uid(),name:pendingSupp.name,category:pendingSupp.category,dose:suppForm.dose||"—",unit:suppForm.dose?suppForm.unit:"",schedule:suppForm.schedule,time:suppForm.time}]);
+    setSuppView("my");setPendingSupp(null);setSuppForm({dose:"",unit:"mg",schedule:"Daily",time:"Morning"});
+  }
   function saveSuppEdit(){setMySupplements(prev=>prev.map(s=>s.id===editingSupp.id?{...s,dose:suppForm.dose||"—",unit:suppForm.dose?suppForm.unit:"",schedule:suppForm.schedule,time:suppForm.time}:s));setEditingSupp(null);setSuppView("my");}
   function deleteSupp(id){setMySupplements(prev=>prev.filter(s=>s.id!==id));setTakenToday(prev=>prev.filter(x=>x!==id));setEditingSupp(null);setSuppView("my");}
 
-  function addPeptideToStack(){if(!pendingPep)return;setPeptideStack(prev=>[...prev,{id:uid(),name:pendingPep.name,category:pendingPep.category,desc:pendingPep.desc,dose:pepForm.dose||"—",unit:pepForm.unit||pendingPep.unit||"mg",frequency:pepForm.frequency||pendingPep.frequency||"",cycle:pepForm.cycle||pendingPep.cycle||"",notes:pepForm.notes,status:pepForm.status,dateAdded:todayISO()}]);setPepView("stack");setPendingPep(null);setPepForm({dose:"",unit:"mg",frequency:"",cycle:"",notes:"",status:"active"});flash("Peptide added ✓");}
+  function addPeptideToStack(){
+    if(!pendingPep)return;
+    setPeptideStack(prev=>[...prev,{id:uid(),name:pendingPep.name,category:pendingPep.category,desc:pendingPep.desc,dose:pepForm.dose||"—",unit:pepForm.unit||pendingPep.unit||"mg",frequency:pepForm.frequency||pendingPep.frequency||"",cycle:pepForm.cycle||pendingPep.cycle||"",notes:pepForm.notes,status:pepForm.status,dateAdded:todayISO()}]);
+    setPepView("stack");setPendingPep(null);setPepForm({dose:"",unit:"mg",frequency:"",cycle:"",notes:"",status:"active"});
+    flash("Peptide added ✓");
+  }
   function savePepEdit(){setPeptideStack(prev=>prev.map(p=>p.id===editingPep.id?{...p,dose:pepForm.dose||"—",unit:pepForm.unit,frequency:pepForm.frequency,cycle:pepForm.cycle,notes:pepForm.notes,status:pepForm.status}:p));setEditingPep(null);setPepView("stack");}
   function deletePep(id){setPeptideStack(prev=>prev.filter(p=>p.id!==id));setPeptideLogs(prev=>{const n={...prev};delete n[id];return n;});setEditingPep(null);setPepView("stack");}
   function logPeptideDose(peptideId){if(!doseForm.dose)return;setPeptideLogs(prev=>({...prev,[peptideId]:[...(prev[peptideId]||[]),{id:uid(),date:doseForm.date,dose:+doseForm.dose,note:doseForm.note}]}));setDoseForm({date:todayISO(),dose:"",note:""});flash("Dose logged ✓");}
@@ -532,8 +590,11 @@ const [setupForm,setSetupForm]=useState({name:"",heightFeet:"",heightInches:"",s
     setInsightLoading(true);setAiInsight("");
     const activeStack=(peptideStack||[]).filter(p=>p.status==="active").map(p=>`${p.name} ${p.dose}${p.unit} ${p.frequency}`).join(", ");
     const recentFoods=(foods||[]).slice(-5).map(f=>`${f.item} (${f.calories}cal/${f.protein}p)`).join(", ");
-    const recentWorkouts=(workouts||[]).slice(-5).map(w=>`${w.type} ${w.minutes}min`).join(", ");
-    try{const data=await callClaude(apiKey,{messages:[{role:"user",content:`Clinical health analyst. Peptide stack: ${activeStack||"none"}. Weight: ${START_WEIGHT}->${latestWeight.weight}lbs (${totalLost.toFixed(1)}lbs lost, ${pctLost(latestWeight.weight)}%). Week ${currentWeek}, ${activePhase.phase} phase. Avg loss: ${avgPerWeek.toFixed(2)} lbs/wk. Food: ${recentFoods||"none"}. Training: ${recentWorkouts||"none"}. Write 3-4 sentence personalized breakdown. Clinical but warm. Reference specific numbers.`}]});setAiInsight(data.content?.map(b=>b.text||"").join("")||"Unable to generate insight.");}catch(e){setAiInsight("Insight unavailable: "+e.message);}
+    const recentWorkouts=(workouts||[]).slice(-5).map(w=>`${w.type} ${w.minutes}min${w.intensity?" "+w.intensity:""}`).join(", ");
+    try{
+      const data=await callClaude(apiKey,{messages:[{role:"user",content:`Clinical health analyst. Peptide stack: ${activeStack||"none"}. Weight: ${START_WEIGHT}->${latestWeight.weight}lbs (${totalLost.toFixed(1)}lbs lost, ${pctLost(latestWeight.weight)}%). Week ${currentWeek}, ${activePhase.phase} phase. Avg loss: ${avgPerWeek.toFixed(2)} lbs/wk. Streak: ${streak} days. Food: ${recentFoods||"none"}. Training: ${recentWorkouts||"none"}. Write 3-4 sentence personalized breakdown. Clinical but motivating. Reference specific numbers.`}]});
+      setAiInsight(data.content?.map(b=>b.text||"").join("")||"Unable to generate insight.");
+    }catch(e){setAiInsight("Insight unavailable: "+e.message);}
     setInsightLoading(false);
   }
 
@@ -555,8 +616,7 @@ const [setupForm,setSetupForm]=useState({name:"",heightFeet:"",heightInches:"",s
   const pill={background:"#0f172a",border:"1px solid #1e293b",color:"#64748b",borderRadius:20,padding:"5px 12px",cursor:"pointer",fontSize:12,fontFamily:"monospace"};
   const formGrid={display:"grid",gridTemplateColumns:"120px 1fr",gap:"8px 12px",alignItems:"center",marginBottom:16};
   const formLabel={fontSize:11,color:"#64748b",fontFamily:"monospace",textTransform:"uppercase",letterSpacing:1,textAlign:"right"};
-
- if(!HAS_SETUP){
+  if(!HAS_SETUP){
     return (
       <div style={DS.page}>
         <div style={{...DS.panel,border:"1px solid #854d0e",borderLeft:"4px solid #f59e0b",marginBottom:16}}>
@@ -564,10 +624,10 @@ const [setupForm,setSetupForm]=useState({name:"",heightFeet:"",heightInches:"",s
           <div style={{fontSize:12,color:"#94a3b8",lineHeight:1.8,fontFamily:"monospace"}}>
             <p style={{margin:"0 0 10px"}}>AXION is a <b style={{color:"#f8fafc"}}>personal tracking tool only</b>. It is not a medical application, does not provide medical advice, and is not intended to diagnose, treat, cure, or prevent any disease or health condition.</p>
             <p style={{margin:"0 0 10px"}}>The information logged and displayed in this app — including peptide protocols, supplement tracking, dosing records, calorie data, and weight logs — is for <b style={{color:"#f8fafc"}}>personal informational purposes only</b>. Nothing in this application should be interpreted as a recommendation, prescription, or endorsement of any substance, dosage, or health practice.</p>
-            <p style={{margin:"0 0 10px"}}>Peptides and research compounds tracked in this app are <b style={{color:"#f8fafc"}}>not approved by the FDA</b> for human use in most jurisdictions. You are solely responsible for understanding and complying with all applicable laws in your country, state, or region regarding the possession and use of any substances you choose to track.</p>
-            <p style={{margin:"0 0 10px"}}><b style={{color:"#f8fafc"}}>Always consult a licensed medical professional</b> before beginning any new health protocol, peptide regimen, supplement stack, or dietary change. Do not modify or discontinue any prescribed medication based on anything logged or displayed in this app.</p>
-            <p style={{margin:"0 0 10px"}}>The creators, developers, and distributors of AXION <b style={{color:"#f8fafc"}}>assume no liability whatsoever</b> for any harm, injury, adverse reaction, legal consequence, or damages — direct or indirect — arising from the use of this application or any substances tracked within it. Use of this app constitutes full acceptance of these terms.</p>
-            <p style={{margin:0,color:"#64748b"}}>By continuing and creating your profile, you confirm that you are an adult, that you understand this disclaimer in full, and that you accept sole responsibility for your health decisions.</p>
+            <p style={{margin:"0 0 10px"}}>Peptides and research compounds tracked in this app are <b style={{color:"#f8fafc"}}>not approved by the FDA</b> for human use in most jurisdictions. You are solely responsible for understanding and complying with all applicable laws in your country, state, or region.</p>
+            <p style={{margin:"0 0 10px"}}><b style={{color:"#f8fafc"}}>Always consult a licensed medical professional</b> before beginning any new health protocol, peptide regimen, supplement stack, or dietary change.</p>
+            <p style={{margin:"0 0 10px"}}>The creators, developers, and distributors of AXION <b style={{color:"#f8fafc"}}>assume no liability whatsoever</b> for any harm, injury, adverse reaction, legal consequence, or damages — direct or indirect — arising from use of this application.</p>
+            <p style={{margin:0,color:"#64748b"}}>By continuing you confirm you are an adult, understand this disclaimer in full, and accept sole responsibility for your health decisions.</p>
           </div>
         </div>
         <div style={DS.panel}>
@@ -586,7 +646,7 @@ const [setupForm,setSetupForm]=useState({name:"",heightFeet:"",heightInches:"",s
               <div style={{width:22,height:22,borderRadius:6,border:`2px solid ${setupForm.agreed?theme.primary:"#334155"}`,background:setupForm.agreed?theme.primary+"22":"transparent",display:"flex",alignItems:"center",justifyContent:"center",flexShrink:0,marginTop:1}}>
                 {setupForm.agreed&&<span style={{color:theme.primary,fontSize:16,fontWeight:900,lineHeight:1}}>✓</span>}
               </div>
-              <span style={{fontSize:12,color:"#94a3b8",lineHeight:1.7,fontFamily:"monospace"}}>I have read and fully understand the disclaimer above. I am an adult and I accept sole responsibility for my health decisions. I acknowledge that AXION provides no medical advice and that its creators bear no liability for any outcomes resulting from my use of this application.</span>
+              <span style={{fontSize:12,color:"#94a3b8",lineHeight:1.7,fontFamily:"monospace"}}>I have read and fully understand the disclaimer. I am an adult and accept sole responsibility for my health decisions. The creators of AXION bear no liability for any outcomes from my use of this application.</span>
             </div>
             <button style={{...DS.btn,gridColumn:"1/-1",opacity:setupForm.agreed?1:0.4,cursor:setupForm.agreed?"pointer":"not-allowed"}} disabled={!setupForm.agreed} onClick={()=>{
               if(!setupForm.agreed)return;
@@ -609,16 +669,30 @@ const [setupForm,setSetupForm]=useState({name:"",heightFeet:"",heightInches:"",s
 
   return (
     <div style={DS.page}>
+
+      {/* MILESTONE CELEBRATION */}
+      {milestone&&(
+        <div style={{position:"fixed",top:0,left:0,right:0,bottom:0,background:"rgba(0,0,0,0.85)",display:"flex",alignItems:"center",justifyContent:"center",zIndex:300,padding:24}}>
+          <div style={{background:`linear-gradient(145deg,#020617,${theme.primary}22)`,border:`2px solid ${theme.primary}`,borderRadius:24,padding:32,textAlign:"center",maxWidth:320,boxShadow:`0 0 60px ${theme.glowStrong}`}}>
+            <div style={{fontSize:64,lineHeight:1,marginBottom:16}}>{milestone.emoji}</div>
+            <div style={{fontSize:28,fontWeight:900,color:theme.primary,fontFamily:"monospace",letterSpacing:2,marginBottom:8}}>{milestone.label}</div>
+            <div style={{fontSize:14,color:"#94a3b8",fontFamily:"monospace",marginBottom:24}}>Keep going. You're doing it.</div>
+            <button onClick={()=>setMilestone(null)} style={{background:theme.primary,color:"#020617",border:"none",borderRadius:12,padding:"12px 28px",fontWeight:900,fontSize:14,fontFamily:"monospace",cursor:"pointer"}}>LET'S GO</button>
+          </div>
+        </div>
+      )}
+
       <header style={{display:"flex",flexDirection:"column",alignItems:"center",justifyContent:"center",marginBottom:22,textAlign:"center"}}>
         <div style={{marginTop:55,fontSize:58,lineHeight:0.9,fontWeight:900,letterSpacing:13,color:"#f8fafc",fontFamily:"Impact,Arial Black,sans-serif",textTransform:"uppercase"}}>AXION</div>
       </header>
+
       <div style={{position:"absolute",top:50,right:18}}>
-       <button onClick={()=>{setTempKey(apiKey);setShowSettings(true);}} style={{width:54,height:54,borderRadius:16,background:`linear-gradient(145deg,rgba(0,0,0,0.96),${theme.primaryDark}55)`,border:`1px solid ${theme.border}`,display:"flex",alignItems:"center",justifyContent:"center",cursor:"pointer",boxShadow:`0 0 22px ${theme.glow}`}}>
+        <button onClick={()=>{setTempKey(apiKey);setShowSettings(true);}} style={{width:54,height:54,borderRadius:16,background:`linear-gradient(145deg,rgba(0,0,0,0.96),${theme.primaryDark}55)`,border:`1px solid ${theme.border}`,display:"flex",alignItems:"center",justifyContent:"center",cursor:"pointer",boxShadow:`0 0 22px ${theme.glow}`}}>
           <Settings size={22} strokeWidth={2.2} color={theme.primary}/>
         </button>
       </div>
 
-      {saved&&<div style={{position:"fixed",top:16,left:"50%",transform:"translateX(-50%)",background:"#14532d",color:theme.primary,border:`1px solid ${theme.primary}`,borderRadius:8,padding:"8px 20px",fontSize:13,fontFamily:"monospace",zIndex:200}}>{saved}</div>}
+      {saved&&<div style={{position:"fixed",top:16,left:"50%",transform:"translateX(-50%)",background:"#14532d",color:theme.primary,border:`1px solid ${theme.primary}`,borderRadius:8,padding:"8px 20px",fontSize:13,fontFamily:"monospace",zIndex:200,whiteSpace:"nowrap"}}>{saved}</div>}
 
       {showSettings&&(
         <div style={{position:"fixed",inset:0,background:"rgba(0,0,0,0.8)",display:"flex",alignItems:"center",justifyContent:"center",zIndex:100,padding:16}} onClick={()=>setShowSettings(false)}>
@@ -661,7 +735,7 @@ const [setupForm,setSetupForm]=useState({name:"",heightFeet:"",heightInches:"",s
       </div>
 
       {/* TABS */}
-     <nav style={{display:"flex",gap:6,marginBottom:16,flexWrap:"wrap"}}>
+      <nav style={{display:"flex",gap:6,marginBottom:16,flexWrap:"wrap"}}>
         {TABS.map(t=>{const Icon=ICONS[t];return(
           <button key={t} onClick={()=>setTab(t)} style={tab===t?DS.activeTab:{flex:"1 1 80px",display:"flex",flexDirection:"column",alignItems:"center",gap:8,padding:"17px 8px",background:"linear-gradient(145deg,#000000,#020806)",border:`1px solid ${theme.border}`,borderRadius:20,cursor:"pointer",color:theme.primary+"99",fontFamily:"monospace",transition:"all 0.18s ease"}}>
             <Icon size={28} strokeWidth={1.8} color={tab===t?theme.primary:theme.primary+"99"}/>
@@ -669,50 +743,121 @@ const [setupForm,setSetupForm]=useState({name:"",heightFeet:"",heightInches:"",s
           </button>
         );})}
       </nav>
-            {/* DASHBOARD */}
+
+      {/* DASHBOARD */}
       {tab==="dashboard"&&<>
-        <div style={{display:"grid",gridTemplateColumns:"repeat(auto-fit,minmax(140px,1fr))",gap:10,marginBottom:14}}>
-          {[["Current",`${latestWeight.weight}`,"lbs"],["Lowest",`${lowestWeight}`,"lbs"],["Lost",`${totalLost.toFixed(1)}`,"lbs"],["% BW",`${pctLost(latestWeight.weight)}`,"%"],["Avg/wk",`${avgPerWeek>0?avgPerWeek.toFixed(2):"0.00"}`,"lbs"],[`To ${TARGET_WEIGHT}`,`${remainingToGoal.toFixed(1)}`,"lbs"],["Protein",`${todayProtein}`,"g"],["Calories",`${todayCals}`,"kcal"]].map(([l,v,u])=>(
-            <div key={l} style={DS.card}><div style={{fontSize:10,color:"#475569",textTransform:"uppercase",letterSpacing:1.5,fontFamily:"monospace",marginBottom:4}}>{l}</div><div style={{fontSize:22,fontWeight:900,lineHeight:1,color:theme.primary}}>{v}<span style={{fontSize:13,fontWeight:400}}> {u}</span></div></div>
-          ))}
-        </div>
 
-        <div style={DS.panel}>
-          <div style={{display:"flex",alignItems:"center",gap:16}}>
-            <Flame size={36} color={theme.primary}/>
-            <div><div style={{fontSize:36,fontWeight:900,color:theme.primary,lineHeight:1,fontFamily:"monospace"}}>{streak}</div><div style={{fontSize:11,color:"#94a3b8",fontFamily:"monospace",letterSpacing:1.5,marginTop:4}}>DAY STREAK</div></div>
-            <div style={{marginLeft:"auto",fontSize:11,color:"#475569",fontFamily:"monospace",textAlign:"right",lineHeight:1.6}}>Log weight, food,<br/>workouts or doses<br/>to keep streak alive</div>
-          </div>
-        </div>
-
-        {(peptideStack||[]).filter(p=>p.status==="active").length>0&&(
-          <div style={DS.panel}>
-            <h2 style={{margin:"0 0 14px",fontSize:15,fontWeight:700,color:"#94a3b8",fontFamily:"monospace"}}>🧬 Active Peptides</h2>
-            {(peptideStack||[]).filter(p=>p.status==="active").map(p=>(
-              <div key={p.id} style={{background:"#020617",border:"1px solid #1e293b",borderLeft:`3px solid ${theme.primary}`,borderRadius:10,padding:"10px 14px",marginBottom:8}}>
-                <div style={{fontWeight:700,color:theme.primary,fontSize:14}}>{p.name}</div>
-                <div style={{fontSize:11,color:"#64748b",fontFamily:"monospace"}}>{p.dose}{p.unit} · {p.frequency}</div>
-              </div>
-            ))}
+        {/* Empty state for new users */}
+        {sortedWeights.length===0&&(
+          <div style={{...DS.panel,borderLeft:`4px solid ${theme.primary}`,marginBottom:14}}>
+            <div style={{fontSize:15,fontWeight:700,color:theme.primary,marginBottom:8}}>👋 Welcome to AXION</div>
+            <div style={{fontSize:13,color:"#94a3b8",lineHeight:1.7}}>Start by logging your weight in the <b style={{color:"#f8fafc"}}>Weight</b> tab, then add your peptide stack in <b style={{color:"#f8fafc"}}>Peptides</b>. Log food daily to keep your streak alive.</div>
           </div>
         )}
 
+        {/* STAT CARDS */}
+        <div style={{display:"grid",gridTemplateColumns:"repeat(auto-fit,minmax(140px,1fr))",gap:10,marginBottom:14}}>
+          {[
+            ["Current",sortedWeights.length?`${latestWeight.weight}`:"--","lbs"],
+            ["Lowest",sortedWeights.length?`${lowestWeight}`:"--","lbs"],
+            ["Lost",totalLost>0?`${totalLost.toFixed(1)}`:"0.0","lbs"],
+            ["% BW",totalLost>0?`${pctLost(latestWeight.weight)}`:"0.0","%"],
+            ["Avg/wk",avgPerWeek>0?`${avgPerWeek.toFixed(2)}`:"--","lbs"],
+            [`To ${TARGET_WEIGHT}`,remainingToGoal>0?`${remainingToGoal.toFixed(1)}`:"0.0","lbs"],
+            ["Protein",todayProtein>0?`${todayProtein}`:"--","g"],
+            ["Calories",todayCals>0?`${todayCals}`:"--","kcal"],
+          ].map(([l,v,u])=>(
+            <div key={l} style={DS.card}>
+              <div style={{fontSize:10,color:"#475569",textTransform:"uppercase",letterSpacing:1.5,fontFamily:"monospace",marginBottom:4}}>{l}</div>
+              <div style={{fontSize:22,fontWeight:900,lineHeight:1,color:v==="--"?"#334155":theme.primary}}>{v}<span style={{fontSize:13,fontWeight:400,color:v==="--"?"#334155":undefined}}> {u}</span></div>
+            </div>
+          ))}
+        </div>
+
+        {/* STREAK */}
+        <div style={DS.panel}>
+          <div style={{display:"flex",alignItems:"center",gap:16}}>
+            <Flame size={36} color={streak>0?theme.primary:"#334155"}/>
+            <div>
+              <div style={{fontSize:36,fontWeight:900,color:streak>0?theme.primary:"#334155",lineHeight:1,fontFamily:"monospace"}}>{streak}</div>
+              <div style={{fontSize:11,color:"#94a3b8",fontFamily:"monospace",letterSpacing:1.5,marginTop:4}}>DAY STREAK</div>
+            </div>
+            <div style={{marginLeft:"auto",fontSize:11,color:"#475569",fontFamily:"monospace",textAlign:"right",lineHeight:1.6}}>
+              {streak===0?"Log something today\nto start your streak":streak>=7?`🔥 ${streak} days strong!`:"Log weight, food,\nworkouts or doses\nto keep it going"}
+            </div>
+          </div>
+        </div>
+
+        {/* WEEKLY SUMMARY */}
+        <div style={DS.panel}>
+          <h2 style={{margin:"0 0 14px",fontSize:15,fontWeight:700,color:"#94a3b8",fontFamily:"monospace"}}>📅 This Week</h2>
+          <div style={{display:"grid",gridTemplateColumns:"repeat(3,1fr)",gap:10}}>
+            {[
+              ["Workouts",`${thisWeekWorkouts.length}`,"sessions"],
+              ["Training",`${thisWeekMins}`,"min"],
+              ["Avg Cals",thisWeekAvgCals?`${thisWeekAvgCals}`:"--","kcal/day"],
+            ].map(([l,v,u])=>(
+              <div key={l} style={{background:"#020617",border:`1px solid ${theme.border}`,borderRadius:14,padding:12,textAlign:"center"}}>
+                <div style={{fontSize:10,color:"#475569",textTransform:"uppercase",letterSpacing:1,fontFamily:"monospace",marginBottom:4}}>{l}</div>
+                <div style={{fontSize:20,fontWeight:900,color:v==="--"?"#334155":theme.primary,fontFamily:"monospace"}}>{v}</div>
+                <div style={{fontSize:10,color:"#64748b",fontFamily:"monospace"}}>{u}</div>
+              </div>
+            ))}
+          </div>
+          {calorieTarget&&todayCals>0&&(
+            <div style={{marginTop:12}}>
+              <div style={{display:"flex",justifyContent:"space-between",marginBottom:4}}>
+                <span style={{fontSize:11,color:"#64748b",fontFamily:"monospace"}}>Today's calories</span>
+                <span style={{fontSize:11,fontFamily:"monospace",color:todayCals>calorieTarget?"#ef4444":theme.primary}}>{todayCals} / {calorieTarget} kcal</span>
+              </div>
+              <div style={{background:"#1e293b",borderRadius:999,height:8,overflow:"hidden"}}>
+                <div style={{height:"100%",borderRadius:999,width:`${Math.min(100,(todayCals/calorieTarget)*100)}%`,background:todayCals>calorieTarget?"#ef4444":`linear-gradient(90deg,${theme.primaryDark},${theme.primary})`}}/>
+              </div>
+            </div>
+          )}
+        </div>
+
+        {/* ACTIVE PEPTIDES */}
+        {(peptideStack||[]).filter(p=>p.status==="active").length>0&&(
+          <div style={DS.panel}>
+            <h2 style={{margin:"0 0 14px",fontSize:15,fontWeight:700,color:"#94a3b8",fontFamily:"monospace"}}>🧬 Active Peptides</h2>
+            {(peptideStack||[]).filter(p=>p.status==="active").map(p=>{
+              const wk=p.dateAdded?getWeekNumber(p.dateAdded,todayISO()):null;
+              return(
+                <div key={p.id} style={{background:"#020617",border:"1px solid #1e293b",borderLeft:`3px solid ${theme.primary}`,borderRadius:10,padding:"10px 14px",marginBottom:8,display:"flex",justifyContent:"space-between",alignItems:"center"}}>
+                  <div>
+                    <div style={{fontWeight:700,color:theme.primary,fontSize:14}}>{p.name}</div>
+                    <div style={{fontSize:11,color:"#64748b",fontFamily:"monospace"}}>{p.dose}{p.unit} · {p.frequency}</div>
+                  </div>
+                  {wk&&<div style={{fontSize:10,fontFamily:"monospace",color:"#475569",background:"#0f172a",borderRadius:6,padding:"3px 8px"}}>WK {wk}</div>}
+                </div>
+              );
+            })}
+          </div>
+        )}
+
+        {/* AI INSIGHT */}
         <div style={DS.panel}>
           <div style={{display:"flex",justifyContent:"space-between",alignItems:"center",marginBottom:12}}>
             <h2 style={{margin:0,fontSize:15,fontWeight:700,color:"#94a3b8",fontFamily:"monospace"}}>🧠 AI Health Breakdown</h2>
             <button onClick={getAIInsight} disabled={insightLoading||sortedWeights.length<2} style={{background:"#1e3a5f",color:"#60a5fa",border:"1px solid #60a5fa",borderRadius:10,padding:"6px 14px",cursor:"pointer",fontFamily:"monospace",fontSize:11,fontWeight:700,opacity:insightLoading?0.6:1}}>{insightLoading?"ANALYZING...":"GENERATE"}</button>
           </div>
-          {aiInsight?<div style={{background:"#020617",border:"1px solid #1e3a5f",borderRadius:10,padding:14,color:"#cbd5e1",fontSize:13,lineHeight:1.7}}>{aiInsight}</div>
-          :<div style={{color:"#475569",fontSize:12,fontFamily:"monospace",fontStyle:"italic"}}>{sortedWeights.length<2?"Add a second weight entry to unlock.":!apiKey?"Add API key in Settings.":"Click GENERATE for a breakdown."}</div>}
+          {aiInsight
+            ?<div style={{background:"#020617",border:"1px solid #1e3a5f",borderRadius:10,padding:14,color:"#cbd5e1",fontSize:13,lineHeight:1.7}}>{aiInsight}</div>
+            :<div style={{color:"#475569",fontSize:12,fontFamily:"monospace",fontStyle:"italic"}}>{sortedWeights.length<2?"Add a second weight entry to unlock.":!apiKey?"Add API key in ⚙️ Settings.":"Click GENERATE for your personalized breakdown."}</div>
+          }
         </div>
 
-        {sortedWeights.length>1&&<div style={DS.panel}><h2 style={{margin:"0 0 14px",fontSize:15,fontWeight:700,color:"#94a3b8",fontFamily:"monospace"}}>Weight Trend</h2><WeightLineChart weights={sortedWeights} color={theme.primary}/></div>}
+        {/* WEIGHT TREND */}
+        {sortedWeights.length>1
+          ?<div style={DS.panel}><h2 style={{margin:"0 0 14px",fontSize:15,fontWeight:700,color:"#94a3b8",fontFamily:"monospace"}}>Weight Trend</h2><WeightLineChart weights={sortedWeights} color={theme.primary}/></div>
+          :<div style={{...DS.panel,textAlign:"center",color:"#334155",fontFamily:"monospace",fontSize:13}}>Log at least 2 weight entries to see your trend chart.</div>
+        }
 
         <div style={{background:"#0f172a",border:"1px solid #854d0e",borderLeft:"4px solid #f59e0b",borderRadius:10,padding:14,color:"#94a3b8",fontSize:13,display:"flex",gap:10,alignItems:"flex-start",marginBottom:14}}>
           <span style={{fontSize:18}}>⚠️</span><span>If energy tanks, digestion stalls, or workouts fall apart — hydrate, hit protein, add carbs, sleep, keep dose changes disciplined.</span>
         </div>
       </>}
-
       {/* WEIGHT */}
       {tab==="weight"&&(
         <div style={DS.panel}>
@@ -720,116 +865,135 @@ const [setupForm,setSetupForm]=useState({name:"",heightFeet:"",heightInches:"",s
           <div style={formGrid}>
             <label style={formLabel}>Date</label><input style={DS.input} type="date" value={weightForm.date} onChange={e=>setWeightForm({...weightForm,date:e.target.value})}/>
             <label style={formLabel}>Weight (lbs)</label><input style={DS.input} type="number" step="0.1" placeholder="e.g. 221.8" value={weightForm.weight} onChange={e=>setWeightForm({...weightForm,weight:e.target.value})}/>
-            <label style={formLabel}>Type</label><select style={DS.input} value={weightForm.type} onChange={e=>setWeightForm({...weightForm,type:e.target.value})}>{["morning","post-bathroom","pre-bathroom","bedtime","other"].map(o=><option key={o}>{o}</option>)}</select>
+            <label style={formLabel}>Type</label>
+            <select style={DS.input} value={weightForm.type} onChange={e=>setWeightForm({...weightForm,type:e.target.value})}>
+              {["morning","post-bathroom","pre-bathroom","bedtime","other"].map(o=><option key={o}>{o}</option>)}
+            </select>
             <label style={formLabel}>Note</label><input style={DS.input} placeholder="Optional" value={weightForm.note} onChange={e=>setWeightForm({...weightForm,note:e.target.value})}/>
             <button style={DS.btn} onClick={addWeight}>+ Add Weight</button>
           </div>
-          {weightDays.length===0&&<div style={{color:"#475569",padding:16,textAlign:"center"}}>No entries yet</div>}
-{(()=>{
-  const currentMonth=todayISO().slice(0,7);
-  const monthMap={};
-  weightDays.forEach(day=>{
-    const m=day.slice(0,7);
-    if(!monthMap[m])monthMap[m]=[];
-    monthMap[m].push(day);
-  });
-  const months=Object.keys(monthMap).sort((a,b)=>b.localeCompare(a));
-  return months.map(month=>{
-    const days=monthMap[month];
-    const isCurrent=month===currentMonth;
-    const monthLabel=new Date(month+"-01T12:00:00").toLocaleDateString("en-US",{month:"long",year:"numeric"});
-    const monthEntries=days.flatMap(d=>weightsByDay[d]);
-    const monthAvg=(monthEntries.reduce((s,e)=>s+Number(e.weight),0)/monthEntries.length).toFixed(1);
-    const isMonthOpen=expandedWeightDay===("month_"+month);
 
-    if(isCurrent){
-      return days.map(day=>{
-        const entries=weightsByDay[day];
-        const avg=(entries.reduce((s,e)=>s+Number(e.weight),0)/entries.length).toFixed(1);
-        const isOpen=expandedWeightDay===day;
-        return(
-          <div key={day} style={{background:"#020617",border:`1px solid ${isOpen?theme.primary+"66":"#1e293b"}`,borderRadius:12,marginBottom:8,overflow:"hidden"}}>
-            <button onClick={()=>setExpandedWeightDay(isOpen?null:day)} style={{width:"100%",background:"none",border:"none",padding:"12px 14px",cursor:"pointer",display:"flex",justifyContent:"space-between",alignItems:"center"}}>
-              <div style={{textAlign:"left"}}>
-                <div style={{fontWeight:700,color:"#e2e8f0",fontSize:14}}>{new Date(day+"T12:00:00").toLocaleDateString("en-US",{weekday:"short",month:"short",day:"numeric"})}</div>
-                <div style={{fontSize:11,color:"#64748b",fontFamily:"monospace"}}>{entries.length} entr{entries.length===1?"y":"ies"} · avg {avg} lbs</div>
-              </div>
-              <div style={{display:"flex",alignItems:"center",gap:8}}>
-                <span style={{fontSize:16,fontWeight:900,color:theme.primary}}>{avg} lbs</span>
-                {isOpen?<ChevronUp size={16} color="#64748b"/>:<ChevronDown size={16} color="#64748b"/>}
-              </div>
-            </button>
-            {isOpen&&(
-              <div style={{padding:"0 14px 12px"}}>
-                {entries.map(e=>(
-                  <div key={e.id} style={{display:"flex",justifyContent:"space-between",alignItems:"center",padding:"8px 0",borderTop:"1px solid #1e293b"}}>
-                    <div><span style={{color:theme.primary,fontWeight:700}}>{e.weight} lbs</span><span style={{color:"#64748b",fontSize:11,fontFamily:"monospace",marginLeft:8}}>{e.type}{e.note?` · ${e.note}`:""}</span></div>
-                    <button style={{background:"transparent",color:"#ef4444",border:"1px solid #450a0a",borderRadius:6,cursor:"pointer",padding:"3px 8px",fontSize:11}} onClick={()=>setWeights((weights||[]).filter(x=>x.id!==e.id))}>✕</button>
-                  </div>
-                ))}
-              </div>
-            )}
-          </div>
-        );
-      });
-    }
+          {weightDays.length===0&&(
+            <div style={{color:"#475569",padding:16,textAlign:"center",fontFamily:"monospace",fontSize:13}}>No entries yet. Log your first weight above.</div>
+          )}
 
-    return(
-      <div key={month} style={{marginBottom:8}}>
-        <button onClick={()=>setExpandedWeightDay(isMonthOpen?null:"month_"+month)} style={{width:"100%",background:`linear-gradient(145deg,#020617,${theme.primary}11)`,border:`1px solid ${isMonthOpen?theme.primary+"66":theme.border}`,borderRadius:12,padding:"14px 16px",cursor:"pointer",display:"flex",justifyContent:"space-between",alignItems:"center"}}>
-          <div style={{textAlign:"left"}}>
-            <div style={{fontWeight:700,color:theme.primary,fontSize:15}}>{monthLabel}</div>
-            <div style={{fontSize:11,color:"#64748b",fontFamily:"monospace",marginTop:2}}>{monthEntries.length} entries · {days.length} days · avg {monthAvg} lbs</div>
-          </div>
-          <div style={{display:"flex",alignItems:"center",gap:8}}>
-            <span style={{fontSize:14,fontWeight:900,color:"#94a3b8"}}>{monthAvg} lbs</span>
-            {isMonthOpen?<ChevronUp size={16} color={theme.primary}/>:<ChevronDown size={16} color={theme.primary}/>}
-          </div>
-        </button>
-        {isMonthOpen&&(
-          <div style={{paddingLeft:8,marginTop:4}}>
-            {days.map(day=>{
-              const entries=weightsByDay[day];
-              const avg=(entries.reduce((s,e)=>s+Number(e.weight),0)/entries.length).toFixed(1);
-              const isOpen=expandedWeightDay===day;
+          {(()=>{
+            const currentMonth=todayISO().slice(0,7);
+            const monthMap={};
+            weightDays.forEach(day=>{
+              const m=day.slice(0,7);
+              if(!monthMap[m])monthMap[m]=[];
+              monthMap[m].push(day);
+            });
+            const months=Object.keys(monthMap).sort((a,b)=>b.localeCompare(a));
+            return months.map(month=>{
+              const days=monthMap[month];
+              const isCurrent=month===currentMonth;
+              const monthLabel=new Date(month+"-01T12:00:00").toLocaleDateString("en-US",{month:"long",year:"numeric"});
+              const monthEntries=days.flatMap(d=>weightsByDay[d]);
+              const monthAvg=(monthEntries.reduce((s,e)=>s+Number(e.weight),0)/monthEntries.length).toFixed(1);
+              const isMonthOpen=expandedWeightDay===("month_"+month);
+
+              if(isCurrent){
+                return days.map(day=>{
+                  const entries=weightsByDay[day];
+                  const avg=(entries.reduce((s,e)=>s+Number(e.weight),0)/entries.length).toFixed(1);
+                  const isOpen=expandedWeightDay===day;
+                  const trend=getTrendForDay(day);
+                  return(
+                    <div key={day} style={{background:"#020617",border:`1px solid ${isOpen?theme.primary+"66":"#1e293b"}`,borderRadius:12,marginBottom:8,overflow:"hidden"}}>
+                      <button onClick={()=>setExpandedWeightDay(isOpen?null:day)} style={{width:"100%",background:"none",border:"none",padding:"12px 14px",cursor:"pointer",display:"flex",justifyContent:"space-between",alignItems:"center"}}>
+                        <div style={{textAlign:"left"}}>
+                          <div style={{fontWeight:700,color:"#e2e8f0",fontSize:14}}>{new Date(day+"T12:00:00").toLocaleDateString("en-US",{weekday:"short",month:"short",day:"numeric"})}</div>
+                          <div style={{fontSize:11,color:"#64748b",fontFamily:"monospace"}}>{entries.length} entr{entries.length===1?"y":"ies"} · avg {avg} lbs</div>
+                        </div>
+                        <div style={{display:"flex",alignItems:"center",gap:8}}>
+                          {trend==="down"&&<TrendingDown size={16} color="#4ade80"/>}
+                          {trend==="up"&&<TrendingUp size={16} color="#ef4444"/>}
+                          {trend==="flat"&&<Minus size={16} color="#f59e0b"/>}
+                          <span style={{fontSize:16,fontWeight:900,color:theme.primary}}>{avg} lbs</span>
+                          {isOpen?<ChevronUp size={16} color="#64748b"/>:<ChevronDown size={16} color="#64748b"/>}
+                        </div>
+                      </button>
+                      {isOpen&&(
+                        <div style={{padding:"0 14px 12px"}}>
+                          {entries.map(e=>(
+                            <div key={e.id} style={{display:"flex",justifyContent:"space-between",alignItems:"center",padding:"8px 0",borderTop:"1px solid #1e293b"}}>
+                              <div><span style={{color:theme.primary,fontWeight:700}}>{e.weight} lbs</span><span style={{color:"#64748b",fontSize:11,fontFamily:"monospace",marginLeft:8}}>{e.type}{e.note?` · ${e.note}`:""}</span></div>
+                              <button style={{background:"transparent",color:"#ef4444",border:"1px solid #450a0a",borderRadius:6,cursor:"pointer",padding:"3px 8px",fontSize:11}} onClick={()=>setWeights((weights||[]).filter(x=>x.id!==e.id))}>✕</button>
+                            </div>
+                          ))}
+                        </div>
+                      )}
+                    </div>
+                  );
+                });
+              }
+
               return(
-                <div key={day} style={{background:"#020617",border:`1px solid ${isOpen?theme.primary+"66":"#1e293b"}`,borderRadius:10,marginBottom:6,overflow:"hidden"}}>
-                  <button onClick={()=>setExpandedWeightDay(isOpen?null:day)} style={{width:"100%",background:"none",border:"none",padding:"10px 14px",cursor:"pointer",display:"flex",justifyContent:"space-between",alignItems:"center"}}>
+                <div key={month} style={{marginBottom:8}}>
+                  <button onClick={()=>setExpandedWeightDay(isMonthOpen?null:"month_"+month)} style={{width:"100%",background:`linear-gradient(145deg,#020617,${theme.primary}11)`,border:`1px solid ${isMonthOpen?theme.primary+"66":theme.border}`,borderRadius:12,padding:"14px 16px",cursor:"pointer",display:"flex",justifyContent:"space-between",alignItems:"center"}}>
                     <div style={{textAlign:"left"}}>
-                      <div style={{fontWeight:700,color:"#e2e8f0",fontSize:13}}>{new Date(day+"T12:00:00").toLocaleDateString("en-US",{weekday:"short",month:"short",day:"numeric"})}</div>
-                      <div style={{fontSize:11,color:"#64748b",fontFamily:"monospace"}}>{entries.length} entr{entries.length===1?"y":"ies"} · avg {avg} lbs</div>
+                      <div style={{fontWeight:700,color:theme.primary,fontSize:15}}>{monthLabel}</div>
+                      <div style={{fontSize:11,color:"#64748b",fontFamily:"monospace",marginTop:2}}>{monthEntries.length} entries · {days.length} days · avg {monthAvg} lbs</div>
                     </div>
                     <div style={{display:"flex",alignItems:"center",gap:8}}>
-                      <span style={{fontSize:14,fontWeight:900,color:theme.primary}}>{avg} lbs</span>
-                      {isOpen?<ChevronUp size={14} color="#64748b"/>:<ChevronDown size={14} color="#64748b"/>}
+                      <span style={{fontSize:14,fontWeight:900,color:"#94a3b8"}}>{monthAvg} lbs</span>
+                      {isMonthOpen?<ChevronUp size={16} color={theme.primary}/>:<ChevronDown size={16} color={theme.primary}/>}
                     </div>
                   </button>
-                  {isOpen&&(
-                    <div style={{padding:"0 14px 10px"}}>
-                      {entries.map(e=>(
-                        <div key={e.id} style={{display:"flex",justifyContent:"space-between",alignItems:"center",padding:"8px 0",borderTop:"1px solid #1e293b"}}>
-                          <div><span style={{color:theme.primary,fontWeight:700}}>{e.weight} lbs</span><span style={{color:"#64748b",fontSize:11,fontFamily:"monospace",marginLeft:8}}>{e.type}{e.note?` · ${e.note}`:""}</span></div>
-                          <button style={{background:"transparent",color:"#ef4444",border:"1px solid #450a0a",borderRadius:6,cursor:"pointer",padding:"3px 8px",fontSize:11}} onClick={()=>setWeights((weights||[]).filter(x=>x.id!==e.id))}>✕</button>
-                        </div>
-                      ))}
+                  {isMonthOpen&&(
+                    <div style={{paddingLeft:8,marginTop:4}}>
+                      {days.map(day=>{
+                        const entries=weightsByDay[day];
+                        const avg=(entries.reduce((s,e)=>s+Number(e.weight),0)/entries.length).toFixed(1);
+                        const isOpen=expandedWeightDay===day;
+                        const trend=getTrendForDay(day);
+                        return(
+                          <div key={day} style={{background:"#020617",border:`1px solid ${isOpen?theme.primary+"66":"#1e293b"}`,borderRadius:10,marginBottom:6,overflow:"hidden"}}>
+                            <button onClick={()=>setExpandedWeightDay(isOpen?null:day)} style={{width:"100%",background:"none",border:"none",padding:"10px 14px",cursor:"pointer",display:"flex",justifyContent:"space-between",alignItems:"center"}}>
+                              <div style={{textAlign:"left"}}>
+                                <div style={{fontWeight:700,color:"#e2e8f0",fontSize:13}}>{new Date(day+"T12:00:00").toLocaleDateString("en-US",{weekday:"short",month:"short",day:"numeric"})}</div>
+                                <div style={{fontSize:11,color:"#64748b",fontFamily:"monospace"}}>{entries.length} entr{entries.length===1?"y":"ies"} · avg {avg} lbs</div>
+                              </div>
+                              <div style={{display:"flex",alignItems:"center",gap:8}}>
+                                {trend==="down"&&<TrendingDown size={14} color="#4ade80"/>}
+                                {trend==="up"&&<TrendingUp size={14} color="#ef4444"/>}
+                                {trend==="flat"&&<Minus size={14} color="#f59e0b"/>}
+                                <span style={{fontSize:14,fontWeight:900,color:theme.primary}}>{avg} lbs</span>
+                                {isOpen?<ChevronUp size={14} color="#64748b"/>:<ChevronDown size={14} color="#64748b"/>}
+                              </div>
+                            </button>
+                            {isOpen&&(
+                              <div style={{padding:"0 14px 10px"}}>
+                                {entries.map(e=>(
+                                  <div key={e.id} style={{display:"flex",justifyContent:"space-between",alignItems:"center",padding:"8px 0",borderTop:"1px solid #1e293b"}}>
+                                    <div><span style={{color:theme.primary,fontWeight:700}}>{e.weight} lbs</span><span style={{color:"#64748b",fontSize:11,fontFamily:"monospace",marginLeft:8}}>{e.type}{e.note?` · ${e.note}`:""}</span></div>
+                                    <button style={{background:"transparent",color:"#ef4444",border:"1px solid #450a0a",borderRadius:6,cursor:"pointer",padding:"3px 8px",fontSize:11}} onClick={()=>setWeights((weights||[]).filter(x=>x.id!==e.id))}>✕</button>
+                                  </div>
+                                ))}
+                              </div>
+                            )}
+                          </div>
+                        );
+                      })}
                     </div>
                   )}
                 </div>
               );
-            })}
-          </div>
-        )}
-      </div>
-    );
-  });
-})()}
+            });
+          })()}
         </div>
       )}
 
       {/* DOSES */}
       {tab==="doses"&&(
         <div>
-          {(peptideStack||[]).length===0&&<div style={{...DS.panel,textAlign:"center",color:"#475569",fontFamily:"monospace"}}>No peptides in your stack yet. Add peptides in the Peptides tab first.</div>}
+          {(peptideStack||[]).length===0&&(
+            <div style={{...DS.panel,textAlign:"center",color:"#475569",fontFamily:"monospace",fontSize:13}}>
+              No peptides in your stack yet.<br/>Add peptides in the 🧬 Peptides tab first.
+            </div>
+          )}
           {(peptideStack||[]).map(pep=>{
             const logs=(peptideLogs[pep.id]||[]).slice().sort((a,b)=>new Date(b.date)-new Date(a.date));
             const total=logs.reduce((s,l)=>s+Number(l.dose||0),0);
@@ -849,7 +1013,7 @@ const [setupForm,setSetupForm]=useState({name:"",heightFeet:"",heightInches:"",s
                         style={{background:"#0f172a",border:`1px solid ${theme.border}`,color:theme.primary,borderRadius:8,padding:"4px 8px",fontSize:13,fontFamily:"monospace",fontWeight:700,width:80,outline:"none"}}
                       />
                       <span style={{color:"#64748b",fontSize:12,fontFamily:"monospace"}}>{pep.unit} · {pep.frequency}</span>
-                      <span style={{color:"#475569",fontSize:11,fontFamily:"monospace"}}>Total: {total.toFixed(3)}{pep.unit}</span>
+                      <span style={{color:"#475569",fontSize:11,fontFamily:"monospace"}}>Total: {total.toFixed(3)}{pep.unit} · {logs.length} doses</span>
                     </div>
                   </div>
                   <button onClick={()=>setDoseTab(isActive?null:pep.id)} style={{background:isActive?"#1e293b":"#1e3a5f",color:isActive?"#94a3b8":"#60a5fa",border:`1px solid ${isActive?"#334155":"#60a5fa"}`,borderRadius:10,padding:"6px 14px",cursor:"pointer",fontFamily:"monospace",fontSize:11,fontWeight:700,flexShrink:0,marginLeft:8}}>{isActive?"Close":"+ Log Dose"}</button>
@@ -897,6 +1061,7 @@ const [setupForm,setSetupForm]=useState({name:"",heightFeet:"",heightInches:"",s
               const sc={active:theme.primary,planned:"#fbbf24",completed:"#64748b"};
               const logs=peptideLogs[p.id]||[];
               const total=logs.reduce((s,l)=>s+Number(l.dose||0),0);
+              const wk=p.dateAdded?getWeekNumber(p.dateAdded,todayISO()):null;
               return(
                 <div key={p.id} style={{background:"#020617",border:"1px solid #1e293b",borderLeft:`3px solid ${sc[p.status]||"#475569"}`,borderRadius:12,padding:14,marginBottom:10}}>
                   <div style={{display:"flex",justifyContent:"space-between",alignItems:"flex-start"}}>
@@ -904,6 +1069,7 @@ const [setupForm,setSetupForm]=useState({name:"",heightFeet:"",heightInches:"",s
                       <div style={{display:"flex",gap:8,alignItems:"center",flexWrap:"wrap"}}>
                         <span style={{fontSize:15,fontWeight:700,color:sc[p.status]}}>{p.name}</span>
                         <span style={{fontSize:10,fontFamily:"monospace",background:sc[p.status]+"22",color:sc[p.status],borderRadius:4,padding:"2px 7px"}}>{p.status.toUpperCase()}</span>
+                        {wk&&p.status==="active"&&<span style={{fontSize:10,fontFamily:"monospace",color:"#475569",background:"#0f172a",borderRadius:4,padding:"2px 7px"}}>WK {wk}</span>}
                       </div>
                       <div style={{fontSize:11,color:"#64748b",fontFamily:"monospace",marginTop:4}}>{p.dose}{p.unit} · {p.frequency}{p.cycle?` · ${p.cycle}`:""}</div>
                       <div style={{fontSize:11,color:"#475569",fontFamily:"monospace",marginTop:2}}>Total: {total.toFixed(3)}{p.unit} · {logs.length} doses</div>
@@ -924,10 +1090,12 @@ const [setupForm,setSetupForm]=useState({name:"",heightFeet:"",heightInches:"",s
             <div>
               <div style={{fontWeight:800,fontSize:16,color:"#f8fafc",marginBottom:14}}>{editingPep.name}</div>
               <div style={formGrid}>
-                <label style={formLabel}>Dose</label><div style={{display:"flex",gap:6}}><input style={{...DS.input,flex:1}} type="number" step="0.1" value={pepForm.dose} onChange={e=>setPepForm({...pepForm,dose:e.target.value})}/><select style={{...DS.input,width:80}} value={pepForm.unit} onChange={e=>setPepForm({...pepForm,unit:e.target.value})}>{["mg","mcg","g","IU","mL"].map(u=><option key={u}>{u}</option>)}</select></div>
+                <label style={formLabel}>Dose</label>
+                <div style={{display:"flex",gap:6}}><input style={{...DS.input,flex:1}} type="number" step="0.1" value={pepForm.dose} onChange={e=>setPepForm({...pepForm,dose:e.target.value})}/><select style={{...DS.input,width:80}} value={pepForm.unit} onChange={e=>setPepForm({...pepForm,unit:e.target.value})}>{["mg","mcg","g","IU","mL"].map(u=><option key={u}>{u}</option>)}</select></div>
                 <label style={formLabel}>Frequency</label><input style={DS.input} value={pepForm.frequency} onChange={e=>setPepForm({...pepForm,frequency:e.target.value})}/>
                 <label style={formLabel}>Cycle</label><input style={DS.input} value={pepForm.cycle} onChange={e=>setPepForm({...pepForm,cycle:e.target.value})}/>
-                <label style={formLabel}>Status</label><select style={DS.input} value={pepForm.status} onChange={e=>setPepForm({...pepForm,status:e.target.value})}>{["active","planned","completed"].map(o=><option key={o}>{o}</option>)}</select>
+                <label style={formLabel}>Status</label>
+                <select style={DS.input} value={pepForm.status} onChange={e=>setPepForm({...pepForm,status:e.target.value})}>{["active","planned","completed"].map(o=><option key={o}>{o}</option>)}</select>
                 <label style={formLabel}>Notes</label><input style={DS.input} value={pepForm.notes} onChange={e=>setPepForm({...pepForm,notes:e.target.value})}/>
               </div>
               <div style={{display:"flex",gap:8,marginTop:8}}>
@@ -990,10 +1158,12 @@ const [setupForm,setSetupForm]=useState({name:"",heightFeet:"",heightInches:"",s
               <div style={{fontSize:12,color:"#64748b",fontFamily:"monospace",marginBottom:14,lineHeight:1.5}}>{pendingPep.desc}</div>
               <div style={{background:"#020617",border:"1px solid #1e293b",borderRadius:8,padding:10,marginBottom:14,fontSize:11,color:"#94a3b8",fontFamily:"monospace"}}>Typical: {pendingPep.typicalDose} · {pendingPep.frequency} · Cycle: {pendingPep.cycle}</div>
               <div style={formGrid}>
-                <label style={formLabel}>Dose</label><div style={{display:"flex",gap:6}}><input style={{...DS.input,flex:1}} type="number" step="0.1" placeholder={pendingPep.typicalDose} value={pepForm.dose} onChange={e=>setPepForm({...pepForm,dose:e.target.value})}/><select style={{...DS.input,width:80}} value={pepForm.unit} onChange={e=>setPepForm({...pepForm,unit:e.target.value})}>{["mg","mcg","g","IU","mL"].map(u=><option key={u}>{u}</option>)}</select></div>
+                <label style={formLabel}>Dose</label>
+                <div style={{display:"flex",gap:6}}><input style={{...DS.input,flex:1}} type="number" step="0.1" placeholder={pendingPep.typicalDose} value={pepForm.dose} onChange={e=>setPepForm({...pepForm,dose:e.target.value})}/><select style={{...DS.input,width:80}} value={pepForm.unit} onChange={e=>setPepForm({...pepForm,unit:e.target.value})}>{["mg","mcg","g","IU","mL"].map(u=><option key={u}>{u}</option>)}</select></div>
                 <label style={formLabel}>Frequency</label><input style={DS.input} placeholder={pendingPep.frequency} value={pepForm.frequency} onChange={e=>setPepForm({...pepForm,frequency:e.target.value})}/>
                 <label style={formLabel}>Cycle</label><input style={DS.input} placeholder={pendingPep.cycle} value={pepForm.cycle} onChange={e=>setPepForm({...pepForm,cycle:e.target.value})}/>
-                <label style={formLabel}>Status</label><select style={DS.input} value={pepForm.status} onChange={e=>setPepForm({...pepForm,status:e.target.value})}>{["active","planned","completed"].map(o=><option key={o}>{o}</option>)}</select>
+                <label style={formLabel}>Status</label>
+                <select style={DS.input} value={pepForm.status} onChange={e=>setPepForm({...pepForm,status:e.target.value})}>{["active","planned","completed"].map(o=><option key={o}>{o}</option>)}</select>
                 <label style={formLabel}>Notes</label><input style={DS.input} placeholder="Protocol notes..." value={pepForm.notes} onChange={e=>setPepForm({...pepForm,notes:e.target.value})}/>
               </div>
               <div style={{display:"flex",gap:8,marginTop:8}}>
@@ -1098,31 +1268,51 @@ const [setupForm,setSetupForm]=useState({name:"",heightFeet:"",heightInches:"",s
             )}
           </div>
 
+          {/* TODAY'S FOOD LOG */}
           <div style={DS.panel}>
-            <h2 style={{margin:"0 0 14px",fontSize:15,fontWeight:700,color:"#94a3b8",fontFamily:"monospace"}}>Today · {todayCals} cal · {todayProtein}g protein</h2>
-            {(foods||[]).filter(f=>f.date===today).length===0&&<div style={{color:"#475569",fontSize:13,fontFamily:"monospace"}}>Nothing logged today.</div>}
-            {[...(foods||[])].sort((a,b)=>new Date(b.date)-new Date(a.date)).map(f=>(
-              <div key={f.id} style={{display:"flex",justifyContent:"space-between",alignItems:"center",gap:10,background:"#020617",border:"1px solid #1e293b",borderRadius:8,padding:"10px 12px",marginBottom:6}}>
-                <div style={{flex:1}}>
-                  <div style={{fontWeight:700,color:"#f59e0b",fontSize:13}}>{f.item}</div>
-                  <div style={{fontSize:11,color:"#64748b",fontFamily:"monospace"}}>{f.date} · {f.calories}cal · {f.protein}g pro · {f.carbs}g carb · {f.fat}g fat{f.fiber?` · ${f.fiber}g fiber`:""}</div>
+            <div style={{display:"flex",justifyContent:"space-between",alignItems:"center",marginBottom:14}}>
+              <h2 style={{margin:0,fontSize:15,fontWeight:700,color:"#94a3b8",fontFamily:"monospace"}}>
+                {showFoodHistory?"All Food History":"Today · "+todayCals+" cal · "+todayProtein+"g protein"}
+              </h2>
+              <button onClick={()=>setShowFoodHistory(h=>!h)} style={{background:"#020617",border:`1px solid ${theme.border}`,color:"#64748b",borderRadius:8,padding:"5px 10px",cursor:"pointer",fontFamily:"monospace",fontSize:11}}>
+                {showFoodHistory?"Today only":"All history"}
+              </button>
+            </div>
+            {calorieTarget&&!showFoodHistory&&todayCals>0&&(
+              <div style={{marginBottom:12}}>
+                <div style={{display:"flex",justifyContent:"space-between",marginBottom:4}}>
+                  <span style={{fontSize:11,color:"#64748b",fontFamily:"monospace"}}>Calorie target</span>
+                  <span style={{fontSize:11,fontFamily:"monospace",color:todayCals>calorieTarget?"#ef4444":theme.primary}}>{todayCals} / {calorieTarget} kcal</span>
                 </div>
-                <button style={{background:"transparent",color:"#ef4444",border:"1px solid #450a0a",borderRadius:6,cursor:"pointer",padding:"3px 8px",fontSize:11,flexShrink:0}} onClick={()=>setFoods((foods||[]).filter(x=>x.id!==f.id))}>✕</button>
+                <div style={{background:"#1e293b",borderRadius:999,height:6,overflow:"hidden"}}>
+                  <div style={{height:"100%",borderRadius:999,width:`${Math.min(100,(todayCals/calorieTarget)*100)}%`,background:todayCals>calorieTarget?"#ef4444":`linear-gradient(90deg,${theme.primaryDark},${theme.primary})`}}/>
+                </div>
               </div>
-            ))}
+            )}
+            {(()=>{
+              const filtered=showFoodHistory?[...(foods||[])].sort((a,b)=>new Date(b.date)-new Date(a.date)):(foods||[]).filter(f=>f.date===today).sort((a,b)=>new Date(b.date)-new Date(a.date));
+              if(filtered.length===0)return <div style={{color:"#475569",fontSize:13,fontFamily:"monospace"}}>{showFoodHistory?"No food logged yet.":"Nothing logged today."}</div>;
+              return filtered.map(f=>(
+                <div key={f.id} style={{display:"flex",justifyContent:"space-between",alignItems:"center",gap:10,background:"#020617",border:"1px solid #1e293b",borderRadius:8,padding:"10px 12px",marginBottom:6}}>
+                  <div style={{flex:1}}>
+                    <div style={{fontWeight:700,color:"#f59e0b",fontSize:13}}>{f.item}</div>
+                    <div style={{fontSize:11,color:"#64748b",fontFamily:"monospace"}}>{showFoodHistory?f.date+" · ":""}{f.calories}cal · {f.protein}g pro · {f.carbs}g carb · {f.fat}g fat{f.fiber?` · ${f.fiber}g fiber`:""}</div>
+                  </div>
+                  <button style={{background:"transparent",color:"#ef4444",border:"1px solid #450a0a",borderRadius:6,cursor:"pointer",padding:"3px 8px",fontSize:11,flexShrink:0}} onClick={()=>setFoods((foods||[]).filter(x=>x.id!==f.id))}>✕</button>
+                </div>
+              ));
+            })()}
           </div>
         </div>
       )}
-
-     {/* WORKOUTS */}
+      {/* WORKOUTS */}
       {tab==="workouts"&&(
         <div>
-          {/* STATS ROW */}
           <div style={{display:"grid",gridTemplateColumns:"repeat(3,1fr)",gap:10,marginBottom:14}}>
             {[
               ["Today",`${todayMinutes}`,"min"],
-              ["This Week",`${(workouts||[]).filter(w=>{const d=new Date(w.date);const s=new Date();s.setDate(s.getDate()-s.getDay());return d>=s;}).reduce((s,w)=>s++(w.minutes||0),0)}`,"min"],
-              ["Total Sessions",`${(workouts||[]).length}`,"logs"],
+              ["This Week",`${thisWeekMins}`,"min"],
+              ["Total",`${(workouts||[]).length}`,"sessions"],
             ].map(([l,v,u])=>(
               <div key={l} style={DS.card}>
                 <div style={{fontSize:10,color:"#475569",textTransform:"uppercase",letterSpacing:1.5,fontFamily:"monospace",marginBottom:4}}>{l}</div>
@@ -1131,7 +1321,6 @@ const [setupForm,setSetupForm]=useState({name:"",heightFeet:"",heightInches:"",s
             ))}
           </div>
 
-          {/* LOG FORM */}
           <div style={DS.panel}>
             <h2 style={{margin:"0 0 16px",fontSize:15,fontWeight:700,color:"#94a3b8",fontFamily:"monospace"}}>💪 Log Workout</h2>
 
@@ -1176,7 +1365,6 @@ const [setupForm,setSetupForm]=useState({name:"",heightFeet:"",heightInches:"",s
               </div>
             </div>
 
-            {/* Sets/Reps (Weights only) */}
             {workoutForm.type==="Weights"&&(
               <div style={{marginBottom:14}}>
                 <div style={{fontSize:11,color:"#64748b",fontFamily:"monospace",textTransform:"uppercase",letterSpacing:1,marginBottom:6}}>Sets / Reps / Notes</div>
@@ -1184,7 +1372,6 @@ const [setupForm,setSetupForm]=useState({name:"",heightFeet:"",heightInches:"",s
               </div>
             )}
 
-            {/* Run details (Run only) */}
             {workoutForm.type==="Run"&&(
               <div style={{marginBottom:14}}>
                 <div style={{fontSize:11,color:"#64748b",fontFamily:"monospace",textTransform:"uppercase",letterSpacing:1,marginBottom:8}}>Run Type</div>
@@ -1226,7 +1413,6 @@ const [setupForm,setSetupForm]=useState({name:"",heightFeet:"",heightInches:"",s
               </div>
             )}
 
-            {/* Notes for everything except Weights */}
             {workoutForm.type!=="Weights"&&(
               <div style={{marginBottom:14}}>
                 <div style={{fontSize:11,color:"#64748b",fontFamily:"monospace",textTransform:"uppercase",letterSpacing:1,marginBottom:6}}>Notes</div>
@@ -1237,35 +1423,60 @@ const [setupForm,setSetupForm]=useState({name:"",heightFeet:"",heightInches:"",s
             <button style={{...DS.btn,gridColumn:"unset",width:"100%"}} onClick={addWorkout}>+ Log Workout</button>
           </div>
 
-          {/* WORKOUT LOG */}
           <div style={DS.panel}>
             <h2 style={{margin:"0 0 14px",fontSize:15,fontWeight:700,color:"#94a3b8",fontFamily:"monospace"}}>Workout History</h2>
             {(workouts||[]).length===0&&<div style={{color:"#475569",fontSize:13,fontFamily:"monospace"}}>No workouts logged yet.</div>}
-            {[...(workouts||[])].sort((a,b)=>new Date(b.date)-new Date(a.date)).map(w=>(
-              <div key={w.id} style={{background:"#020617",border:`1px solid ${theme.border}`,borderRadius:12,padding:14,marginBottom:8}}>
-                <div style={{display:"flex",justifyContent:"space-between",alignItems:"flex-start"}}>
-                  <div style={{flex:1}}>
-                    <div style={{display:"flex",alignItems:"center",gap:8,flexWrap:"wrap",marginBottom:4}}>
-                      <span style={{fontWeight:700,fontSize:14,color:theme.primary}}>{w.type}</span>
-                      {w.intensity&&<span style={{fontSize:10,fontFamily:"monospace",padding:"2px 8px",borderRadius:20,background:w.intensity==="Easy"?"#14532d":w.intensity==="Moderate"?"#451a03":w.intensity==="Hard"?"#431407":"#450a0a",color:w.intensity==="Easy"?"#4ade80":w.intensity==="Moderate"?"#f59e0b":w.intensity==="Hard"?"#f97316":"#ef4444",border:`1px solid ${w.intensity==="Easy"?"#4ade80":w.intensity==="Moderate"?"#f59e0b":w.intensity==="Hard"?"#f97316":"#ef4444"}`}}>{w.intensity}</span>}
-                      {w.runType&&<span style={{fontSize:10,fontFamily:"monospace",color:"#94a3b8"}}>{w.runType}</span>}
+            {(()=>{
+              const sorted=[...(workouts||[])].sort((a,b)=>new Date(b.date)-new Date(a.date));
+              const weekMap={};
+              sorted.forEach(w=>{
+                const d=new Date(w.date);
+                const sun=new Date(d);sun.setDate(d.getDate()-d.getDay());
+                const key=sun.toISOString().slice(0,10);
+                if(!weekMap[key])weekMap[key]=[];
+                weekMap[key].push(w);
+              });
+              return Object.entries(weekMap).sort((a,b)=>new Date(b[0])-new Date(a[0])).map(([weekStart,wkWorkouts])=>{
+                const weekEnd=new Date(weekStart);weekEnd.setDate(weekEnd.getDate()+6);
+                const label=`Week of ${new Date(weekStart).toLocaleDateString("en-US",{month:"short",day:"numeric"})}`;
+                const totalMins=wkWorkouts.reduce((s,w)=>s++(w.minutes||0),0);
+                const isCurrentWeek=new Date(weekStart)>=new Date(new Date().setDate(new Date().getDate()-new Date().getDay())-1);
+                return(
+                  <div key={weekStart} style={{marginBottom:12}}>
+                    <div style={{fontSize:11,color:isCurrentWeek?theme.primary:"#475569",fontFamily:"monospace",textTransform:"uppercase",letterSpacing:1,marginBottom:8,display:"flex",justifyContent:"space-between"}}>
+                      <span>{isCurrentWeek?"This Week":label}</span>
+                      <span>{wkWorkouts.length} sessions · {totalMins} min</span>
                     </div>
-                    <div style={{fontSize:11,color:"#64748b",fontFamily:"monospace"}}>
-                      {w.date} · {w.minutes} min
-                      {w.calories?` · ${w.calories} cal`:""}
-                      {w.miles?` · ${w.miles} mi`:""}
-                      {w.runTime?` · ${w.runTime}`:""}
-                    </div>
-                    {w.note&&<div style={{fontSize:11,color:"#94a3b8",marginTop:4,fontStyle:"italic"}}>{w.note}</div>}
+                    {wkWorkouts.map(w=>(
+                      <div key={w.id} style={{background:"#020617",border:`1px solid ${theme.border}`,borderRadius:12,padding:14,marginBottom:6}}>
+                        <div style={{display:"flex",justifyContent:"space-between",alignItems:"flex-start"}}>
+                          <div style={{flex:1}}>
+                            <div style={{display:"flex",alignItems:"center",gap:8,flexWrap:"wrap",marginBottom:4}}>
+                              <span style={{fontWeight:700,fontSize:14,color:theme.primary}}>{w.type}</span>
+                              {w.intensity&&<span style={{fontSize:10,fontFamily:"monospace",padding:"2px 8px",borderRadius:20,background:w.intensity==="Easy"?"#14532d":w.intensity==="Moderate"?"#451a03":w.intensity==="Hard"?"#431407":"#450a0a",color:w.intensity==="Easy"?"#4ade80":w.intensity==="Moderate"?"#f59e0b":w.intensity==="Hard"?"#f97316":"#ef4444",border:`1px solid ${w.intensity==="Easy"?"#4ade80":w.intensity==="Moderate"?"#f59e0b":w.intensity==="Hard"?"#f97316":"#ef4444"}`}}>{w.intensity}</span>}
+                              {w.runType&&<span style={{fontSize:10,fontFamily:"monospace",color:"#94a3b8"}}>{w.runType}</span>}
+                            </div>
+                            <div style={{fontSize:11,color:"#64748b",fontFamily:"monospace"}}>
+                              {w.date} · {w.minutes} min
+                              {w.calories?` · ${w.calories} cal burned`:""}
+                              {w.miles?` · ${w.miles} mi`:""}
+                              {w.runTime?` · ${w.runTime}`:""}
+                            </div>
+                            {w.note&&<div style={{fontSize:11,color:"#94a3b8",marginTop:4,fontStyle:"italic"}}>{w.note}</div>}
+                          </div>
+                          <button style={{background:"transparent",color:"#ef4444",border:"1px solid #450a0a",borderRadius:6,cursor:"pointer",padding:"3px 8px",fontSize:11,flexShrink:0,marginLeft:8}} onClick={()=>setWorkouts((workouts||[]).filter(x=>x.id!==w.id))}>✕</button>
+                        </div>
+                      </div>
+                    ))}
                   </div>
-                  <button style={{background:"transparent",color:"#ef4444",border:"1px solid #450a0a",borderRadius:6,cursor:"pointer",padding:"3px 8px",fontSize:11,flexShrink:0,marginLeft:8}} onClick={()=>setWorkouts((workouts||[]).filter(x=>x.id!==w.id))}>✕</button>
-                </div>
-              </div>
-            ))}
+                );
+              });
+            })()}
           </div>
         </div>
       )}
-            {/* SUPPLEMENTS */}
+
+      {/* SUPPLEMENTS */}
       {tab==="supplements"&&(
         <div style={DS.panel}>
           <h2 style={{margin:"0 0 14px",fontSize:15,fontWeight:700,color:"#94a3b8",fontFamily:"monospace"}}>💊 Supplements</h2>
@@ -1277,16 +1488,21 @@ const [setupForm,setSetupForm]=useState({name:"",heightFeet:"",heightInches:"",s
               {mySupplements.map(s=>{
                 const taken=takenToday.includes(s.id);
                 return(
-                  <div key={s.id} style={{display:"flex",alignItems:"center",gap:10,background:taken?"#052e16":"#020617",border:`1px solid ${taken?theme.primary+"66":"#1e293b"}`,borderRadius:12,padding:"10px 14px",marginBottom:8,cursor:"pointer"}} onClick={()=>{setEditingSupp(s);setSuppForm({dose:s.dose==="—"?"":s.dose,unit:s.unit||"mg",schedule:s.schedule,time:s.time});setSuppView("detail");}}>
+                  <div key={s.id} style={{display:"flex",alignItems:"center",gap:10,background:taken?theme.primary+"11":"#020617",border:`1px solid ${taken?theme.primary+"66":"#1e293b"}`,borderRadius:12,padding:"10px 14px",marginBottom:8,cursor:"pointer",transition:"all 0.15s"}} onClick={()=>{setEditingSupp(s);setSuppForm({dose:s.dose==="—"?"":s.dose,unit:s.unit||"mg",schedule:s.schedule,time:s.time});setSuppView("detail");}}>
                     <div style={{flex:1}}>
                       <div style={{fontWeight:700,fontSize:14,color:"#e2e8f0"}}>{s.name}</div>
                       <div style={{fontSize:11,color:"#64748b",fontFamily:"monospace",marginTop:2}}>{s.dose}{s.unit} · {s.schedule} · {s.time}</div>
                       {taken&&<div style={{fontSize:10,color:theme.primary,fontFamily:"monospace",marginTop:3}}>✓ TAKEN TODAY</div>}
                     </div>
-                    <button onClick={e=>{e.stopPropagation();toggleTaken(s.id);}} style={{width:34,height:34,borderRadius:"50%",border:`1px solid ${taken?theme.primary:"#334155"}`,background:taken?theme.primaryDark+"44":"transparent",cursor:"pointer",display:"flex",alignItems:"center",justifyContent:"center",fontSize:14,color:taken?theme.primary:"#475569",flexShrink:0}}>✓</button>
+                    <button onClick={e=>{e.stopPropagation();toggleTaken(s.id);}} style={{width:36,height:36,borderRadius:"50%",border:`2px solid ${taken?theme.primary:"#334155"}`,background:taken?theme.primary+"33":"transparent",cursor:"pointer",display:"flex",alignItems:"center",justifyContent:"center",fontSize:16,color:taken?theme.primary:"#475569",flexShrink:0,transition:"all 0.15s"}}>✓</button>
                   </div>
                 );
               })}
+              {mySupplements.length>0&&(
+                <div style={{fontSize:11,color:"#475569",fontFamily:"monospace",textAlign:"center",padding:"8px 0"}}>
+                  {takenToday.filter(id=>mySupplements.find(s=>s.id===id)).length} / {mySupplements.length} taken today
+                </div>
+              )}
             </div>
           )}
 
