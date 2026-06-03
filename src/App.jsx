@@ -556,11 +556,25 @@ const todayStr=d.toISOString().slice(0,10);
     setAiScanLoading(false);
   }
 
-  function addWorkout(){
-    if(!workoutForm.type)return;
-    setWorkouts([...(workouts||[]),{...workoutForm,id:uid(),minutes:+(workoutForm.minutes||0),calories:+(workoutForm.calories||0)}]);
-    setWorkoutForm({date:todayISO(),type:"",minutes:"",note:"",calories:"",intensity:"",runType:"",miles:"",runTime:""});
-    flash("Workout saved ✓");
+function addWorkout(){
+    try{
+      if(!workoutForm.type)return;
+      const w={
+        id:uid(),
+        date:workoutForm.date||todayISO(),
+        type:String(workoutForm.type||""),
+        minutes:+(workoutForm.minutes||0),
+        calories:+(workoutForm.calories||0),
+        intensity:String(workoutForm.intensity||""),
+        note:String(workoutForm.note||""),
+        runType:String(workoutForm.runType||""),
+        miles:String(workoutForm.miles||""),
+        runTime:String(workoutForm.runTime||""),
+      };
+      setWorkouts(prev=>[...(prev||[]),w]);
+      setWorkoutForm({date:todayISO(),type:"",minutes:"",note:"",calories:"",intensity:"",runType:"",miles:"",runTime:""});
+      flash("Workout saved ✓");
+    }catch(e){console.error("Workout error:",e);}
   }
 
   function toggleTaken(id){setTakenToday(prev=>prev.includes(id)?prev.filter(x=>x!==id):[...prev,id]);}
