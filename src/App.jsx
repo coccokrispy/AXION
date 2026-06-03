@@ -221,41 +221,48 @@ function PeptideCalculator({theme,DS}) {
 
   // SVG syringe drawings
   const Syringe30=()=>(
-    <svg viewBox="0 0 120 60" style={{width:80,height:40,display:"block",margin:"6px auto 0"}}>
-      <rect x="10" y="22" width="70" height="16" rx="3" fill="none" stroke={theme.primary} strokeWidth="2"/>
-      <rect x="12" y="24" width="20" height="12" rx="1" fill={theme.primary+"44"}/>
-      <line x1="32" y1="24" x2="32" y2="36" stroke={theme.primary} strokeWidth="1.5"/>
-      <line x1="52" y1="24" x2="52" y2="36" stroke={theme.primary} strokeWidth="1.5"/>
-      <line x1="72" y1="24" x2="72" y2="36" stroke={theme.primary} strokeWidth="1.5"/>
-      <polygon points="80,28 80,32 95,30" fill={theme.primary}/>
-      <rect x="6" y="18" width="4" height="24" rx="1" fill={theme.primary}/>
-      <rect x="2" y="20" width="8" height="3" rx="1" fill={theme.primary}/>
-      <rect x="2" y="37" width="8" height="3" rx="1" fill={theme.primary}/>
-      <text x="60" y="52" textAnchor="middle" fill="#94a3b8" fontSize="13" fontFamily="monospace" fontWeight="700">30 units</text>
+    <svg viewBox="0 0 80 50" style={{width:80,height:50,display:"block",margin:"4px auto 0"}}>
+      <rect x="8" y="10" width="50" height="14" rx="3" fill="none" stroke={theme.primary} strokeWidth="2"/>
+      <rect x="10" y="12" width="14" height="10" rx="1" fill={theme.primary+"44"}/>
+      <line x1="24" y1="12" x2="24" y2="22" stroke={theme.primary} strokeWidth="1.5"/>
+      <line x1="38" y1="12" x2="38" y2="22" stroke={theme.primary} strokeWidth="1.5"/>
+      <line x1="52" y1="12" x2="52" y2="22" stroke={theme.primary} strokeWidth="1.5"/>
+      <polygon points="58,14 58,18 70,16" fill={theme.primary}/>
+      <rect x="4" y="7" width="4" height="20" rx="1" fill={theme.primary}/>
+      <rect x="1" y="8" width="6" height="3" rx="1" fill={theme.primary}/>
+      <rect x="1" y="23" width="6" height="3" rx="1" fill={theme.primary}/>
+      <text x="40" y="44" textAnchor="middle" fill="#94a3b8" fontSize="11" fontFamily="monospace" fontWeight="700">30 units</text>
     </svg>
   );
   const Syringe50=()=>(
-    <svg viewBox="0 0 140 70" style={{width:96,height:48,display:"block",margin:"6px auto 0"}}>
-      <rect x="10" y="22" width="90" height="16" rx="3" fill="none" stroke={theme.primary} strokeWidth="2"/>
-      <rect x="12" y="24" width="20" height="12" rx="1" fill={theme.primary+"44"}/>
-      {[32,50,68,86].map(x=><line key={x} x1={x} y1="24" x2={x} y2="36" stroke={theme.primary} strokeWidth="1.5"/>)}
-      <polygon points="100,28 100,32 115,30" fill={theme.primary}/>
-      <rect x="6" y="18" width="4" height="24" rx="1" fill={theme.primary}/>
-      <rect x="2" y="20" width="8" height="3" rx="1" fill={theme.primary}/>
-      <rect x="2" y="37" width="8" height="3" rx="1" fill={theme.primary}/>
-      <text x="70" y="52" textAnchor="middle" fill="#64748b" fontSize="9" fontFamily="monospace">50 units</text>
+    <svg viewBox="0 0 80 50" style={{width:80,height:50,display:"block",margin:"4px auto 0"}}>
+      <rect x="4" y="10" width="56" height="14" rx="3" fill="none" stroke={theme.primary} strokeWidth="2"/>
+      <rect x="6" y="12" width="12" height="10" rx="1" fill={theme.primary+"44"}/>
+      <line x1="18" y1="12" x2="18" y2="22" stroke={theme.primary} strokeWidth="1.5"/>
+      <line x1="30" y1="12" x2="30" y2="22" stroke={theme.primary} strokeWidth="1.5"/>
+      <line x1="42" y1="12" x2="42" y2="22" stroke={theme.primary} strokeWidth="1.5"/>
+      <line x1="54" y1="12" x2="54" y2="22" stroke={theme.primary} strokeWidth="1.5"/>
+      <polygon points="60,14 60,18 74,16" fill={theme.primary}/>
+      <rect x="1" y="7" width="3" height="20" rx="1" fill={theme.primary}/>
+      <rect x="0" y="8" width="5" height="3" rx="1" fill={theme.primary}/>
+      <rect x="0" y="23" width="5" height="3" rx="1" fill={theme.primary}/>
+      <text x="40" y="44" textAnchor="middle" fill="#94a3b8" fontSize="11" fontFamily="monospace" fontWeight="700">50 units</text>
     </svg>
   );
   const Syringe100=()=>(
-    <svg viewBox="0 0 180 60" style={{width:80,height:40,display:"block",margin:"6px auto 0"}}>
-      <rect x="10" y="22" width="130" height="16" rx="3" fill="none" stroke={theme.primary} strokeWidth="2"/>
-      <rect x="12" y="24" width="20" height="12" rx="1" fill={theme.primary+"44"}/>
-      {[32,58,84,110,136].map(x=><line key={x} x1={x} y1="24" x2={x} y2="36" stroke={theme.primary} strokeWidth="1.5"/>)}
-      <polygon points="140,28 140,32 160,30" fill={theme.primary}/>
-      <rect x="6" y="18" width="4" height="24" rx="1" fill={theme.primary}/>
-      <rect x="2" y="20" width="8" height="3" rx="1" fill={theme.primary}/>
-      <rect x="2" y="37" width="8" height="3" rx="1" fill={theme.primary}/>
-      <text x="90" y="52" textAnchor="middle" fill="#64748b" fontSize="9" fontFamily="monospace">100 units</text>
+    <svg viewBox="0 0 80 50" style={{width:80,height:50,display:"block",margin:"4px auto 0"}}>
+      <rect x="4" y="10" width="56" height="14" rx="3" fill="none" stroke={theme.primary} strokeWidth="2"/>
+      <rect x="6" y="12" width="10" height="10" rx="1" fill={theme.primary+"44"}/>
+      <line x1="16" y1="12" x2="16" y2="22" stroke={theme.primary} strokeWidth="1.5"/>
+      <line x1="26" y1="12" x2="26" y2="22" stroke={theme.primary} strokeWidth="1.5"/>
+      <line x1="36" y1="12" x2="36" y2="22" stroke={theme.primary} strokeWidth="1.5"/>
+      <line x1="46" y1="12" x2="46" y2="22" stroke={theme.primary} strokeWidth="1.5"/>
+      <line x1="56" y1="12" x2="56" y2="22" stroke={theme.primary} strokeWidth="1.5"/>
+      <polygon points="60,14 60,18 76,16" fill={theme.primary}/>
+      <rect x="1" y="7" width="3" height="20" rx="1" fill={theme.primary}/>
+      <rect x="0" y="8" width="5" height="3" rx="1" fill={theme.primary}/>
+      <rect x="0" y="23" width="5" height="3" rx="1" fill={theme.primary}/>
+      <text x="40" y="44" textAnchor="middle" fill="#94a3b8" fontSize="11" fontFamily="monospace" fontWeight="700">100 units</text>
     </svg>
   );
 
