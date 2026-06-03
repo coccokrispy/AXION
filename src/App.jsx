@@ -1024,14 +1024,137 @@ export default function App() {
       {/* FOOD */}
       {tab==="food"&&(
         <div>
+          {/* DAILY NUTRITION SUMMARY */}
+          <div style={DS.panel}>
+            <div style={{display:"flex",justifyContent:"space-between",alignItems:"center",marginBottom:12}}>
+              <h2 style={{margin:0,fontSize:15,fontWeight:700,color:"#94a3b8",fontFamily:"monospace"}}>📊 Today's Nutrition</h2>
+              <span style={{fontSize:11,color:"#475569",fontFamily:"monospace"}}>{new Date().toLocaleDateString("en-US",{month:"short",day:"numeric"})}</span>
+            </div>
+            <div style={{display:"grid",gridTemplateColumns:"repeat(4,1fr)",gap:8,marginBottom:12}}>
+              {[["Calories",todayCals,"kcal",calorieTarget],["Protein",todayProtein,"g",Number(localStorage.getItem("tracker_protein_target"))||null],["Carbs",todayFoods.reduce((s,f)=>s+(f.carbs||0),0),"g",null],["Fat",todayFoods.reduce((s,f)=>s+(f.fat||0),0),"g",null]].map(([l,v,u,target])=>(
+                <div key={l} style={{background:"#020617",border:`1px solid ${theme.border}`,borderRadius:12,padding:10,textAlign:"center"}}>
+                  <div style={{fontSize:10,color:"#475569",fontFamily:"monospace",textTransform:"uppercase",letterSpacing:1,marginBottom:4}}>{l}</div>
+                  <div style={{fontSize:18,fontWeight:900,color:v>0?theme.primary:"#334155",fontFamily:"monospace"}}>{v>0?v:"--"}</div>
+                  <div style={{fontSize:10,color:"#64748b",fontFamily:"monospace"}}>{u}</div>
+                </div>
+              ))}
+            </div>
+            {calorieTarget&&todayCals>0&&(
+              <div style={{marginBottom:8}}>
+                <div style={{display:"flex",justifyContent:"space-between",marginBottom:4}}>
+                  <span style={{fontSize:11,color:"#64748b",fontFamily:"monospace"}}>Calories</span>
+                  <span style={{fontSize:11,fontFamily:"monospace",color:todayCals>calorieTarget?"#ef4444":theme.primary}}>{todayCals} / {calorieTarget}</span>
+                </div>
+                <div style={{background:"#1e293b",borderRadius:999,height:7,overflow:"hidden"}}>
+                  <div style={{height:"100%",borderRadius:999,width:`${Math.min(100,(todayCals/calorieTarget)*100)}%`,background:todayCals>calorieTarget?"#ef4444":`linear-gradient(90deg,${theme.primaryDark},${theme.primary})`}}/>
+                </div>
+              </div>
+            )}
+            {(()=>{
+              const proteinTarget=Number(localStorage.getItem("tracker_protein_target"))||Math.round((Number(localStorage.getItem("tracker_start_weight"))||200)*0.7);
+              if(proteinTarget&&todayProtein>0)return(
+                <div>
+                  <div style={{display:"flex",justifyContent:"space-between",marginBottom:4}}>
+                    <span style={{fontSize:11,color:"#64748b",fontFamily:"monospace"}}>Protein</span>
+                    <span style={{fontSize:11,fontFamily:"monospace",color:todayProtein>=proteinTarget?"#4ade80":theme.primary}}>{todayProtein} / {proteinTarget}g</span>
+                  </div>
+                  <div style={{background:"#1e293b",borderRadius:999,height:7,overflow:"hidden"}}>
+                    <div style={{height:"100%",borderRadius:999,width:`${Math.min(100,(todayProtein/proteinTarget)*100)}%`,background:todayProtein>=proteinTarget?"#4ade80":`linear-gradient(90deg,#1d4ed8,#60a5fa)`}}/>
+                  </div>
+                </div>
+              );
+            })()}
+          </div>
+
+          {/* LOG FORM */}
           <div style={DS.panel}>
             <div style={{display:"flex",gap:6,marginBottom:16}}>
-              {[["search","🔍 Search"],["ai","📷 Scan"],["manual","✏️ Manual"]].map(([m,l])=>(<button key={m} onClick={()=>setFoodMode(m)} style={{flex:1,padding:"9px 4px",borderRadius:10,border:`1px solid ${foodMode===m?theme.primary:"#334155"}`,background:foodMode===m?theme.primary+"22":"#020617",color:foodMode===m?theme.primary:"#64748b",cursor:"pointer",fontSize:11,fontFamily:"monospace",fontWeight:700}}>{l}</button>))}
+              {[["search","🔍 Search"],["quick","⚡ Quick"],["ai","📷 Scan"],["manual","✏️ Manual"]].map(([m,l])=>(
+                <button key={m} onClick={()=>setFoodMode(m)} style={{flex:1,padding:"8px 4px",borderRadius:10,border:`1px solid ${foodMode===m?theme.primary:"#334155"}`,background:foodMode===m?theme.primary+"22":"#020617",color:foodMode===m?theme.primary:"#64748b",cursor:"pointer",fontSize:10,fontFamily:"monospace",fontWeight:700}}>{l}</button>
+              ))}
             </div>
+
             <div style={{marginBottom:12}}>
               <div style={{fontSize:11,color:"#64748b",fontFamily:"monospace",textTransform:"uppercase",letterSpacing:1,marginBottom:6}}>Date</div>
-              <input style={DS.input} type="date" value={foodDate} onChange={e=>setFoodDate(e.target.value)}/>
+              <input style={{...DS.input,width:"auto",minWidth:160}} type="date" value={foodDate} onChange={e=>setFoodDate(e.target.value)}/>
             </div>
+
+            {/* MEAL TAG */}
+            <div style={{marginBottom:14}}>
+              <div style={{fontSize:11,color:"#64748b",fontFamily:"monospace",textTransform:"uppercase",letterSpacing:1,marginBottom:8}}>Meal</div>
+              <div style={{display:"flex",gap:6,flexWrap:"wrap"}}>
+                {[["🌅","Breakfast"],["☀️","Lunch"],["🌙","Dinner"],["🍎","Snack"]].map(([icon,meal])=>{
+                  const selected=(window._axionMeal||"Lunch")===meal;
+                  return(
+                    <button key={meal} onClick={()=>{window._axionMeal=meal;document.dispatchEvent(new Event("mealchange"));}} style={{padding:"7px 12px",borderRadius:10,cursor:"pointer",fontFamily:"monospace",fontSize:11,fontWeight:700,border:`1px solid ${selected?theme.primary:theme.border}`,background:selected?theme.primary+"22":"#020617",color:selected?theme.primary:"#94a3b8",transition:"all 0.15s"}}>
+                      {icon} {meal}
+                    </button>
+                  );
+                })}
+              </div>
+            </div>
+
+            {/* QUICK ADD */}
+            {foodMode==="quick"&&(
+              <div>
+                {/* Recent foods */}
+                {(()=>{
+                  const recent=[...new Map((foods||[]).slice().reverse().map(f=>[f.item,f])).values()].slice(0,8);
+                  if(recent.length===0)return <div style={{color:"#475569",fontSize:13,fontFamily:"monospace",padding:"12px 0"}}>No recent foods yet. Search or add some food first.</div>;
+                  return(
+                    <div>
+                      <div style={{fontSize:11,color:"#64748b",fontFamily:"monospace",textTransform:"uppercase",letterSpacing:1,marginBottom:10}}>Recent — tap to re-log</div>
+                      <div style={{display:"flex",flexDirection:"column",gap:6,marginBottom:16}}>
+                        {recent.map(f=>(
+                          <button key={f.id} onClick={()=>{
+                            setFoods(prev=>[...(prev||[]),{...f,id:uid(),date:foodDate,meal:window._axionMeal||"Lunch"}]);
+                            flash(`${f.item} logged ✓`);
+                          }} style={{display:"flex",justifyContent:"space-between",alignItems:"center",background:"#020617",border:`1px solid ${theme.border}`,borderRadius:12,padding:"10px 14px",cursor:"pointer",textAlign:"left"}}>
+                            <div>
+                              <div style={{fontWeight:700,color:"#f8fafc",fontSize:13}}>{f.item}</div>
+                              <div style={{fontSize:11,color:"#64748b",fontFamily:"monospace"}}>{f.calories}cal · {f.protein}g pro</div>
+                            </div>
+                            <div style={{fontSize:20,color:theme.primary}}>+</div>
+                          </button>
+                        ))}
+                      </div>
+                    </div>
+                  );
+                })()}
+
+                {/* Common staples */}
+                <div style={{fontSize:11,color:"#64748b",fontFamily:"monospace",textTransform:"uppercase",letterSpacing:1,marginBottom:10}}>Common Staples</div>
+                <div style={{display:"flex",flexDirection:"column",gap:6}}>
+                  {[
+                    {item:"Chicken Breast (100g)",calories:165,protein:31,carbs:0,fat:3.6,fiber:0},
+                    {item:"White Rice (100g cooked)",calories:130,protein:2.7,carbs:28,fat:0.3,fiber:0.4},
+                    {item:"Large Egg",calories:70,protein:6,carbs:0.5,fat:5,fiber:0},
+                    {item:"Greek Yogurt (170g)",calories:100,protein:17,carbs:6,fat:0.7,fiber:0},
+                    {item:"Protein Shake (1 scoop)",calories:120,protein:25,carbs:3,fat:1.5,fiber:0},
+                    {item:"Banana (medium)",calories:105,protein:1.3,carbs:27,fat:0.4,fiber:3.1},
+                    {item:"Almonds (28g / 1oz)",calories:164,protein:6,carbs:6,fat:14,fiber:3.5},
+                    {item:"Salmon (100g)",calories:208,protein:20,carbs:0,fat:13,fiber:0},
+                    {item:"Broccoli (100g)",calories:34,protein:2.8,carbs:7,fat:0.4,fiber:2.6},
+                    {item:"Sweet Potato (100g)",calories:86,protein:1.6,carbs:20,fat:0.1,fiber:3},
+                    {item:"Oatmeal (40g dry)",calories:150,protein:5,carbs:27,fat:2.5,fiber:4},
+                    {item:"Ground Beef 80/20 (100g)",calories:254,protein:17,carbs:0,fat:20,fiber:0},
+                  ].map(food=>(
+                    <button key={food.item} onClick={()=>{
+                      setFoods(prev=>[...(prev||[]),{id:uid(),date:foodDate,meal:window._axionMeal||"Lunch",...food}]);
+                      flash(`${food.item} logged ✓`);
+                    }} style={{display:"flex",justifyContent:"space-between",alignItems:"center",background:"#020617",border:`1px solid ${theme.border}`,borderRadius:12,padding:"10px 14px",cursor:"pointer",textAlign:"left"}}>
+                      <div>
+                        <div style={{fontWeight:700,color:"#f8fafc",fontSize:13}}>{food.item}</div>
+                        <div style={{fontSize:11,color:"#64748b",fontFamily:"monospace"}}>{food.calories}cal · {food.protein}g pro · {food.carbs}g carb · {food.fat}g fat</div>
+                      </div>
+                      <div style={{fontSize:20,color:theme.primary}}>+</div>
+                    </button>
+                  ))}
+                </div>
+              </div>
+            )}
+
+            {/* AI SEARCH */}
             {foodMode==="search"&&<>
               {!apiKey&&<div style={{background:"#451a03",border:"1px solid #fb923c",borderRadius:8,padding:12,marginBottom:12,fontSize:12,color:"#fb923c",fontFamily:"monospace"}}>Add your API key in Settings to enable food search</div>}
               <div style={{display:"flex",gap:8,marginBottom:10}}>
@@ -1048,7 +1171,9 @@ export default function App() {
                     <div style={{marginBottom:12}}>
                       <div style={{fontSize:11,color:"#64748b",fontFamily:"monospace",marginBottom:6,textTransform:"uppercase",letterSpacing:1}}>Quick select serving</div>
                       <div style={{display:"flex",flexWrap:"wrap",gap:6}}>
-                        {foodSearchResults.serving_sizes.map(sv=>(<button key={sv.label} onClick={()=>{setServingWeight(String(sv.weight_g));setServingUnit("g");}} style={{background:servingWeight===String(sv.weight_g)?theme.primary+"22":"#0f172a",border:`1px solid ${servingWeight===String(sv.weight_g)?theme.primary:"#1e293b"}`,color:servingWeight===String(sv.weight_g)?theme.primary:"#94a3b8",borderRadius:8,padding:"5px 10px",cursor:"pointer",fontSize:12,fontFamily:"monospace"}}>{sv.label}</button>))}
+                        {foodSearchResults.serving_sizes.map((sv,i)=>(
+                          <button key={sv.label} onClick={()=>{setServingWeight(String(sv.weight_g));setServingUnit("g");}} style={{background:servingWeight===String(sv.weight_g)||(!servingWeight&&i===0)?theme.primary+"22":"#0f172a",border:`1px solid ${servingWeight===String(sv.weight_g)||(!servingWeight&&i===0)?theme.primary:"#1e293b"}`,color:servingWeight===String(sv.weight_g)||(!servingWeight&&i===0)?theme.primary:"#94a3b8",borderRadius:8,padding:"5px 10px",cursor:"pointer",fontSize:12,fontFamily:"monospace"}}>{sv.label}</button>
+                        ))}
                       </div>
                     </div>
                   )}
@@ -1063,17 +1188,29 @@ export default function App() {
                       <div style={{background:"#0f172a",borderRadius:10,padding:12,marginBottom:12}}>
                         <div style={{fontSize:11,color:"#64748b",fontFamily:"monospace",marginBottom:8,textTransform:"uppercase",letterSpacing:1}}>Nutrition for {servingWeight}{servingUnit}</div>
                         <div style={{display:"grid",gridTemplateColumns:"repeat(4,1fr)",gap:8}}>
-                          {[["Cal",n.calories,""],["Pro",n.protein,"g"],["Carb",n.carbs,"g"],["Fat",n.fat,"g"]].map(([l,v,u])=>(<div key={l} style={{textAlign:"center"}}><div style={{fontSize:18,fontWeight:900,color:theme.primary}}>{v}<span style={{fontSize:11}}>{u}</span></div><div style={{fontSize:10,color:"#64748b",fontFamily:"monospace"}}>{l}</div></div>))}
+                          {[["Cal",n.calories,""],["Pro",n.protein,"g"],["Carb",n.carbs,"g"],["Fat",n.fat,"g"]].map(([l,v,u])=>(
+                            <div key={l} style={{textAlign:"center"}}><div style={{fontSize:18,fontWeight:900,color:theme.primary}}>{v}<span style={{fontSize:11}}>{u}</span></div><div style={{fontSize:10,color:"#64748b",fontFamily:"monospace"}}>{l}</div></div>
+                          ))}
                         </div>
                         {n.fiber>0&&<div style={{fontSize:11,color:"#64748b",fontFamily:"monospace",marginTop:8}}>Fiber: {n.fiber}g · Sugar: {n.sugar}g · Sodium: {n.sodium}mg</div>}
                       </div>
                     );
                   })()}
-                  <button style={{...DS.btn,gridColumn:"unset",width:"100%",opacity:(!servingWeight||parseFloat(servingWeight)<=0)?0.5:1}} onClick={logSearchedFood} disabled={!servingWeight||parseFloat(servingWeight)<=0}>+ Log This Food</button>
+                  <button style={{...DS.btn,gridColumn:"unset",width:"100%",opacity:(!servingWeight||parseFloat(servingWeight)<=0)?0.5:1}} onClick={()=>{
+                    if(!foodSearchResults||!servingWeight)return;
+                    const wg=servingUnit==="oz"?parseFloat(servingWeight)*28.35:parseFloat(servingWeight);
+                    if(!wg||wg<=0)return;
+                    const n=calcNutrition(foodSearchResults.per_100g,wg);
+                    setFoods(prev=>[...(prev||[]),{id:uid(),date:foodDate,meal:window._axionMeal||"Lunch",item:foodSearchResults.food+(foodSearchResults.brand?` (${foodSearchResults.brand})`:""),weight_g:wg,...n}]);
+                    setFoodQuery("");setFoodSearchResults(null);setServingWeight("");
+                    flash("Food logged ✓");
+                  }} disabled={!servingWeight||parseFloat(servingWeight)<=0}>+ Log This Food</button>
                   {foodSearchResults.notes&&<div style={{fontSize:11,color:"#64748b",fontFamily:"monospace",marginTop:8,fontStyle:"italic"}}>💬 {foodSearchResults.notes}</div>}
                 </div>
               )}
             </>}
+
+            {/* SCAN */}
             {foodMode==="ai"&&<>
               {!apiKey&&<div style={{background:"#451a03",border:"1px solid #fb923c",borderRadius:8,padding:12,marginBottom:12,fontSize:12,color:"#fb923c",fontFamily:"monospace"}}>Add your API key in Settings to enable scanning</div>}
               <div style={{display:"flex",gap:8,marginBottom:10}}>
@@ -1092,6 +1229,8 @@ export default function App() {
               )}
               {aiScanError&&<div style={{color:"#ef4444",fontSize:13,fontFamily:"monospace"}}>{aiScanError}</div>}
             </>}
+
+            {/* MANUAL */}
             {foodMode==="manual"&&(
               <div style={formGrid}>
                 <label style={formLabel}>Food name</label><input style={DS.input} placeholder="Chicken breast" value={manualFood.item} onChange={e=>setManualFood({...manualFood,item:e.target.value})}/>
@@ -1100,39 +1239,78 @@ export default function App() {
                 <label style={formLabel}>Carbs (g)</label><input style={DS.input} type="number" placeholder="0" value={manualFood.carbs} onChange={e=>setManualFood({...manualFood,carbs:e.target.value})}/>
                 <label style={formLabel}>Fat (g)</label><input style={DS.input} type="number" placeholder="3.6" value={manualFood.fat} onChange={e=>setManualFood({...manualFood,fat:e.target.value})}/>
                 <label style={formLabel}>Fiber (g)</label><input style={DS.input} type="number" placeholder="0" value={manualFood.fiber} onChange={e=>setManualFood({...manualFood,fiber:e.target.value})}/>
-                <button style={DS.btn} onClick={addManualFood}>+ Log Food</button>
+                <button style={DS.btn} onClick={()=>{
+                  if(!manualFood.item)return;
+                  setFoods(prev=>[...(prev||[]),{id:uid(),date:foodDate,meal:window._axionMeal||"Lunch",item:manualFood.item,weight_g:null,calories:+(manualFood.calories||0),protein:+(manualFood.protein||0),carbs:+(manualFood.carbs||0),fat:+(manualFood.fat||0),fiber:+(manualFood.fiber||0)}]);
+                  setManualFood({item:"",calories:"",protein:"",carbs:"",fat:"",fiber:""});
+                  flash("Food logged ✓");
+                }}>+ Log Food</button>
               </div>
             )}
           </div>
+
+          {/* FOOD LOG - grouped by meal */}
           <div style={DS.panel}>
             <div style={{display:"flex",justifyContent:"space-between",alignItems:"center",marginBottom:14}}>
-              <h2 style={{margin:0,fontSize:15,fontWeight:700,color:"#94a3b8",fontFamily:"monospace"}}>{showFoodHistory?"All Food History":"Today · "+todayCals+" cal · "+todayProtein+"g protein"}</h2>
-              <button onClick={()=>setShowFoodHistory(h=>!h)} style={{background:"#020617",border:`1px solid ${theme.border}`,color:"#64748b",borderRadius:8,padding:"5px 10px",cursor:"pointer",fontFamily:"monospace",fontSize:11}}>{showFoodHistory?"Today only":"All history"}</button>
+              <h2 style={{margin:0,fontSize:15,fontWeight:700,color:"#94a3b8",fontFamily:"monospace"}}>
+                {showFoodHistory?"All History":"Today's Log"}
+              </h2>
+              <button onClick={()=>setShowFoodHistory(h=>!h)} style={{background:"#020617",border:`1px solid ${theme.border}`,color:"#64748b",borderRadius:8,padding:"5px 10px",cursor:"pointer",fontFamily:"monospace",fontSize:11}}>
+                {showFoodHistory?"Today":"All history"}
+              </button>
             </div>
-            {calorieTarget&&!showFoodHistory&&todayCals>0&&(
-              <div style={{marginBottom:12}}>
-                <div style={{display:"flex",justifyContent:"space-between",marginBottom:4}}>
-                  <span style={{fontSize:11,color:"#64748b",fontFamily:"monospace"}}>Calorie target</span>
-                  <span style={{fontSize:11,fontFamily:"monospace",color:todayCals>calorieTarget?"#ef4444":theme.primary}}>{todayCals} / {calorieTarget} kcal</span>
-                </div>
-                <div style={{background:"#1e293b",borderRadius:999,height:6,overflow:"hidden"}}>
-                  <div style={{height:"100%",borderRadius:999,width:`${Math.min(100,(todayCals/calorieTarget)*100)}%`,background:todayCals>calorieTarget?"#ef4444":`linear-gradient(90deg,${theme.primaryDark},${theme.primary})`}}/>
-                </div>
+
+            {showFoodHistory?(
+              <div>
+                {[...(foods||[])].sort((a,b)=>new Date(b.date)-new Date(a.date)).length===0
+                  ?<div style={{color:"#475569",fontSize:13,fontFamily:"monospace"}}>No food logged yet.</div>
+                  :[...(foods||[])].sort((a,b)=>new Date(b.date)-new Date(a.date)).map(f=>(
+                    <div key={f.id} style={{display:"flex",justifyContent:"space-between",alignItems:"center",gap:10,background:"#020617",border:"1px solid #1e293b",borderRadius:8,padding:"10px 12px",marginBottom:6}}>
+                      <div style={{flex:1}}>
+                        <div style={{fontWeight:700,color:"#f59e0b",fontSize:13}}>{f.item}</div>
+                        <div style={{fontSize:11,color:"#64748b",fontFamily:"monospace"}}>{f.date}{f.meal?` · ${f.meal}`:""} · {f.calories}cal · {f.protein}g pro</div>
+                      </div>
+                      <button style={{background:"transparent",color:"#ef4444",border:"1px solid #450a0a",borderRadius:6,cursor:"pointer",padding:"3px 8px",fontSize:11,flexShrink:0}} onClick={()=>setFoods((foods||[]).filter(x=>x.id!==f.id))}>✕</button>
+                    </div>
+                  ))
+                }
+              </div>
+            ):(
+              <div>
+                {todayFoods.length===0
+                  ?<div style={{color:"#475569",fontSize:13,fontFamily:"monospace"}}>Nothing logged today. Use Quick, Search, Scan, or Manual above.</div>
+                  :(()=>{
+                    const mealOrder=["Breakfast","Lunch","Dinner","Snack"];
+                    const byMeal={};
+                    todayFoods.forEach(f=>{const m=f.meal||"Other";if(!byMeal[m])byMeal[m]=[];byMeal[m].push(f);});
+                    const meals=[...mealOrder.filter(m=>byMeal[m]),...Object.keys(byMeal).filter(m=>!mealOrder.includes(m))];
+                    return meals.map(meal=>{
+                      const items=byMeal[meal];
+                      const mealCals=items.reduce((s,f)=>s+(f.calories||0),0);
+                      const mealPro=items.reduce((s,f)=>s+(f.protein||0),0);
+                      const icons={"Breakfast":"🌅","Lunch":"☀️","Dinner":"🌙","Snack":"🍎","Other":"🍽️"};
+                      return(
+                        <div key={meal} style={{marginBottom:14}}>
+                          <div style={{display:"flex",justifyContent:"space-between",alignItems:"center",marginBottom:6}}>
+                            <div style={{fontSize:12,fontWeight:700,color:theme.primary,fontFamily:"monospace"}}>{icons[meal]||"🍽️"} {meal}</div>
+                            <div style={{fontSize:11,color:"#475569",fontFamily:"monospace"}}>{mealCals} cal · {mealPro}g pro</div>
+                          </div>
+                          {items.map(f=>(
+                            <div key={f.id} style={{display:"flex",justifyContent:"space-between",alignItems:"center",gap:10,background:"#020617",border:"1px solid #1e293b",borderRadius:8,padding:"10px 12px",marginBottom:5}}>
+                              <div style={{flex:1}}>
+                                <div style={{fontWeight:700,color:"#f59e0b",fontSize:13}}>{f.item}</div>
+                                <div style={{fontSize:11,color:"#64748b",fontFamily:"monospace"}}>{f.calories}cal · {f.protein}g pro · {f.carbs}g carb · {f.fat}g fat{f.fiber?` · ${f.fiber}g fiber`:""}</div>
+                              </div>
+                              <button style={{background:"transparent",color:"#ef4444",border:"1px solid #450a0a",borderRadius:6,cursor:"pointer",padding:"3px 8px",fontSize:11,flexShrink:0}} onClick={()=>setFoods((foods||[]).filter(x=>x.id!==f.id))}>✕</button>
+                            </div>
+                          ))}
+                        </div>
+                      );
+                    });
+                  })()
+                }
               </div>
             )}
-            {(()=>{
-              const filtered=showFoodHistory?[...(foods||[])].sort((a,b)=>new Date(b.date)-new Date(a.date)):(foods||[]).filter(f=>f.date===today).sort((a,b)=>new Date(b.date)-new Date(a.date));
-              if(filtered.length===0)return <div style={{color:"#475569",fontSize:13,fontFamily:"monospace"}}>{showFoodHistory?"No food logged yet.":"Nothing logged today."}</div>;
-              return filtered.map(f=>(
-                <div key={f.id} style={{display:"flex",justifyContent:"space-between",alignItems:"center",gap:10,background:"#020617",border:"1px solid #1e293b",borderRadius:8,padding:"10px 12px",marginBottom:6}}>
-                  <div style={{flex:1}}>
-                    <div style={{fontWeight:700,color:"#f59e0b",fontSize:13}}>{f.item}</div>
-                    <div style={{fontSize:11,color:"#64748b",fontFamily:"monospace"}}>{showFoodHistory?f.date+" · ":""}{f.calories}cal · {f.protein}g pro · {f.carbs}g carb · {f.fat}g fat{f.fiber?` · ${f.fiber}g fiber`:""}</div>
-                  </div>
-                  <button style={{background:"transparent",color:"#ef4444",border:"1px solid #450a0a",borderRadius:6,cursor:"pointer",padding:"3px 8px",fontSize:11,flexShrink:0}} onClick={()=>setFoods((foods||[]).filter(x=>x.id!==f.id))}>✕</button>
-                </div>
-              ));
-            })()}
           </div>
         </div>
       )}
