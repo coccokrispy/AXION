@@ -510,10 +510,10 @@ export default function App() {
       </div>
 
       {/* TABS */}
-      <nav style={{display:"flex",gap:6,marginBottom:16,flexWrap:"wrap"}}>
+     <nav style={{display:"flex",gap:6,marginBottom:16,flexWrap:"wrap"}}>
         {TABS.map(t=>{const Icon=ICONS[t];return(
-          <button key={t} onClick={()=>setTab(t)} style={tab===t?DS.activeTab:{flex:"1 1 80px",display:"flex",flexDirection:"column",alignItems:"center",gap:8,padding:"17px 8px",background:"linear-gradient(145deg,#000000,#020806)",border:"1px solid rgba(74,222,128,0.18)",borderRadius:20,cursor:"pointer",color:"#cbd5e1",fontFamily:"monospace",transition:"all 0.18s ease"}}>
-            <Icon size={28} strokeWidth={1.8} color={tab===t?theme.primary:"#e2e8f0"}/>
+          <button key={t} onClick={()=>setTab(t)} style={tab===t?DS.activeTab:{flex:"1 1 80px",display:"flex",flexDirection:"column",alignItems:"center",gap:8,padding:"17px 8px",background:"linear-gradient(145deg,#000000,#020806)",border:`1px solid ${theme.border}`,borderRadius:20,cursor:"pointer",color:theme.primary+"99",fontFamily:"monospace",transition:"all 0.18s ease"}}>
+            <Icon size={28} strokeWidth={1.8} color={tab===t?theme.primary:theme.primary+"99"}/>
             <span style={{fontSize:11,textTransform:"capitalize"}}>{t}</span>
           </button>
         );})}
