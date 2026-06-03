@@ -247,7 +247,7 @@ function PeptideCalculator({theme,DS}) {
     </svg>
   );
   const Syringe100=()=>(
-    <svg viewBox="0 0 180 60" style={{width:120,height:40,display:"block",margin:"6px auto 0"}}>
+    <svg viewBox="0 0 180 60" style={{width:80,height:40,display:"block",margin:"6px auto 0"}}>
       <rect x="10" y="22" width="130" height="16" rx="3" fill="none" stroke={theme.primary} strokeWidth="2"/>
       <rect x="12" y="24" width="20" height="12" rx="1" fill={theme.primary+"44"}/>
       {[32,58,84,110,136].map(x=><line key={x} x1={x} y1="24" x2={x} y2="36" stroke={theme.primary} strokeWidth="1.5"/>)}
