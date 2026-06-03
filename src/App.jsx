@@ -307,7 +307,7 @@ function PeptideCalculator({theme,DS}) {
         <div style={{marginBottom:24}}>
           <div style={{fontSize:11,color:"#64748b",fontFamily:"monospace",textTransform:"uppercase",letterSpacing:1.5,marginBottom:12}}>Step 4 — Dose per injection (mg)</div>
           <div style={{display:"flex",gap:8,flexWrap:"wrap"}}>
-            {["0.05","0.1","0.25","0.5","other"].map(v=>(
+{["0.25","0.50","0.75","1.00","other"].map(v=>(
               <button key={v} onClick={()=>setDose(v)} style={selBtn(dose===v)}>{v==="other"?"Other":v+" mg"}</button>
             ))}
           </div>
