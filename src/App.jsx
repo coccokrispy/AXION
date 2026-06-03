@@ -472,10 +472,13 @@ export default function App() {
   const streak=useMemo(()=>{
     const allDates=new Set([...(weights||[]).map(w=>w.date),...(foods||[]).map(f=>f.date),...(workouts||[]).map(w=>w.date),...Object.values(peptideLogs||{}).flat().map(l=>l.date)]);
     let count=0;let d=new Date();
-    // Give grace: if today not logged yet, start from yesterday
     const todayStr=d.toISOString().slice(0,10);
     if(!allDates.has(todayStr)){d.setDate(d.getDate()-1);}
-    while(true){const iso=d.toISOString().slice(0,10);if(allDates.has(iso)){count++;d.setDate(d.getDate()-1);}else break;}
+    for(let i=0;i<3650;i++){
+      const iso=d.toISOString().slice(0,10);
+      if(allDates.has(iso)){count++;d.setDate(d.getDate()-1);}
+      else break;
+    }
     return count;
   },[weights,foods,workouts,peptideLogs]);
 
