@@ -559,6 +559,17 @@ export default function App() {
   if(!HAS_SETUP){
     return (
       <div style={DS.page}>
+        <div style={{...DS.panel,border:"1px solid #854d0e",borderLeft:"4px solid #f59e0b",marginBottom:16}}>
+          <div style={{fontSize:13,fontWeight:900,color:"#f59e0b",fontFamily:"monospace",letterSpacing:1,marginBottom:12}}>⚠️ IMPORTANT DISCLAIMER — READ BEFORE CONTINUING</div>
+          <div style={{fontSize:12,color:"#94a3b8",lineHeight:1.8,fontFamily:"monospace"}}>
+            <p style={{margin:"0 0 10px"}}>AXION is a <b style={{color:"#f8fafc"}}>personal tracking tool only</b>. It is not a medical application, does not provide medical advice, and is not intended to diagnose, treat, cure, or prevent any disease or health condition.</p>
+            <p style={{margin:"0 0 10px"}}>The information logged and displayed in this app — including peptide protocols, supplement tracking, dosing records, calorie data, and weight logs — is for <b style={{color:"#f8fafc"}}>personal informational purposes only</b>. Nothing in this application should be interpreted as a recommendation, prescription, or endorsement of any substance, dosage, or health practice.</p>
+            <p style={{margin:"0 0 10px"}}>Peptides and research compounds tracked in this app are <b style={{color:"#f8fafc"}}>not approved by the FDA</b> for human use in most jurisdictions. You are solely responsible for understanding and complying with all applicable laws in your country, state, or region regarding the possession and use of any substances you choose to track.</p>
+            <p style={{margin:"0 0 10px"}}><b style={{color:"#f8fafc"}}>Always consult a licensed medical professional</b> before beginning any new health protocol, peptide regimen, supplement stack, or dietary change. Do not modify or discontinue any prescribed medication based on anything logged or displayed in this app.</p>
+            <p style={{margin:"0 0 10px"}}>The creators, developers, and distributors of AXION <b style={{color:"#f8fafc"}}>assume no liability whatsoever</b> for any harm, injury, adverse reaction, legal consequence, or damages — direct or indirect — arising from the use of this application or any substances tracked within it. Use of this app constitutes full acceptance of these terms.</p>
+            <p style={{margin:0,color:"#64748b"}}>By continuing and creating your profile, you confirm that you are an adult, that you understand this disclaimer in full, and that you accept sole responsibility for your health decisions.</p>
+          </div>
+        </div>
         <div style={DS.panel}>
           <h1 style={{margin:"0 0 16px",fontSize:28,fontWeight:900,color:"#f8fafc"}}>Welcome to AXION</h1>
           <div style={formGrid}>
