@@ -687,11 +687,21 @@ export default function App() {
             return(
               <div key={pep.id} style={{...DS.panel,borderLeft:`3px solid ${sc[pep.status]||"#475569"}`}}>
                 <div style={{display:"flex",justifyContent:"space-between",alignItems:"center",marginBottom:10}}>
-                  <div>
+                  <div style={{flex:1}}>
                     <div style={{fontWeight:700,fontSize:15,color:sc[pep.status]}}>{pep.name}</div>
-                    <div style={{fontSize:11,color:"#64748b",fontFamily:"monospace"}}>{pep.dose}{pep.unit} · {pep.frequency} · Total: {total.toFixed(3)}{pep.unit}</div>
+                    <div style={{display:"flex",alignItems:"center",gap:6,marginTop:4,flexWrap:"wrap"}}>
+                      <input
+                        type="number"
+                        step="0.025"
+                        value={pep.dose==="—"?"":pep.dose}
+                        onChange={e=>setPeptideStack(prev=>prev.map(p=>p.id===pep.id?{...p,dose:e.target.value}:p))}
+                        style={{background:"#0f172a",border:`1px solid ${theme.border}`,color:theme.primary,borderRadius:8,padding:"4px 8px",fontSize:13,fontFamily:"monospace",fontWeight:700,width:80,outline:"none"}}
+                      />
+                      <span style={{color:"#64748b",fontSize:12,fontFamily:"monospace"}}>{pep.unit} · {pep.frequency}</span>
+                      <span style={{color:"#475569",fontSize:11,fontFamily:"monospace"}}>Total: {total.toFixed(3)}{pep.unit}</span>
+                    </div>
                   </div>
-                  <button onClick={()=>setDoseTab(isActive?null:pep.id)} style={{background:isActive?"#1e293b":"#1e3a5f",color:isActive?"#94a3b8":"#60a5fa",border:`1px solid ${isActive?"#334155":"#60a5fa"}`,borderRadius:10,padding:"6px 14px",cursor:"pointer",fontFamily:"monospace",fontSize:11,fontWeight:700}}>{isActive?"Close":"+ Log Dose"}</button>
+                  <button onClick={()=>setDoseTab(isActive?null:pep.id)} style={{background:isActive?"#1e293b":"#1e3a5f",color:isActive?"#94a3b8":"#60a5fa",border:`1px solid ${isActive?"#334155":"#60a5fa"}`,borderRadius:10,padding:"6px 14px",cursor:"pointer",fontFamily:"monospace",fontSize:11,fontWeight:700,flexShrink:0,marginLeft:8}}>{isActive?"Close":"+ Log Dose"}</button>
                 </div>
                 {isActive&&(
                   <div style={{background:"#020617",border:"1px solid #1e293b",borderRadius:12,padding:14,marginBottom:12}}>
