@@ -556,28 +556,182 @@ const todayStr=d.toISOString().slice(0,10);
     setAiScanLoading(false);
   }
 
-  function addWorkout(){
-    try{
-      if(!workoutForm.type)return;
-      const w={
-        id:uid(),
-        date:workoutForm.date||todayISO(),
-        type:String(workoutForm.type||""),
-        minutes:+(workoutForm.minutes||0),
-        calories:+(workoutForm.calories||0),
-        intensity:String(workoutForm.intensity||""),
-        note:String(workoutForm.note||""),
-        runType:String(workoutForm.runType||""),
-        miles:String(workoutForm.miles||""),
-        runTime:String(workoutForm.runTime||""),
-      };
-      setWorkouts(prev=>[...(prev||[]),w]);
-      setWorkoutForm({date:todayISO(),type:"",minutes:"",note:"",calories:"",intensity:"",runType:"",miles:"",runTime:""});
-      flash("Workout saved ✓");
-    }catch(e){console.error("Workout error:",e);}
-  }
+ {/* WORKOUTS */}
+      {tab==="workouts"&&(
+        <div>
+          <div style={{display:"grid",gridTemplateColumns:"repeat(3,1fr)",gap:10,marginBottom:14}}>
+            {[
+              ["Today",`${todayMinutes}`,"min"],
+              ["This Week",`${thisWeekMins}`,"min"],
+              ["Total",`${(workouts||[]).length}`,"sessions"],
+            ].map(([l,v,u])=>(
+              <div key={l} style={DS.card}>
+                <div style={{fontSize:10,color:"#475569",textTransform:"uppercase",letterSpacing:1.5,fontFamily:"monospace",marginBottom:4}}>{l}</div>
+                <div style={{fontSize:22,fontWeight:900,color:theme.primary}}>{v}<span style={{fontSize:12,fontWeight:400}}> {u}</span></div>
+              </div>
+            ))}
+          </div>
 
+          <div style={DS.panel}>
+            <h2 style={{margin:"0 0 16px",fontSize:15,fontWeight:700,color:"#94a3b8",fontFamily:"monospace"}}>💪 Log Workout</h2>
 
+            <div style={{marginBottom:14}}>
+              <div style={{fontSize:11,color:"#64748b",fontFamily:"monospace",textTransform:"uppercase",letterSpacing:1,marginBottom:6}}>Date</div>
+              <input style={{...DS.input,width:"auto",minWidth:160}} type="date" value={workoutForm.date} onChange={e=>setWorkoutForm({...workoutForm,date:e.target.value})}/>
+            </div>
+
+            <div style={{marginBottom:14}}>
+              <div style={{fontSize:11,color:"#64748b",fontFamily:"monospace",textTransform:"uppercase",letterSpacing:1,marginBottom:8}}>Workout Type</div>
+              <div style={{display:"flex",flexWrap:"wrap",gap:8,marginBottom:8}}>
+                {[["🏋️","Weights"],["🏃","Run"],["🚴","Bike"],["🏊","Swim"],["⚡","HIIT"],["🚶","Walk"],["🤸","Cardio"],["⚽","Sports"],["🔥","Other"]].map(([icon,label])=>(
+                  <button key={label} onClick={()=>setWorkoutForm({...workoutForm,type:label,miles:"",runTime:"",runType:"",intensity:"",note:"",calories:""})}
+                    style={{padding:"8px 12px",borderRadius:10,cursor:"pointer",fontFamily:"monospace",fontSize:12,fontWeight:700,border:`1px solid ${workoutForm.type===label?theme.primary:theme.border}`,background:workoutForm.type===label?theme.primary+"22":"#020617",color:workoutForm.type===label?theme.primary:"#94a3b8",transition:"all 0.15s"}}>
+                    {icon} {label}
+                  </button>
+                ))}
+              </div>
+              <input style={DS.input} placeholder="Or type custom..." value={["Weights","Run","Bike","Swim","HIIT","Walk","Cardio","Sports","Other"].includes(workoutForm.type)?"":workoutForm.type} onChange={e=>setWorkoutForm({...workoutForm,type:e.target.value})}/>
+            </div>
+
+            <div style={{display:"grid",gridTemplateColumns:"1fr 1fr",gap:10,marginBottom:14}}>
+              <div>
+                <div style={{fontSize:11,color:"#64748b",fontFamily:"monospace",textTransform:"uppercase",letterSpacing:1,marginBottom:6}}>Duration (min)</div>
+                <input style={DS.input} type="number" placeholder="60" value={workoutForm.minutes} onChange={e=>setWorkoutForm({...workoutForm,minutes:e.target.value})}/>
+              </div>
+              <div>
+                <div style={{fontSize:11,color:"#64748b",fontFamily:"monospace",textTransform:"uppercase",letterSpacing:1,marginBottom:6}}>Calories Burned</div>
+                <input style={DS.input} type="number" placeholder="400" value={workoutForm.calories||""} onChange={e=>setWorkoutForm({...workoutForm,calories:e.target.value})}/>
+              </div>
+            </div>
+
+            <div style={{marginBottom:14}}>
+              <div style={{fontSize:11,color:"#64748b",fontFamily:"monospace",textTransform:"uppercase",letterSpacing:1,marginBottom:8}}>Intensity</div>
+              <div style={{display:"grid",gridTemplateColumns:"repeat(4,1fr)",gap:6}}>
+                {[["Easy","#4ade80"],["Moderate","#f59e0b"],["Hard","#f97316"],["Max","#ef4444"]].map(([level,color])=>(
+                  <button key={level} onClick={()=>setWorkoutForm({...workoutForm,intensity:level})}
+                    style={{padding:"8px 4px",borderRadius:10,cursor:"pointer",fontFamily:"monospace",fontSize:11,fontWeight:700,border:`1px solid ${workoutForm.intensity===level?color:"#1e293b"}`,background:workoutForm.intensity===level?color+"22":"#020617",color:workoutForm.intensity===level?color:"#64748b",transition:"all 0.15s"}}>
+                    {level}
+                  </button>
+                ))}
+              </div>
+            </div>
+
+            {workoutForm.type==="Weights"&&(
+              <div style={{marginBottom:14}}>
+                <div style={{fontSize:11,color:"#64748b",fontFamily:"monospace",textTransform:"uppercase",letterSpacing:1,marginBottom:6}}>Sets / Reps / Notes</div>
+                <input style={DS.input} placeholder='e.g. "Bench 3x8 185lb, Squat 4x5 225lb"' value={workoutForm.note} onChange={e=>setWorkoutForm({...workoutForm,note:e.target.value})}/>
+              </div>
+            )}
+
+            {workoutForm.type==="Run"&&(
+              <div style={{marginBottom:14}}>
+                <div style={{fontSize:11,color:"#64748b",fontFamily:"monospace",textTransform:"uppercase",letterSpacing:1,marginBottom:8}}>Run Type</div>
+                <div style={{display:"flex",flexWrap:"wrap",gap:6,marginBottom:12}}>
+                  {["Easy Run","Tempo","Intervals","Long Run","Race","Treadmill"].map(rt=>(
+                    <button key={rt} onClick={()=>setWorkoutForm({...workoutForm,runType:rt})}
+                      style={{padding:"7px 12px",borderRadius:10,cursor:"pointer",fontFamily:"monospace",fontSize:11,fontWeight:700,border:`1px solid ${workoutForm.runType===rt?theme.primary:theme.border}`,background:workoutForm.runType===rt?theme.primary+"22":"#020617",color:workoutForm.runType===rt?theme.primary:"#94a3b8",transition:"all 0.15s"}}>
+                      {rt}
+                    </button>
+                  ))}
+                </div>
+                <div style={{display:"grid",gridTemplateColumns:"1fr 1fr",gap:10,marginBottom:10}}>
+                  <div>
+                    <div style={{fontSize:11,color:"#64748b",fontFamily:"monospace",textTransform:"uppercase",letterSpacing:1,marginBottom:6}}>Distance (miles)</div>
+                    <input style={DS.input} type="number" step="0.1" placeholder="3.1" value={workoutForm.miles||""} onChange={e=>setWorkoutForm({...workoutForm,miles:e.target.value})}/>
+                  </div>
+                  <div>
+                    <div style={{fontSize:11,color:"#64748b",fontFamily:"monospace",textTransform:"uppercase",letterSpacing:1,marginBottom:6}}>Time (mm:ss)</div>
+                    <input style={DS.input} placeholder="28:30" value={workoutForm.runTime||""} onChange={e=>setWorkoutForm({...workoutForm,runTime:e.target.value})}/>
+                  </div>
+                </div>
+                {(()=>{
+                  try {
+                    if(!workoutForm.miles||!workoutForm.runTime)return null;
+                    const milesNum=parseFloat(workoutForm.miles);
+                    const parts=workoutForm.runTime.split(":");
+                    if(parts.length!==2)return null;
+                    const totalMins=+parts[0]+(+parts[1]/60);
+                    if(!milesNum||isNaN(milesNum)||isNaN(totalMins)||totalMins<=0||milesNum<=0)return null;
+                    const pace=totalMins/milesNum;
+                    const paceMin=Math.floor(pace);
+                    const paceSec=Math.round((pace-paceMin)*60).toString().padStart(2,"0");
+                    return(
+                      <div style={{background:`linear-gradient(145deg,#020617,${theme.primary}11)`,border:`1px solid ${theme.primary}44`,borderRadius:12,padding:12,display:"grid",gridTemplateColumns:"1fr 1fr 1fr",gap:8,textAlign:"center",marginBottom:10}}>
+                        {[["Distance",`${milesNum.toFixed(2)} mi`],["Total Time",workoutForm.runTime],["Avg Pace",`${paceMin}:${paceSec} /mi`]].map(([l,v])=>(
+                          <div key={l}>
+                            <div style={{fontSize:10,color:"#64748b",fontFamily:"monospace",textTransform:"uppercase",letterSpacing:1,marginBottom:4}}>{l}</div>
+                            <div style={{fontSize:15,fontWeight:900,color:theme.primary,fontFamily:"monospace"}}>{v}</div>
+                          </div>
+                        ))}
+                      </div>
+                    );
+                  } catch(e) { return null; }
+                })()}
+              </div>
+            )}
+
+            {workoutForm.type!=="Weights"&&(
+              <div style={{marginBottom:14}}>
+                <div style={{fontSize:11,color:"#64748b",fontFamily:"monospace",textTransform:"uppercase",letterSpacing:1,marginBottom:6}}>Notes</div>
+                <input style={DS.input} placeholder="Energy level, PRs, how it felt..." value={workoutForm.note} onChange={e=>setWorkoutForm({...workoutForm,note:e.target.value})}/>
+              </div>
+            )}
+
+            <button style={{...DS.btn,gridColumn:"unset",width:"100%"}} onClick={addWorkout}>+ Log Workout</button>
+          </div>
+
+          <div style={DS.panel}>
+            <h2 style={{margin:"0 0 14px",fontSize:15,fontWeight:700,color:"#94a3b8",fontFamily:"monospace"}}>Workout History</h2>
+            {(workouts||[]).length===0&&<div style={{color:"#475569",fontSize:13,fontFamily:"monospace"}}>No workouts logged yet.</div>}
+            {(()=>{
+              const sorted=[...(workouts||[])].sort((a,b)=>new Date(b.date)-new Date(a.date));
+              const weekMap={};
+              sorted.forEach(w=>{
+                const d=new Date(w.date);
+                const sun=new Date(d);sun.setDate(d.getDate()-d.getDay());
+                const key=sun.toISOString().slice(0,10);
+                if(!weekMap[key])weekMap[key]=[];
+                weekMap[key].push(w);
+              });
+              return Object.entries(weekMap).sort((a,b)=>new Date(b[0])-new Date(a[0])).map(([weekStart,wkWorkouts])=>{
+                const totalMins=wkWorkouts.reduce((s,w)=>s++(w.minutes||0),0);
+                const isCurrentWeek=new Date(weekStart)>=new Date(new Date().setDate(new Date().getDate()-new Date().getDay())-1);
+                const label=`Week of ${new Date(weekStart).toLocaleDateString("en-US",{month:"short",day:"numeric"})}`;
+                return(
+                  <div key={weekStart} style={{marginBottom:12}}>
+                    <div style={{fontSize:11,color:isCurrentWeek?theme.primary:"#475569",fontFamily:"monospace",textTransform:"uppercase",letterSpacing:1,marginBottom:8,display:"flex",justifyContent:"space-between"}}>
+                      <span>{isCurrentWeek?"This Week":label}</span>
+                      <span>{wkWorkouts.length} sessions · {totalMins} min</span>
+                    </div>
+                    {wkWorkouts.map(w=>(
+                      <div key={w.id} style={{background:"#020617",border:`1px solid ${theme.border}`,borderRadius:12,padding:14,marginBottom:6}}>
+                        <div style={{display:"flex",justifyContent:"space-between",alignItems:"flex-start"}}>
+                          <div style={{flex:1}}>
+                            <div style={{display:"flex",alignItems:"center",gap:8,flexWrap:"wrap",marginBottom:4}}>
+                              <span style={{fontWeight:700,fontSize:14,color:theme.primary}}>{w.type}</span>
+                              {w.intensity&&<span style={{fontSize:10,fontFamily:"monospace",padding:"2px 8px",borderRadius:20,background:w.intensity==="Easy"?"#14532d":w.intensity==="Moderate"?"#451a03":w.intensity==="Hard"?"#431407":"#450a0a",color:w.intensity==="Easy"?"#4ade80":w.intensity==="Moderate"?"#f59e0b":w.intensity==="Hard"?"#f97316":"#ef4444",border:`1px solid ${w.intensity==="Easy"?"#4ade80":w.intensity==="Moderate"?"#f59e0b":w.intensity==="Hard"?"#f97316":"#ef4444"}`}}>{w.intensity}</span>}
+                              {w.runType&&<span style={{fontSize:10,fontFamily:"monospace",color:"#94a3b8"}}>{w.runType}</span>}
+                            </div>
+                            <div style={{fontSize:11,color:"#64748b",fontFamily:"monospace"}}>
+                              {w.date} · {w.minutes} min
+                              {w.calories?` · ${w.calories} cal burned`:""}
+                              {w.miles?` · ${w.miles} mi`:""}
+                              {w.runTime?` · ${w.runTime}`:""}
+                            </div>
+                            {w.note&&<div style={{fontSize:11,color:"#94a3b8",marginTop:4,fontStyle:"italic"}}>{w.note}</div>}
+                          </div>
+                          <button style={{background:"transparent",color:"#ef4444",border:"1px solid #450a0a",borderRadius:6,cursor:"pointer",padding:"3px 8px",fontSize:11,flexShrink:0,marginLeft:8}} onClick={()=>setWorkouts((workouts||[]).filter(x=>x.id!==w.id))}>✕</button>
+                        </div>
+                      </div>
+                    ))}
+                  </div>
+                );
+              });
+            })()}
+          </div>
+        </div>
+      )}
+  
   function toggleTaken(id){setTakenToday(prev=>prev.includes(id)?prev.filter(x=>x!==id):[...prev,id]);}
 
   function addSupplement(){
