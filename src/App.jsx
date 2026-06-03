@@ -395,7 +395,7 @@ export default function App() {
   const [saved,setSaved]=useState("");
   const [showSettings,setShowSettings]=useState(false);
   const [tempKey,setTempKey]=useState("");
-  const [setupForm,setSetupForm]=useState({name:"",heightFeet:"",heightInches:"",startWeight:"",targetWeight:"",startDate:todayISO(),activityLevel:"moderate"});
+const [setupForm,setSetupForm]=useState({name:"",heightFeet:"",heightInches:"",startWeight:"",targetWeight:"",startDate:todayISO(),activityLevel:"moderate",agreed:false});
 
   const [weightForm,setWeightForm]=useState({date:todayISO(),weight:"",type:"morning",note:""});
   const [expandedWeightDay,setExpandedWeightDay]=useState(null);
@@ -556,7 +556,7 @@ export default function App() {
   const formGrid={display:"grid",gridTemplateColumns:"120px 1fr",gap:"8px 12px",alignItems:"center",marginBottom:16};
   const formLabel={fontSize:11,color:"#64748b",fontFamily:"monospace",textTransform:"uppercase",letterSpacing:1,textAlign:"right"};
 
-  if(!HAS_SETUP){
+ if(!HAS_SETUP){
     return (
       <div style={DS.page}>
         <div style={{...DS.panel,border:"1px solid #854d0e",borderLeft:"4px solid #f59e0b",marginBottom:16}}>
@@ -582,7 +582,25 @@ export default function App() {
             <label style={formLabel}>Activity</label>
             <select style={DS.input} value={setupForm.activityLevel} onChange={e=>setSetupForm({...setupForm,activityLevel:e.target.value})}><option value="sedentary">Sedentary</option><option value="light">Light 1-3x/wk</option><option value="moderate">Moderate 3-5x/wk</option><option value="active">Active 6-7x/wk</option><option value="very_active">Very active</option></select>
             {estimatedCalories>0&&<div style={{gridColumn:"1/-1",marginTop:8,padding:14,borderRadius:16,border:`1px solid ${theme.primary}`,background:"rgba(20,83,45,0.18)",color:theme.primary,fontSize:14,fontFamily:"monospace"}}>Estimated target: {estimatedCalories} cal/day for ~1 lb/week loss.</div>}
-            <button style={DS.btn} onClick={()=>{localStorage.setItem("tracker_name",setupForm.name);localStorage.setItem("tracker_height_feet",setupForm.heightFeet);localStorage.setItem("tracker_height_inches",setupForm.heightInches);localStorage.setItem("tracker_start_weight",setupForm.startWeight);localStorage.setItem("tracker_target_weight",setupForm.targetWeight);localStorage.setItem("tracker_start_date",setupForm.startDate);localStorage.setItem("tracker_activity_level",setupForm.activityLevel);localStorage.setItem("tracker_calorie_target",estimatedCalories);localStorage.setItem("tracker_setup_complete","true");location.reload();}}>Start AXION</button>
+            <div style={{gridColumn:"1/-1",marginTop:8,background:"#020617",border:`1px solid ${theme.border}`,borderRadius:12,padding:14,display:"flex",alignItems:"flex-start",gap:12,cursor:"pointer"}} onClick={()=>setSetupForm({...setupForm,agreed:!setupForm.agreed})}>
+              <div style={{width:22,height:22,borderRadius:6,border:`2px solid ${setupForm.agreed?theme.primary:"#334155"}`,background:setupForm.agreed?theme.primary+"22":"transparent",display:"flex",alignItems:"center",justifyContent:"center",flexShrink:0,marginTop:1}}>
+                {setupForm.agreed&&<span style={{color:theme.primary,fontSize:16,fontWeight:900,lineHeight:1}}>✓</span>}
+              </div>
+              <span style={{fontSize:12,color:"#94a3b8",lineHeight:1.7,fontFamily:"monospace"}}>I have read and fully understand the disclaimer above. I am an adult and I accept sole responsibility for my health decisions. I acknowledge that AXION provides no medical advice and that its creators bear no liability for any outcomes resulting from my use of this application.</span>
+            </div>
+            <button style={{...DS.btn,gridColumn:"1/-1",opacity:setupForm.agreed?1:0.4,cursor:setupForm.agreed?"pointer":"not-allowed"}} disabled={!setupForm.agreed} onClick={()=>{
+              if(!setupForm.agreed)return;
+              localStorage.setItem("tracker_name",setupForm.name);
+              localStorage.setItem("tracker_height_feet",setupForm.heightFeet);
+              localStorage.setItem("tracker_height_inches",setupForm.heightInches);
+              localStorage.setItem("tracker_start_weight",setupForm.startWeight);
+              localStorage.setItem("tracker_target_weight",setupForm.targetWeight);
+              localStorage.setItem("tracker_start_date",setupForm.startDate);
+              localStorage.setItem("tracker_activity_level",setupForm.activityLevel);
+              localStorage.setItem("tracker_calorie_target",estimatedCalories);
+              localStorage.setItem("tracker_setup_complete","true");
+              location.reload();
+            }}>Start AXION</button>
           </div>
         </div>
       </div>
