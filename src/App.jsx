@@ -556,7 +556,7 @@ const todayStr=d.toISOString().slice(0,10);
     setAiScanLoading(false);
   }
 
-function addWorkout(){
+  function addWorkout(){
     try{
       if(!workoutForm.type)return;
       const w={
@@ -576,6 +576,7 @@ function addWorkout(){
       flash("Workout saved ✓");
     }catch(e){console.error("Workout error:",e);}
   }
+
 
   function toggleTaken(id){setTakenToday(prev=>prev.includes(id)?prev.filter(x=>x!==id):[...prev,id]);}
 
