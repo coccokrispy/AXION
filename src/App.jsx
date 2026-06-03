@@ -555,183 +555,91 @@ const todayStr=d.toISOString().slice(0,10);
     }catch(e){setAiScanError("Scan failed: "+e.message);}
     setAiScanLoading(false);
   }
+async function scanLabel(){
+    if(!labelImage||!apiKey){setAiScanError("Add API key in Settings.");return;}
+    setAiScanLoading(true);setAiScanError("");
+    try{
+      const base64=labelImage.split(",")[1];const mediaType=labelImage.split(";")[0].split(":")[1];
+      const data=await callClaude(apiKey,{system:`Nutrition analyst. Identify this food/label. Return ONLY JSON: {"food":"name","brand":"brand or null","per_100g":{"calories":n,"protein":n,"carbs":n,"fat":n,"fiber":n,"sugar":n,"sodium":n},"serving_sizes":[{"label":"1 serving (Xg)","weight_g":X}],"notes":"how identified"}`,messages:[{role:"user",content:[{type:"image",source:{type:"base64",media_type:mediaType,data:base64}},{type:"text",text:scanServingNote?`I had approximately: ${scanServingNote}`:"Identify this food and give nutrition facts per 100g."}]}]});
+      const parsed=JSON.parse(data.content.map(b=>b.text||"").join("").replace(/```json|```/g,"").trim());
+      setFoodSearchResults(parsed);setFoodMode("search");setLabelImage(null);
+    }catch(e){setAiScanError("Scan failed: "+e.message);}
+    setAiScanLoading(false);
+  }
 
- {/* WORKOUTS */}
-      {tab==="workouts"&&(
-        <div>
-          <div style={{display:"grid",gridTemplateColumns:"repeat(3,1fr)",gap:10,marginBottom:14}}>
-            {[
-              ["Today",`${todayMinutes}`,"min"],
-              ["This Week",`${thisWeekMins}`,"min"],
-              ["Total",`${(workouts||[]).length}`,"sessions"],
-            ].map(([l,v,u])=>(
-              <div key={l} style={DS.card}>
-                <div style={{fontSize:10,color:"#475569",textTransform:"uppercase",letterSpacing:1.5,fontFamily:"monospace",marginBottom:4}}>{l}</div>
-                <div style={{fontSize:22,fontWeight:900,color:theme.primary}}>{v}<span style={{fontSize:12,fontWeight:400}}> {u}</span></div>
-              </div>
-            ))}
-          </div>
+  function addWorkout(){
+    try{
+      if(!workoutForm.type)return;
+      const w={
+        id:uid(),
+        date:workoutForm.date||todayISO(),
+        type:String(workoutForm.type||""),
+        minutes:+(workoutForm.minutes||0),
+        calories:+(workoutForm.calories||0),
+        intensity:String(workoutForm.intensity||""),
+        note:String(workoutForm.note||""),
+        runType:String(workoutForm.runType||""),
+        miles:String(workoutForm.miles||""),
+        runTime:String(workoutForm.runTime||""),
+      };
+      setWorkouts(prev=>[...(prev||[]),w]);
+      setWorkoutForm({date:todayISO(),type:"",minutes:"",note:"",calories:"",intensity:"",runType:"",miles:"",runTime:""});
+      flash("Workout saved ✓");
+    }catch(e){console.error("Workout error:",e);}
+  }
 
-          <div style={DS.panel}>
-            <h2 style={{margin:"0 0 16px",fontSize:15,fontWeight:700,color:"#94a3b8",fontFamily:"monospace"}}>💪 Log Workout</h2>
+  function toggleTaken(id){setTakenToday(prev=>prev.includes(id)?prev.filter(x=>x!==id):[...prev,id]);}
 
-            <div style={{marginBottom:14}}>
-              <div style={{fontSize:11,color:"#64748b",fontFamily:"monospace",textTransform:"uppercase",letterSpacing:1,marginBottom:6}}>Date</div>
-              <input style={{...DS.input,width:"auto",minWidth:160}} type="date" value={workoutForm.date} onChange={e=>setWorkoutForm({...workoutForm,date:e.target.value})}/>
-            </div>
+  function addSupplement(){
+    if(!pendingSupp)return;
+    setMySupplements(prev=>[...prev,{id:uid(),name:pendingSupp.name,category:pendingSupp.category,dose:suppForm.dose||"—",unit:suppForm.dose?suppForm.unit:"",schedule:suppForm.schedule,time:suppForm.time}]);
+    setSuppView("my");setPendingSupp(null);setSuppForm({dose:"",unit:"mg",schedule:"Daily",time:"Morning"});
+  }
+  function saveSuppEdit(){setMySupplements(prev=>prev.map(s=>s.id===editingSupp.id?{...s,dose:suppForm.dose||"—",unit:suppForm.dose?suppForm.unit:"",schedule:suppForm.schedule,time:suppForm.time}:s));setEditingSupp(null);setSuppView("my");}
+  function deleteSupp(id){setMySupplements(prev=>prev.filter(s=>s.id!==id));setTakenToday(prev=>prev.filter(x=>x!==id));setEditingSupp(null);setSuppView("my");}
 
-            <div style={{marginBottom:14}}>
-              <div style={{fontSize:11,color:"#64748b",fontFamily:"monospace",textTransform:"uppercase",letterSpacing:1,marginBottom:8}}>Workout Type</div>
-              <div style={{display:"flex",flexWrap:"wrap",gap:8,marginBottom:8}}>
-                {[["🏋️","Weights"],["🏃","Run"],["🚴","Bike"],["🏊","Swim"],["⚡","HIIT"],["🚶","Walk"],["🤸","Cardio"],["⚽","Sports"],["🔥","Other"]].map(([icon,label])=>(
-                  <button key={label} onClick={()=>setWorkoutForm({...workoutForm,type:label,miles:"",runTime:"",runType:"",intensity:"",note:"",calories:""})}
-                    style={{padding:"8px 12px",borderRadius:10,cursor:"pointer",fontFamily:"monospace",fontSize:12,fontWeight:700,border:`1px solid ${workoutForm.type===label?theme.primary:theme.border}`,background:workoutForm.type===label?theme.primary+"22":"#020617",color:workoutForm.type===label?theme.primary:"#94a3b8",transition:"all 0.15s"}}>
-                    {icon} {label}
-                  </button>
-                ))}
-              </div>
-              <input style={DS.input} placeholder="Or type custom..." value={["Weights","Run","Bike","Swim","HIIT","Walk","Cardio","Sports","Other"].includes(workoutForm.type)?"":workoutForm.type} onChange={e=>setWorkoutForm({...workoutForm,type:e.target.value})}/>
-            </div>
+  function addPeptideToStack(){
+    if(!pendingPep)return;
+    setPeptideStack(prev=>[...prev,{id:uid(),name:pendingPep.name,category:pendingPep.category,desc:pendingPep.desc,dose:pepForm.dose||"—",unit:pepForm.unit||pendingPep.unit||"mg",frequency:pepForm.frequency||pendingPep.frequency||"",cycle:pepForm.cycle||pendingPep.cycle||"",notes:pepForm.notes,status:pepForm.status,dateAdded:todayISO()}]);
+    setPepView("stack");setPendingPep(null);setPepForm({dose:"",unit:"mg",frequency:"",cycle:"",notes:"",status:"active"});
+    flash("Peptide added ✓");
+  }
+  function savePepEdit(){setPeptideStack(prev=>prev.map(p=>p.id===editingPep.id?{...p,dose:pepForm.dose||"—",unit:pepForm.unit,frequency:pepForm.frequency,cycle:pepForm.cycle,notes:pepForm.notes,status:pepForm.status}:p));setEditingPep(null);setPepView("stack");}
+  function deletePep(id){setPeptideStack(prev=>prev.filter(p=>p.id!==id));setPeptideLogs(prev=>{const n={...prev};delete n[id];return n;});setEditingPep(null);setPepView("stack");}
+  function logPeptideDose(peptideId){if(!doseForm.dose)return;setPeptideLogs(prev=>({...prev,[peptideId]:[...(prev[peptideId]||[]),{id:uid(),date:doseForm.date,dose:+doseForm.dose,note:doseForm.note}]}));setDoseForm({date:todayISO(),dose:"",note:""});flash("Dose logged ✓");}
+  function removePeptideDose(peptideId,entryId){setPeptideLogs(prev=>({...prev,[peptideId]:(prev[peptideId]||[]).filter(e=>e.id!==entryId)}));}
 
-            <div style={{display:"grid",gridTemplateColumns:"1fr 1fr",gap:10,marginBottom:14}}>
-              <div>
-                <div style={{fontSize:11,color:"#64748b",fontFamily:"monospace",textTransform:"uppercase",letterSpacing:1,marginBottom:6}}>Duration (min)</div>
-                <input style={DS.input} type="number" placeholder="60" value={workoutForm.minutes} onChange={e=>setWorkoutForm({...workoutForm,minutes:e.target.value})}/>
-              </div>
-              <div>
-                <div style={{fontSize:11,color:"#64748b",fontFamily:"monospace",textTransform:"uppercase",letterSpacing:1,marginBottom:6}}>Calories Burned</div>
-                <input style={DS.input} type="number" placeholder="400" value={workoutForm.calories||""} onChange={e=>setWorkoutForm({...workoutForm,calories:e.target.value})}/>
-              </div>
-            </div>
+  async function getAIInsight(){
+    if(sortedWeights.length<2||!apiKey){setAiInsight(!apiKey?"Add API key in Settings.":"Add a second weight entry to unlock.");return;}
+    setInsightLoading(true);setAiInsight("");
+    const activeStack=(peptideStack||[]).filter(p=>p.status==="active").map(p=>`${p.name} ${p.dose}${p.unit} ${p.frequency}`).join(", ");
+    const recentFoods=(foods||[]).slice(-5).map(f=>`${f.item} (${f.calories}cal/${f.protein}p)`).join(", ");
+    const recentWorkouts=(workouts||[]).slice(-5).map(w=>`${w.type} ${w.minutes}min${w.intensity?" "+w.intensity:""}`).join(", ");
+    try{
+      const data=await callClaude(apiKey,{messages:[{role:"user",content:`Clinical health analyst. Peptide stack: ${activeStack||"none"}. Weight: ${START_WEIGHT}->${latestWeight.weight}lbs (${totalLost.toFixed(1)}lbs lost, ${pctLost(latestWeight.weight)}%). Week ${currentWeek}, ${activePhase.phase} phase. Avg loss: ${avgPerWeek.toFixed(2)} lbs/wk. Streak: ${streak} days. Food: ${recentFoods||"none"}. Training: ${recentWorkouts||"none"}. Write 3-4 sentence personalized breakdown. Clinical but motivating. Reference specific numbers.`}]});
+      setAiInsight(data.content?.map(b=>b.text||"").join("")||"Unable to generate insight.");
+    }catch(e){setAiInsight("Insight unavailable: "+e.message);}
+    setInsightLoading(false);
+  }
 
-            <div style={{marginBottom:14}}>
-              <div style={{fontSize:11,color:"#64748b",fontFamily:"monospace",textTransform:"uppercase",letterSpacing:1,marginBottom:8}}>Intensity</div>
-              <div style={{display:"grid",gridTemplateColumns:"repeat(4,1fr)",gap:6}}>
-                {[["Easy","#4ade80"],["Moderate","#f59e0b"],["Hard","#f97316"],["Max","#ef4444"]].map(([level,color])=>(
-                  <button key={level} onClick={()=>setWorkoutForm({...workoutForm,intensity:level})}
-                    style={{padding:"8px 4px",borderRadius:10,cursor:"pointer",fontFamily:"monospace",fontSize:11,fontWeight:700,border:`1px solid ${workoutForm.intensity===level?color:"#1e293b"}`,background:workoutForm.intensity===level?color+"22":"#020617",color:workoutForm.intensity===level?color:"#64748b",transition:"all 0.15s"}}>
-                    {level}
-                  </button>
-                ))}
-              </div>
-            </div>
+  const TABS=["dashboard","weight","doses","peptides","food","workouts","supplements","calculator"];
+  const ICONS={dashboard:Zap,weight:Scale,doses:Syringe,peptides:Dna,food:Utensils,workouts:Dumbbell,supplements:Pill,calculator:Calculator};
 
-            {workoutForm.type==="Weights"&&(
-              <div style={{marginBottom:14}}>
-                <div style={{fontSize:11,color:"#64748b",fontFamily:"monospace",textTransform:"uppercase",letterSpacing:1,marginBottom:6}}>Sets / Reps / Notes</div>
-                <input style={DS.input} placeholder='e.g. "Bench 3x8 185lb, Squat 4x5 225lb"' value={workoutForm.note} onChange={e=>setWorkoutForm({...workoutForm,note:e.target.value})}/>
-              </div>
-            )}
+  const DS={
+    page:{minHeight:"100vh",background:`radial-gradient(circle at top,${theme.bg} 0%,#020403 24%,#000000 72%)`,color:"#f8fafc",padding:"42px 12px 48px",fontFamily:"Inter,Arial,sans-serif",maxWidth:430,margin:"0 auto"},
+    panel:{background:"linear-gradient(145deg,rgba(0,0,0,0.98),rgba(2,8,5,0.98))",border:`1px solid ${theme.border}`,borderRadius:26,padding:20,marginBottom:18,boxShadow:`0 0 26px ${theme.glow}`},
+    card:{background:"linear-gradient(145deg,rgba(0,0,0,0.98),rgba(2,8,5,0.98))",border:`1px solid ${theme.border}`,borderRadius:22,padding:18,boxShadow:`0 0 22px ${theme.glow}`},
+    btn:{gridColumn:"2",background:`linear-gradient(135deg,${theme.primaryDark},${theme.primary})`,color:"#020617",border:"none",borderRadius:12,padding:"12px 16px",cursor:"pointer",fontWeight:900,fontSize:14,fontFamily:"monospace",letterSpacing:1,marginTop:4,boxShadow:`0 0 22px ${theme.glowStrong}`},
+    input:{background:"#000000",border:`1px solid ${theme.border}`,color:"#f8fafc",borderRadius:12,padding:"11px 13px",fontSize:14,fontFamily:"Inter,Arial,sans-serif",width:"100%",boxSizing:"border-box",outline:"none"},
+    activeTab:{flex:"1 1 80px",display:"flex",flexDirection:"column",alignItems:"center",gap:8,padding:"17px 8px",background:`linear-gradient(145deg,rgba(0,0,0,1),${theme.tabBg})`,border:`1px solid ${theme.primary}`,borderRadius:20,cursor:"pointer",color:theme.primary,fontFamily:"monospace",boxShadow:`0 0 24px ${theme.glowStrong}`,transform:"translateY(-2px)",transition:"all 0.18s ease"},
+    pillActive:{background:"#1e3a5f",border:`1px solid ${theme.primary}`,color:theme.primary,borderRadius:20,padding:"5px 12px",cursor:"pointer",fontSize:12,fontFamily:"monospace"},
+    goalBarFill:{height:"100%",background:`linear-gradient(90deg,${theme.primaryDark},${theme.primary})`,borderRadius:999},
+    goalCircle:{width:110,height:110,borderRadius:"50%",border:"2px solid #1e293b",background:"radial-gradient(circle,#020617 45%,#0f172a 100%)",display:"flex",flexDirection:"column",alignItems:"center",justifyContent:"center",justifySelf:"center",boxShadow:`0 0 0 6px ${theme.glow},inset 0 0 24px ${theme.glow}`},
+  };
 
-            {workoutForm.type==="Run"&&(
-              <div style={{marginBottom:14}}>
-                <div style={{fontSize:11,color:"#64748b",fontFamily:"monospace",textTransform:"uppercase",letterSpacing:1,marginBottom:8}}>Run Type</div>
-                <div style={{display:"flex",flexWrap:"wrap",gap:6,marginBottom:12}}>
-                  {["Easy Run","Tempo","Intervals","Long Run","Race","Treadmill"].map(rt=>(
-                    <button key={rt} onClick={()=>setWorkoutForm({...workoutForm,runType:rt})}
-                      style={{padding:"7px 12px",borderRadius:10,cursor:"pointer",fontFamily:"monospace",fontSize:11,fontWeight:700,border:`1px solid ${workoutForm.runType===rt?theme.primary:theme.border}`,background:workoutForm.runType===rt?theme.primary+"22":"#020617",color:workoutForm.runType===rt?theme.primary:"#94a3b8",transition:"all 0.15s"}}>
-                      {rt}
-                    </button>
-                  ))}
-                </div>
-                <div style={{display:"grid",gridTemplateColumns:"1fr 1fr",gap:10,marginBottom:10}}>
-                  <div>
-                    <div style={{fontSize:11,color:"#64748b",fontFamily:"monospace",textTransform:"uppercase",letterSpacing:1,marginBottom:6}}>Distance (miles)</div>
-                    <input style={DS.input} type="number" step="0.1" placeholder="3.1" value={workoutForm.miles||""} onChange={e=>setWorkoutForm({...workoutForm,miles:e.target.value})}/>
-                  </div>
-                  <div>
-                    <div style={{fontSize:11,color:"#64748b",fontFamily:"monospace",textTransform:"uppercase",letterSpacing:1,marginBottom:6}}>Time (mm:ss)</div>
-                    <input style={DS.input} placeholder="28:30" value={workoutForm.runTime||""} onChange={e=>setWorkoutForm({...workoutForm,runTime:e.target.value})}/>
-                  </div>
-                </div>
-                {(()=>{
-                  try {
-                    if(!workoutForm.miles||!workoutForm.runTime)return null;
-                    const milesNum=parseFloat(workoutForm.miles);
-                    const parts=workoutForm.runTime.split(":");
-                    if(parts.length!==2)return null;
-                    const totalMins=+parts[0]+(+parts[1]/60);
-                    if(!milesNum||isNaN(milesNum)||isNaN(totalMins)||totalMins<=0||milesNum<=0)return null;
-                    const pace=totalMins/milesNum;
-                    const paceMin=Math.floor(pace);
-                    const paceSec=Math.round((pace-paceMin)*60).toString().padStart(2,"0");
-                    return(
-                      <div style={{background:`linear-gradient(145deg,#020617,${theme.primary}11)`,border:`1px solid ${theme.primary}44`,borderRadius:12,padding:12,display:"grid",gridTemplateColumns:"1fr 1fr 1fr",gap:8,textAlign:"center",marginBottom:10}}>
-                        {[["Distance",`${milesNum.toFixed(2)} mi`],["Total Time",workoutForm.runTime],["Avg Pace",`${paceMin}:${paceSec} /mi`]].map(([l,v])=>(
-                          <div key={l}>
-                            <div style={{fontSize:10,color:"#64748b",fontFamily:"monospace",textTransform:"uppercase",letterSpacing:1,marginBottom:4}}>{l}</div>
-                            <div style={{fontSize:15,fontWeight:900,color:theme.primary,fontFamily:"monospace"}}>{v}</div>
-                          </div>
-                        ))}
-                      </div>
-                    );
-                  } catch(e) { return null; }
-                })()}
-              </div>
-            )}
-
-            {workoutForm.type!=="Weights"&&(
-              <div style={{marginBottom:14}}>
-                <div style={{fontSize:11,color:"#64748b",fontFamily:"monospace",textTransform:"uppercase",letterSpacing:1,marginBottom:6}}>Notes</div>
-                <input style={DS.input} placeholder="Energy level, PRs, how it felt..." value={workoutForm.note} onChange={e=>setWorkoutForm({...workoutForm,note:e.target.value})}/>
-              </div>
-            )}
-
-            <button style={{...DS.btn,gridColumn:"unset",width:"100%"}} onClick={addWorkout}>+ Log Workout</button>
-          </div>
-
-          <div style={DS.panel}>
-            <h2 style={{margin:"0 0 14px",fontSize:15,fontWeight:700,color:"#94a3b8",fontFamily:"monospace"}}>Workout History</h2>
-            {(workouts||[]).length===0&&<div style={{color:"#475569",fontSize:13,fontFamily:"monospace"}}>No workouts logged yet.</div>}
-            {(()=>{
-              const sorted=[...(workouts||[])].sort((a,b)=>new Date(b.date)-new Date(a.date));
-              const weekMap={};
-              sorted.forEach(w=>{
-                const d=new Date(w.date);
-                const sun=new Date(d);sun.setDate(d.getDate()-d.getDay());
-                const key=sun.toISOString().slice(0,10);
-                if(!weekMap[key])weekMap[key]=[];
-                weekMap[key].push(w);
-              });
-              return Object.entries(weekMap).sort((a,b)=>new Date(b[0])-new Date(a[0])).map(([weekStart,wkWorkouts])=>{
-                const totalMins=wkWorkouts.reduce((s,w)=>s++(w.minutes||0),0);
-                const isCurrentWeek=new Date(weekStart)>=new Date(new Date().setDate(new Date().getDate()-new Date().getDay())-1);
-                const label=`Week of ${new Date(weekStart).toLocaleDateString("en-US",{month:"short",day:"numeric"})}`;
-                return(
-                  <div key={weekStart} style={{marginBottom:12}}>
-                    <div style={{fontSize:11,color:isCurrentWeek?theme.primary:"#475569",fontFamily:"monospace",textTransform:"uppercase",letterSpacing:1,marginBottom:8,display:"flex",justifyContent:"space-between"}}>
-                      <span>{isCurrentWeek?"This Week":label}</span>
-                      <span>{wkWorkouts.length} sessions · {totalMins} min</span>
-                    </div>
-                    {wkWorkouts.map(w=>(
-                      <div key={w.id} style={{background:"#020617",border:`1px solid ${theme.border}`,borderRadius:12,padding:14,marginBottom:6}}>
-                        <div style={{display:"flex",justifyContent:"space-between",alignItems:"flex-start"}}>
-                          <div style={{flex:1}}>
-                            <div style={{display:"flex",alignItems:"center",gap:8,flexWrap:"wrap",marginBottom:4}}>
-                              <span style={{fontWeight:700,fontSize:14,color:theme.primary}}>{w.type}</span>
-                              {w.intensity&&<span style={{fontSize:10,fontFamily:"monospace",padding:"2px 8px",borderRadius:20,background:w.intensity==="Easy"?"#14532d":w.intensity==="Moderate"?"#451a03":w.intensity==="Hard"?"#431407":"#450a0a",color:w.intensity==="Easy"?"#4ade80":w.intensity==="Moderate"?"#f59e0b":w.intensity==="Hard"?"#f97316":"#ef4444",border:`1px solid ${w.intensity==="Easy"?"#4ade80":w.intensity==="Moderate"?"#f59e0b":w.intensity==="Hard"?"#f97316":"#ef4444"}`}}>{w.intensity}</span>}
-                              {w.runType&&<span style={{fontSize:10,fontFamily:"monospace",color:"#94a3b8"}}>{w.runType}</span>}
-                            </div>
-                            <div style={{fontSize:11,color:"#64748b",fontFamily:"monospace"}}>
-                              {w.date} · {w.minutes} min
-                              {w.calories?` · ${w.calories} cal burned`:""}
-                              {w.miles?` · ${w.miles} mi`:""}
-                              {w.runTime?` · ${w.runTime}`:""}
-                            </div>
-                            {w.note&&<div style={{fontSize:11,color:"#94a3b8",marginTop:4,fontStyle:"italic"}}>{w.note}</div>}
-                          </div>
-                          <button style={{background:"transparent",color:"#ef4444",border:"1px solid #450a0a",borderRadius:6,cursor:"pointer",padding:"3px 8px",fontSize:11,flexShrink:0,marginLeft:8}} onClick={()=>setWorkouts((workouts||[]).filter(x=>x.id!==w.id))}>✕</button>
-                        </div>
-                      </div>
-                    ))}
-                  </div>
-                );
-              });
-            })()}
-          </div>
-        </div>
-      )}
-  
+  const pill={background:"#0f172a",border:"1px solid #1e293b",color:"#64748b",borderRadius:20,padding:"5px 12px",cursor:"pointer",fontSize:12,fontFamily:"monospace"};
+  const formGrid={display:"grid",gridTemplateColumns:"120px 1fr",gap:"8px 12px",alignItems:"center",marginBottom:16};
+  const formLabel={fontSize:11,color:"#64748b",fontFamily:"monospace",textTransform:"uppercase",letterSpacing:1,textAlign:"right"};
   function toggleTaken(id){setTakenToday(prev=>prev.includes(id)?prev.filter(x=>x!==id):[...prev,id]);}
 
   function addSupplement(){
