@@ -318,7 +318,7 @@ export default function App() {
   const [aiScanError,setAiScanError]=useState("");
   const [scanServingNote,setScanServingNote]=useState("");
  const [showFoodHistory,setShowFoodHistory]=useState(false);
-  const [showFoodHistory,setShowFoodHistory]=useState(false);
+  
   const [accessGranted,setAccessGranted]=useState(()=>localStorage.getItem("axion_access")==="true");
   const [codeInput,setCodeInput]=useState("");
   const [codeError,setCodeError]=useState("");
@@ -594,51 +594,7 @@ export default function App() {
     );
   }
 
-  if(!HAS_SETUP){
-  if(!accessGranted){
-    return(
-      <div style={DS.page}>
-        <div style={{display:"flex",flexDirection:"column",alignItems:"center",justifyContent:"center",minHeight:"80vh",padding:24}}>
-          <div style={{fontSize:58,fontWeight:900,letterSpacing:13,color:"#f8fafc",fontFamily:"Impact,Arial Black,sans-serif",textTransform:"uppercase",marginBottom:8}}>AXION</div>
-          <div style={{fontSize:12,color:"#475569",fontFamily:"monospace",letterSpacing:3,marginBottom:48}}>BETA ACCESS</div>
-          <div style={{...DS.panel,width:"100%",maxWidth:360}}>
-            <div style={{fontSize:14,fontWeight:700,color:"#94a3b8",fontFamily:"monospace",marginBottom:6}}>Enter your invite code</div>
-            <div style={{fontSize:12,color:"#475569",fontFamily:"monospace",marginBottom:16,lineHeight:1.6}}>This is a closed beta. You need an invite code to access AXION.</div>
-            <input
-              style={{...DS.input,marginBottom:10,textTransform:"uppercase",letterSpacing:2,fontSize:16,textAlign:"center"}}
-              placeholder="AXION-XXXXX"
-              value={codeInput}
-              onChange={e=>setCodeInput(e.target.value.toUpperCase())}
-              onKeyDown={e=>{
-                if(e.key==="Enter"){
-                  if(VALID_CODES.includes(codeInput.trim())){
-                    localStorage.setItem("axion_access","true");
-                    localStorage.setItem("axion_code_used",codeInput.trim());
-                    setAccessGranted(true);
-                    setCodeError("");
-                  }else{
-                    setCodeError("Invalid code. Contact the AXION team for access.");
-                  }
-                }
-              }}
-            />
-            {codeError&&<div style={{color:"#ef4444",fontSize:12,fontFamily:"monospace",marginBottom:10,textAlign:"center"}}>{codeError}</div>}
-            <button style={{...DS.btn,gridColumn:"unset",width:"100%"}} onClick={()=>{
-              if(VALID_CODES.includes(codeInput.trim())){
-                localStorage.setItem("axion_access","true");
-                localStorage.setItem("axion_code_used",codeInput.trim());
-                setAccessGranted(true);
-                setCodeError("");
-              }else{
-                setCodeError("Invalid code. Contact the AXION team for access.");
-              }
-            }}>Enter AXION</button>
-          </div>
-          <div style={{marginTop:24,fontSize:11,color:"#334155",fontFamily:"monospace",textAlign:"center"}}>© 2026 AXION · Closed Beta · All rights reserved</div>
-        </div>
-      </div>
-    );
-  }
+  
   if(!HAS_SETUP){
     return (
       <div style={DS.page}>
