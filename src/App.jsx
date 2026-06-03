@@ -317,7 +317,8 @@ export default function App() {
   const [aiScanLoading,setAiScanLoading]=useState(false);
   const [aiScanError,setAiScanError]=useState("");
   const [scanServingNote,setScanServingNote]=useState("");
-  const [showFoodHistory,setShowFoodHistory]=useState(false);
+ const [showFoodHistory,setShowFoodHistory]=useState(false);
+  const [selectedMeal,setSelectedMeal]=useState("Lunch");
 
   const [workoutForm,setWorkoutForm]=useState({date:todayISO(),type:"",minutes:"",note:"",calories:"",intensity:"",runType:"",miles:"",runTime:""});
   const [insightLoading,setInsightLoading]=useState(false);
@@ -1084,9 +1085,9 @@ export default function App() {
               <div style={{fontSize:11,color:"#64748b",fontFamily:"monospace",textTransform:"uppercase",letterSpacing:1,marginBottom:8}}>Meal</div>
               <div style={{display:"flex",gap:6,flexWrap:"wrap"}}>
                 {[["🌅","Breakfast"],["☀️","Lunch"],["🌙","Dinner"],["🍎","Snack"]].map(([icon,meal])=>{
-                  const selected=(window._axionMeal||"Lunch")===meal;
-                  return(
-                    <button key={meal} onClick={()=>{window._axionMeal=meal;document.dispatchEvent(new Event("mealchange"));}} style={{padding:"7px 12px",borderRadius:10,cursor:"pointer",fontFamily:"monospace",fontSize:11,fontWeight:700,border:`1px solid ${selected?theme.primary:theme.border}`,background:selected?theme.primary+"22":"#020617",color:selected?theme.primary:"#94a3b8",transition:"all 0.15s"}}>
+                  const selected=selectedMeal===meal;
+                    return(
+                      <button key={meal} onClick={()=>setSelectedMeal(meal)} style={{padding:"7px 12px",borderRadius:10,cursor:"pointer",fontFamily:"monospace",fontSize:11,fontWeight:700,border:`1px solid ${selected?theme.primary:theme.border}`,background:selected?theme.primary+"22":"#020617",color:selected?theme.primary:"#94a3b8",transition:"all 0.15s"}}>
                       {icon} {meal}
                     </button>
                   );
@@ -1107,7 +1108,7 @@ export default function App() {
                       <div style={{display:"flex",flexDirection:"column",gap:6,marginBottom:16}}>
                         {recent.map(f=>(
                           <button key={f.id} onClick={()=>{
-                            setFoods(prev=>[...(prev||[]),{...f,id:uid(),date:foodDate,meal:window._axionMeal||"Lunch"}]);
+                            setFoods(prev=>[...(prev||[]),{...f,id:uid(),date:foodDate,meal:selectedMeal}]);
                             flash(`${f.item} logged ✓`);
                           }} style={{display:"flex",justifyContent:"space-between",alignItems:"center",background:"#020617",border:`1px solid ${theme.border}`,borderRadius:12,padding:"10px 14px",cursor:"pointer",textAlign:"left"}}>
                             <div>
