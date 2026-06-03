@@ -352,10 +352,10 @@ export default function App() {
 
   const today=todayISO();
   const todayFoods=(foods||[]).filter(f=>f.date===today);
-  const todayCals=todayFoods.reduce((s,f)=>s++(f.calories||0),0);
-  const todayProtein=todayFoods.reduce((s,f)=>s++(f.protein||0),0);
+  const todayCals=todayFoods.reduce((s,f)=>s+(f.calories||0),0);
+  const todayProtein=todayFoods.reduce((s,f)=>s+(f.protein||0),0);
   const todayWorkouts=(workouts||[]).filter(w=>w.date===today);
-  const todayMinutes=todayWorkouts.reduce((s,w)=>s++(w.minutes||0),0);
+  const todayMinutes=todayWorkouts.reduce((s,w)=>s+(w.minutes||0),0);
   const calorieTarget=Number(localStorage.getItem("tracker_calorie_target"))||null;
 
   const projectedWeeksToGoal=avgPerWeek>0?Math.ceil(Math.max(0,Number(latestWeight.weight)-TARGET_WEIGHT)/avgPerWeek):999;
@@ -363,9 +363,9 @@ export default function App() {
 
   const weekStart=new Date();weekStart.setDate(weekStart.getDate()-weekStart.getDay());weekStart.setHours(0,0,0,0);
   const thisWeekWorkouts=(workouts||[]).filter(w=>new Date(w.date)>=weekStart);
-  const thisWeekMins=thisWeekWorkouts.reduce((s,w)=>s++(w.minutes||0),0);
+  const thisWeekMins=thisWeekWorkouts.reduce((s,w)=>s+(w.minutes||0),0);
   const thisWeekFoods=(foods||[]).filter(f=>new Date(f.date)>=weekStart);
-  const thisWeekAvgCals=thisWeekFoods.length>0?Math.round(thisWeekFoods.reduce((s,f)=>s++(f.calories||0),0)/Math.max(1,new Set(thisWeekFoods.map(f=>f.date)).size)):null;
+  const thisWeekAvgCals=thisWeekFoods.length>0?Math.round(thisWeekFoods.reduce((s,f)=>s+(f.calories||0),0)/Math.max(1,new Set(thisWeekFoods.map(f=>f.date)).size)):null;
 
   const weightsByDay=useMemo(()=>{const map={};(weights||[]).forEach(w=>{if(!map[w.date])map[w.date]=[];map[w.date].push(w);});return map;},[weights]);
   const weightDays=useMemo(()=>Object.keys(weightsByDay).sort((a,b)=>new Date(b)-new Date(a)),[weightsByDay]);
@@ -1252,7 +1252,7 @@ export default function App() {
               const weekMap={};
               sorted.forEach(w=>{const d=new Date(w.date);const sun=new Date(d);sun.setDate(d.getDate()-d.getDay());const key=sun.toISOString().slice(0,10);if(!weekMap[key])weekMap[key]=[];weekMap[key].push(w);});
               return Object.entries(weekMap).sort((a,b)=>new Date(b[0])-new Date(a[0])).map(([weekStart,wkWorkouts])=>{
-                const totalMins=wkWorkouts.reduce((s,w)=>s++(w.minutes||0),0);
+                const totalMins=wkWorkouts.reduce((s,w)=>s+(w.minutes||0),0);
                 const isCurrentWeek=new Date(weekStart)>=new Date(new Date().setDate(new Date().getDate()-new Date().getDay())-1);
                 const label=`Week of ${new Date(weekStart).toLocaleDateString("en-US",{month:"short",day:"numeric"})}`;
                 return(
