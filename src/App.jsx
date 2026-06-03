@@ -215,11 +215,7 @@ function PeptideCalculator({theme,DS}) {
     <div>
       <div style={DS.panel}>
         <h2 style={{margin:"0 0 14px",fontSize:15,fontWeight:700,color:"#94a3b8",fontFamily:"monospace"}}>🧮 Reconstitution Calculator</h2>
-        <div style={{marginBottom:16}}>
-          <div style={{fontSize:10,color:"#64748b",fontFamily:"monospace",textTransform:"uppercase",letterSpacing:1.5,marginBottom:6}}>Peptide</div>
-          <div style={{display:"flex",gap:6,flexWrap:"wrap"}}>
-            {CALC_PRESETS.map(p=><button key={p.name} style={peptide===p.name?pillA:pill} onClick={()=>{setPeptide(p.name);setUnit(p.unit);if(p.commonDoses.length)setDose(String(p.commonDoses[0]))}}>{p.name}</button>)}
-          </div>
+       
           {peptide==="Custom"&&<input style={{...DS.input,marginTop:8}} placeholder="Custom name" value={custom} onChange={e=>setCustom(e.target.value)}/>}
         </div>
         <div style={{display:"grid",gridTemplateColumns:"repeat(auto-fit,minmax(160px,1fr))",gap:14,marginBottom:16}}>
@@ -228,7 +224,7 @@ function PeptideCalculator({theme,DS}) {
           <div><div style={{fontSize:10,color:"#64748b",fontFamily:"monospace",textTransform:"uppercase",letterSpacing:1.5,marginBottom:6}}>Dose</div><div style={{display:"flex",gap:6}}><input style={{background:"#020617",border:"1px solid #334155",color:"#e2e8f0",borderRadius:8,padding:"9px 12px",fontSize:14,fontFamily:"monospace",flex:1,boxSizing:"border-box"}} type="number" step="0.1" value={dose} onChange={e=>setDose(e.target.value)}/><select style={{background:"#020617",border:"1px solid #334155",color:"#e2e8f0",borderRadius:8,padding:"9px 6px",fontSize:14,fontFamily:"monospace",width:72}} value={unit} onChange={e=>setUnit(e.target.value)}><option value="mg">mg</option><option value="mcg">mcg</option></select></div></div>
           <div><div style={{fontSize:10,color:"#64748b",fontFamily:"monospace",textTransform:"uppercase",letterSpacing:1.5,marginBottom:6}}>Syringe</div><select style={{background:"#020617",border:"1px solid #334155",color:"#e2e8f0",borderRadius:8,padding:"9px 12px",fontSize:14,fontFamily:"monospace",width:"100%",boxSizing:"border-box"}} value={syringe} onChange={e=>setSyringe(e.target.value)}><option value="100">100u (1mL)</option><option value="50">50u (0.5mL)</option><option value="30">30u (0.3mL)</option></select></div>
         </div>
-        {preset.commonDoses.length>0&&<div style={{marginBottom:16}}><div style={{fontSize:10,color:"#64748b",fontFamily:"monospace",textTransform:"uppercase",letterSpacing:1.5,marginBottom:6}}>Quick dose</div><div style={{display:"flex",gap:6,flexWrap:"wrap"}}>{preset.commonDoses.map(d=><button key={d} style={dose===String(d)?pillA:pill} onClick={()=>setDose(String(d))}>{d} {preset.unit}</button>)}</div></div>}
+        
         {valid?(
           <div style={{background:"#020617",border:"1px solid #1e3a5f",borderRadius:12,padding:16,marginTop:8}}>
             <div style={{fontSize:13,color:"#60a5fa",fontFamily:"monospace",marginBottom:14,fontWeight:700}}>📐 Results — {peptide==="Custom"?(custom||"Custom"):peptide}</div>
