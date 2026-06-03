@@ -231,7 +231,7 @@ function PeptideCalculator({theme,DS}) {
       <rect x="6" y="18" width="4" height="24" rx="1" fill={theme.primary}/>
       <rect x="2" y="20" width="8" height="3" rx="1" fill={theme.primary}/>
       <rect x="2" y="37" width="8" height="3" rx="1" fill={theme.primary}/>
-      <text x="60" y="52" textAnchor="middle" fill="#64748b" fontSize="9" fontFamily="monospace">30 units</text>
+      <text x="60" y="52" textAnchor="middle" fill="#94a3b8" fontSize="13" fontFamily="monospace" fontWeight="700">30 units</text>
     </svg>
   );
   const Syringe50=()=>(
