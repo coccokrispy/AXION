@@ -621,6 +621,17 @@ export default function App() {
             <label style={formLabel}>Activity</label>
             <select style={DS.input} value={setupForm.activityLevel} onChange={e=>setSetupForm({...setupForm,activityLevel:e.target.value})}><option value="sedentary">Sedentary</option><option value="light">Light 1-3x/wk</option><option value="moderate">Moderate 3-5x/wk</option><option value="active">Active 6-7x/wk</option><option value="very_active">Very active</option></select>
             {estimatedCalories>0&&<div style={{gridColumn:"1/-1",marginTop:8,padding:14,borderRadius:16,border:`1px solid ${theme.primary}`,background:"rgba(20,83,45,0.18)",color:theme.primary,fontSize:14,fontFamily:"monospace"}}>Estimated target: {estimatedCalories} cal/day for ~1 lb/week loss.</div>}
+            <div style={{gridColumn:"1/-1",marginTop:8}}>
+              <div style={{fontSize:11,color:"#64748b",fontFamily:"monospace",textTransform:"uppercase",letterSpacing:1,marginBottom:10}}>Choose your theme</div>
+              <div style={{display:"flex",gap:8}}>
+                {Object.entries(THEMES).map(([k,t])=>(
+                  <button key={k} onClick={()=>setThemeName(k)} style={{flex:1,padding:"12px 4px",borderRadius:12,border:`2px solid ${themeName===k?t.primary:"#1e293b"}`,background:themeName===k?t.primary+"22":"#020617",cursor:"pointer",color:t.primary,fontSize:10,fontFamily:"monospace",fontWeight:700,transition:"all 0.15s"}}>
+                    <div style={{width:20,height:20,borderRadius:"50%",background:t.primary,margin:"0 auto 6px",boxShadow:themeName===k?`0 0 10px ${t.primary}`:"none"}}/>
+                    {t.label}
+                  </button>
+                ))}
+              </div>
+            </div>
             <div style={{gridColumn:"1/-1",marginTop:8,background:"#020617",border:`1px solid ${theme.border}`,borderRadius:12,padding:14,display:"flex",alignItems:"flex-start",gap:12,cursor:"pointer"}} onClick={()=>setSetupForm({...setupForm,agreed:!setupForm.agreed})}>
               <div style={{width:22,height:22,borderRadius:6,border:`2px solid ${setupForm.agreed?theme.primary:"#334155"}`,background:setupForm.agreed?theme.primary+"22":"transparent",display:"flex",alignItems:"center",justifyContent:"center",flexShrink:0,marginTop:1}}>
                 {setupForm.agreed&&<span style={{color:theme.primary,fontSize:16,fontWeight:900,lineHeight:1}}>✓</span>}
