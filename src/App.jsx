@@ -194,56 +194,176 @@ function WeightLineChart({weights,color}) {
 }
 
 function PeptideCalculator({theme,DS}) {
-  const [peptide,setPeptide]=useState(CALC_PRESETS[0].name);
-  const [vialMg,setVialMg]=useState("10");
-  const [bacMl,setBacMl]=useState("2");
-  const [dose,setDose]=useState("1");
-  const [unit,setUnit]=useState("mg");
-  const [syringe,setSyringe]=useState("100");
-  const [custom,setCustom]=useState("");
-  const preset=CALC_PRESETS.find(p=>p.name===peptide)||CALC_PRESETS[0];
-  const vN=parseFloat(vialMg)||0;const bN=parseFloat(bacMl)||0;const dN=parseFloat(dose)||0;
+  const [syringe,setSyringe]=useState(null);
+  const [vialMg,setVialMg]=useState(null);
+  const [customVial,setCustomVial]=useState("");
+  const [bacMl,setBacMl]=useState(null);
+  const [customBac,setCustomBac]=useState("");
+  const [dose,setDose]=useState(null);
+  const [customDose,setCustomDose]=useState("");
+
+  const vN=parseFloat(vialMg==="other"?customVial:vialMg)||0;
+  const bN=parseFloat(bacMl==="other"?customBac:bacMl)||0;
+  const dN=parseFloat(dose==="other"?customDose:dose)||0;
   const conc=bN>0?vN/bN:0;
-  const dMg=unit==="mcg"?dN/1000:dN;
-  const injectMl=conc>0?dMg/conc:0;
-  const injectU=injectMl/(1/parseFloat(syringe));
-  const dosesPerVial=dMg>0?vN/dMg:0;
-  const valid=conc>0&&dMg>0&&injectMl>0;
-  const pillA={background:"#1e3a5f",border:`1px solid ${theme.primary}`,color:theme.primary,borderRadius:20,padding:"5px 12px",cursor:"pointer",fontSize:12,fontFamily:"monospace"};
-  const pill={background:"#0f172a",border:"1px solid #1e293b",color:"#64748b",borderRadius:20,padding:"5px 12px",cursor:"pointer",fontSize:12,fontFamily:"monospace"};
+  const injectMl=conc>0?dN/conc:0;
+  const injectU=syringe?injectMl/(1/parseFloat(syringe)):0;
+  const pct=syringe?(injectU/parseFloat(syringe))*100:0;
+  const overLimit=pct>100;
+  const valid=conc>0&&dN>0&&injectMl>0&&syringe;
+
+  const selBtn=(active)=>({
+    padding:"10px 14px",borderRadius:10,cursor:"pointer",fontFamily:"monospace",fontSize:13,fontWeight:700,
+    border:`2px solid ${active?theme.primary:theme.border}`,
+    background:active?theme.primary+"22":"#020617",
+    color:active?theme.primary:"#94a3b8",transition:"all 0.15s"
+  });
+
+  // SVG syringe drawings
+  const Syringe30=()=>(
+    <svg viewBox="0 0 120 60" style={{width:80,height:40,display:"block",margin:"6px auto 0"}}>
+      <rect x="10" y="22" width="70" height="16" rx="3" fill="none" stroke={theme.primary} strokeWidth="2"/>
+      <rect x="12" y="24" width="20" height="12" rx="1" fill={theme.primary+"44"}/>
+      <line x1="32" y1="24" x2="32" y2="36" stroke={theme.primary} strokeWidth="1.5"/>
+      <line x1="52" y1="24" x2="52" y2="36" stroke={theme.primary} strokeWidth="1.5"/>
+      <line x1="72" y1="24" x2="72" y2="36" stroke={theme.primary} strokeWidth="1.5"/>
+      <polygon points="80,28 80,32 95,30" fill={theme.primary}/>
+      <rect x="6" y="18" width="4" height="24" rx="1" fill={theme.primary}/>
+      <rect x="2" y="20" width="8" height="3" rx="1" fill={theme.primary}/>
+      <rect x="2" y="37" width="8" height="3" rx="1" fill={theme.primary}/>
+      <text x="60" y="52" textAnchor="middle" fill="#64748b" fontSize="9" fontFamily="monospace">30 units</text>
+    </svg>
+  );
+  const Syringe50=()=>(
+    <svg viewBox="0 0 140 60" style={{width:96,height:40,display:"block",margin:"6px auto 0"}}>
+      <rect x="10" y="22" width="90" height="16" rx="3" fill="none" stroke={theme.primary} strokeWidth="2"/>
+      <rect x="12" y="24" width="20" height="12" rx="1" fill={theme.primary+"44"}/>
+      {[32,50,68,86].map(x=><line key={x} x1={x} y1="24" x2={x} y2="36" stroke={theme.primary} strokeWidth="1.5"/>)}
+      <polygon points="100,28 100,32 115,30" fill={theme.primary}/>
+      <rect x="6" y="18" width="4" height="24" rx="1" fill={theme.primary}/>
+      <rect x="2" y="20" width="8" height="3" rx="1" fill={theme.primary}/>
+      <rect x="2" y="37" width="8" height="3" rx="1" fill={theme.primary}/>
+      <text x="70" y="52" textAnchor="middle" fill="#64748b" fontSize="9" fontFamily="monospace">50 units</text>
+    </svg>
+  );
+  const Syringe100=()=>(
+    <svg viewBox="0 0 180 60" style={{width:120,height:40,display:"block",margin:"6px auto 0"}}>
+      <rect x="10" y="22" width="130" height="16" rx="3" fill="none" stroke={theme.primary} strokeWidth="2"/>
+      <rect x="12" y="24" width="20" height="12" rx="1" fill={theme.primary+"44"}/>
+      {[32,58,84,110,136].map(x=><line key={x} x1={x} y1="24" x2={x} y2="36" stroke={theme.primary} strokeWidth="1.5"/>)}
+      <polygon points="140,28 140,32 160,30" fill={theme.primary}/>
+      <rect x="6" y="18" width="4" height="24" rx="1" fill={theme.primary}/>
+      <rect x="2" y="20" width="8" height="3" rx="1" fill={theme.primary}/>
+      <rect x="2" y="37" width="8" height="3" rx="1" fill={theme.primary}/>
+      <text x="90" y="52" textAnchor="middle" fill="#64748b" fontSize="9" fontFamily="monospace">100 units</text>
+    </svg>
+  );
+
   return (
     <div>
       <div style={DS.panel}>
-        <h2 style={{margin:"0 0 14px",fontSize:15,fontWeight:700,color:"#94a3b8",fontFamily:"monospace"}}>🧮 Reconstitution Calculator</h2>
-       
-        
-        <div style={{display:"grid",gridTemplateColumns:"repeat(auto-fit,minmax(160px,1fr))",gap:14,marginBottom:16}}>
-          <div><div style={{fontSize:10,color:"#64748b",fontFamily:"monospace",textTransform:"uppercase",letterSpacing:1.5,marginBottom:6}}>Vial (mg)</div><input style={{background:"#020617",border:"1px solid #334155",color:"#e2e8f0",borderRadius:8,padding:"9px 12px",fontSize:14,fontFamily:"monospace",width:"100%",boxSizing:"border-box"}} type="number" step="0.5" value={vialMg} onChange={e=>setVialMg(e.target.value)}/></div>
-          <div><div style={{fontSize:10,color:"#64748b",fontFamily:"monospace",textTransform:"uppercase",letterSpacing:1.5,marginBottom:6}}>BAC Water (mL)</div><input style={{background:"#020617",border:"1px solid #334155",color:"#e2e8f0",borderRadius:8,padding:"9px 12px",fontSize:14,fontFamily:"monospace",width:"100%",boxSizing:"border-box"}} type="number" step="0.5" value={bacMl} onChange={e=>setBacMl(e.target.value)}/></div>
-          <div><div style={{fontSize:10,color:"#64748b",fontFamily:"monospace",textTransform:"uppercase",letterSpacing:1.5,marginBottom:6}}>Dose</div><div style={{display:"flex",gap:6}}><input style={{background:"#020617",border:"1px solid #334155",color:"#e2e8f0",borderRadius:8,padding:"9px 12px",fontSize:14,fontFamily:"monospace",flex:1,boxSizing:"border-box"}} type="number" step="0.1" value={dose} onChange={e=>setDose(e.target.value)}/><select style={{background:"#020617",border:"1px solid #334155",color:"#e2e8f0",borderRadius:8,padding:"9px 6px",fontSize:14,fontFamily:"monospace",width:72}} value={unit} onChange={e=>setUnit(e.target.value)}><option value="mg">mg</option><option value="mcg">mcg</option></select></div></div>
-          <div><div style={{fontSize:10,color:"#64748b",fontFamily:"monospace",textTransform:"uppercase",letterSpacing:1.5,marginBottom:6}}>Syringe</div><select style={{background:"#020617",border:"1px solid #334155",color:"#e2e8f0",borderRadius:8,padding:"9px 12px",fontSize:14,fontFamily:"monospace",width:"100%",boxSizing:"border-box"}} value={syringe} onChange={e=>setSyringe(e.target.value)}><option value="100">100u (1mL)</option><option value="50">50u (0.5mL)</option><option value="30">30u (0.3mL)</option></select></div>
+        <h2 style={{margin:"0 0 20px",fontSize:15,fontWeight:700,color:"#94a3b8",fontFamily:"monospace"}}>🧮 Reconstitution Calculator</h2>
+
+        {/* STEP 1 — SYRINGE */}
+        <div style={{marginBottom:24}}>
+          <div style={{fontSize:11,color:"#64748b",fontFamily:"monospace",textTransform:"uppercase",letterSpacing:1.5,marginBottom:12}}>Step 1 — Syringe size</div>
+          <div style={{display:"grid",gridTemplateColumns:"1fr 1fr 1fr",gap:10}}>
+            {[["30","0.3 ml",Syringe30],["50","0.5 ml",Syringe50],["100","1.0 ml",Syringe100]].map(([val,label,Img])=>(
+              <button key={val} onClick={()=>setSyringe(val)} style={{...selBtn(syringe===val),display:"flex",flexDirection:"column",alignItems:"center",padding:"12px 8px"}}>
+                <Img/>
+                <span style={{marginTop:6,fontSize:12}}>{label}</span>
+              </button>
+            ))}
+          </div>
         </div>
-        
-        {valid?(
-          <div style={{background:"#020617",border:"1px solid #1e3a5f",borderRadius:12,padding:16,marginTop:8}}>
-            <div style={{fontSize:13,color:"#60a5fa",fontFamily:"monospace",marginBottom:14,fontWeight:700}}>📐 Results — {peptide==="Custom"?(custom||"Custom"):peptide}</div>
-            <div style={{display:"grid",gridTemplateColumns:"repeat(auto-fit,minmax(130px,1fr))",gap:12,marginBottom:16}}>
-              {[["Concentration",conc.toFixed(4),"mg/mL","#60a5fa"],["Inject volume",injectMl.toFixed(4),"mL",theme.primary],["Syringe mark",injectU.toFixed(1),`units (${syringe}U)`,"#f59e0b"],["Doses/vial",dosesPerVial.toFixed(1),"injections","#a78bfa"]].map(([l,v,u,c])=>(
-                <div key={l} style={{background:"#0f172a",border:"1px solid #1e293b",borderRadius:10,padding:12}}>
-                  <div style={{fontSize:10,color:"#475569",fontFamily:"monospace",textTransform:"uppercase",letterSpacing:1,marginBottom:4}}>{l}</div>
-                  <div style={{fontSize:22,fontWeight:900,color:c}}>{v}</div>
-                  <div style={{fontSize:11,color:"#64748b",fontFamily:"monospace"}}>{u}</div>
+
+        {/* STEP 2 — VIAL */}
+        <div style={{marginBottom:24}}>
+          <div style={{fontSize:11,color:"#64748b",fontFamily:"monospace",textTransform:"uppercase",letterSpacing:1.5,marginBottom:12}}>Step 2 — Vial size (mg)</div>
+          <div style={{display:"flex",gap:8,flexWrap:"wrap"}}>
+            {["5","10","15","other"].map(v=>(
+              <button key={v} onClick={()=>setVialMg(v)} style={selBtn(vialMg===v)}>{v==="other"?"Other":v+" mg"}</button>
+            ))}
+          </div>
+          {vialMg==="other"&&(
+            <input style={{...DS.input,marginTop:10}} type="number" step="0.5" placeholder="Enter mg..." value={customVial} onChange={e=>setCustomVial(e.target.value)}/>
+          )}
+        </div>
+
+        {/* STEP 3 — BAC WATER */}
+        <div style={{marginBottom:24}}>
+          <div style={{fontSize:11,color:"#64748b",fontFamily:"monospace",textTransform:"uppercase",letterSpacing:1.5,marginBottom:12}}>Step 3 — Bacteriostatic water (mL)</div>
+          <div style={{display:"flex",gap:8,flexWrap:"wrap"}}>
+            {["1","2","3","5","other"].map(v=>(
+              <button key={v} onClick={()=>setBacMl(v)} style={selBtn(bacMl===v)}>{v==="other"?"Other":v+" mL"}</button>
+            ))}
+          </div>
+          {bacMl==="other"&&(
+            <input style={{...DS.input,marginTop:10}} type="number" step="0.5" placeholder="Enter mL..." value={customBac} onChange={e=>setCustomBac(e.target.value)}/>
+          )}
+        </div>
+
+        {/* STEP 4 — DOSE */}
+        <div style={{marginBottom:24}}>
+          <div style={{fontSize:11,color:"#64748b",fontFamily:"monospace",textTransform:"uppercase",letterSpacing:1.5,marginBottom:12}}>Step 4 — Dose per injection (mg)</div>
+          <div style={{display:"flex",gap:8,flexWrap:"wrap"}}>
+            {["0.05","0.1","0.25","0.5","other"].map(v=>(
+              <button key={v} onClick={()=>setDose(v)} style={selBtn(dose===v)}>{v==="other"?"Other":v+" mg"}</button>
+            ))}
+          </div>
+          {dose==="other"&&(
+            <input style={{...DS.input,marginTop:10}} type="number" step="0.025" placeholder="Enter mg..." value={customDose} onChange={e=>setCustomDose(e.target.value)}/>
+          )}
+        </div>
+
+        {/* RESULTS */}
+        {valid&&(
+          <div style={{background:`linear-gradient(145deg,#020617,${theme.primary}11)`,border:`1px solid ${theme.primary}66`,borderRadius:16,padding:20,marginTop:8}}>
+            {overLimit?(
+              <div style={{background:"#450a0a",border:"1px solid #ef4444",borderRadius:10,padding:14,marginBottom:16,color:"#ef4444",fontFamily:"monospace",fontSize:13,fontWeight:700,textAlign:"center"}}>
+                ⚠️ Syringe volume not sufficient for this dose. Use a larger syringe or adjust your amounts.
+              </div>
+            ):(
+              <div style={{textAlign:"center",marginBottom:20}}>
+                <div style={{fontSize:13,color:"#94a3b8",fontFamily:"monospace",marginBottom:8}}>
+                  To have a dose of <b style={{color:theme.primary}}>{dN} mg</b> pull the syringe to
+                </div>
+                <div style={{fontSize:52,fontWeight:900,color:theme.primary,fontFamily:"monospace",lineHeight:1}}>{injectU.toFixed(1)}</div>
+                <div style={{fontSize:16,color:"#94a3b8",fontFamily:"monospace",marginTop:4}}>units on a {syringe}U syringe</div>
+              </div>
+            )}
+
+            <div style={{display:"grid",gridTemplateColumns:"1fr 1fr",gap:10,marginBottom:16}}>
+              {[["Concentration",`${conc.toFixed(4)} mg/mL`,"#60a5fa"],["Inject volume",`${injectMl.toFixed(4)} mL`,theme.primary],["Doses per vial",`${(vN/dN).toFixed(1)}x`,"#a78bfa"],["Syringe fill",`${Math.min(100,pct).toFixed(1)}%`,"#f59e0b"]].map(([l,v,c])=>(
+                <div key={l} style={{background:"#020617",border:"1px solid #1e293b",borderRadius:10,padding:12,textAlign:"center"}}>
+                  <div style={{fontSize:10,color:"#475569",fontFamily:"monospace",textTransform:"uppercase",letterSpacing:1,marginBottom:6}}>{l}</div>
+                  <div style={{fontSize:18,fontWeight:900,color:c,fontFamily:"monospace"}}>{v}</div>
                 </div>
               ))}
             </div>
-            <div style={{display:"flex",justifyContent:"space-between",marginBottom:8}}><span style={{fontSize:10,color:"#64748b",fontFamily:"monospace",textTransform:"uppercase",letterSpacing:1.5}}>Syringe fill</span><span style={{color:"#f59e0b",fontFamily:"monospace",fontSize:13}}>{Math.min(100,(injectU/+syringe)*100).toFixed(1)}%</span></div>
-            <div style={{background:"#1e293b",borderRadius:999,height:22,overflow:"hidden"}}><div style={{height:"100%",borderRadius:999,width:`${Math.min(100,(injectU/+syringe)*100)}%`,background:injectU>+syringe?"#ef4444":"linear-gradient(90deg,#f59e0b,#fb923c)"}}/></div>
+
+            {/* Syringe fill bar */}
+            <div style={{display:"flex",justifyContent:"space-between",marginBottom:6}}>
+              <span style={{fontSize:10,color:"#64748b",fontFamily:"monospace",textTransform:"uppercase",letterSpacing:1}}>Syringe fill</span>
+              <span style={{color:"#f59e0b",fontFamily:"monospace",fontSize:12}}>{Math.min(100,pct).toFixed(1)}%</span>
+            </div>
+            <div style={{background:"#1e293b",borderRadius:999,height:18,overflow:"hidden"}}>
+              <div style={{height:"100%",borderRadius:999,width:`${Math.min(100,pct)}%`,background:overLimit?"#ef4444":`linear-gradient(90deg,${theme.primaryDark},${theme.primary})`}}/>
+            </div>
           </div>
-        ):<div style={{color:"#475569",padding:16,textAlign:"center",fontFamily:"monospace",fontSize:13}}>Fill in all fields</div>}
+        )}
+
+        {!valid&&(syringe||vialMg||bacMl||dose)&&(
+          <div style={{color:"#475569",padding:16,textAlign:"center",fontFamily:"monospace",fontSize:13,border:"1px dashed #1e293b",borderRadius:12}}>
+            Complete all 4 steps to see your results
+          </div>
+        )}
       </div>
+
+      {/* Storage */}
       <div style={DS.panel}>
         <h2 style={{margin:"0 0 14px",fontSize:15,fontWeight:700,color:"#94a3b8",fontFamily:"monospace"}}>🧊 Storage & Safety</h2>
-        {[["Unreconstituted","Freezer (-20C). Protect from light. Stable 12-24 months."],["Reconstituted","Refrigerate 2-8C. Stable 4-8 weeks. Label with date."],["BAC Water","0.9% benzyl alcohol. Inject slowly down side of vial."],["Mixing","Gently swirl, never shake. Shaking degrades peptides."],["Injection","Subcutaneous into belly, love handles, or thigh. Rotate."],["Hygiene","Alcohol swab before each draw. Fresh needle every time."]].map(([t,b])=>(
+        {[["Unreconstituted","Freezer (-20°C). Protect from light. Stable 12-24 months."],["Reconstituted","Refrigerate 2-8°C. Stable 4-8 weeks. Label with date."],["BAC Water","0.9% benzyl alcohol. Inject slowly down the side of the vial."],["Mixing","Gently swirl, never shake. Shaking degrades peptides."],["Injection","Subcutaneous into belly, love handles, or thigh. Rotate sites."],["Hygiene","Alcohol swab before each draw. Fresh needle every time."]].map(([t,b])=>(
           <div key={t} style={{display:"flex",gap:14,alignItems:"flex-start",background:"#020617",border:"1px solid #1e293b",borderRadius:10,padding:14,marginBottom:10}}>
             <div><div style={{fontWeight:700,marginBottom:4,fontSize:14,color:"#e2e8f0"}}>{t}</div><div style={{color:"#64748b",fontSize:13,lineHeight:1.5}}>{b}</div></div>
           </div>
