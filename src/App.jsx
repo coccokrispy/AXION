@@ -462,7 +462,7 @@ export default function App() {
         <div style={{marginTop:55,fontSize:58,lineHeight:0.9,fontWeight:900,letterSpacing:13,color:"#f8fafc",fontFamily:"Impact,Arial Black,sans-serif",textTransform:"uppercase"}}>AXION</div>
       </header>
       <div style={{position:"absolute",top:50,right:18}}>
-        <button onClick={()=>{setTempKey(apiKey);setShowSettings(true);}} style={{width:54,height:54,borderRadius:16,background:"linear-gradient(145deg,rgba(0,0,0,0.96),rgba(20,83,45,0.32))",border:`1px solid ${theme.border}`,display:"flex",alignItems:"center",justifyContent:"center",cursor:"pointer",boxShadow:`0 0 22px ${theme.glow}`}}>
+       <button onClick={()=>{setTempKey(apiKey);setShowSettings(true);}} style={{width:54,height:54,borderRadius:16,background:`linear-gradient(145deg,rgba(0,0,0,0.96),${theme.primaryDark}55)`,border:`1px solid ${theme.border}`,display:"flex",alignItems:"center",justifyContent:"center",cursor:"pointer",boxShadow:`0 0 22px ${theme.glow}`}}>
           <Settings size={22} strokeWidth={2.2} color={theme.primary}/>
         </button>
       </div>
