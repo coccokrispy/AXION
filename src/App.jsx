@@ -1253,8 +1253,8 @@ export default function App() {
                     {item:"Oatmeal (40g dry)",calories:150,protein:5,carbs:27,fat:2.5,fiber:4},
                     {item:"Ground Beef 80/20 (100g)",calories:254,protein:17,carbs:0,fat:20,fiber:0},
                   ].map(food=>(
-                    <button key={food.item} onClick={()=>{
-                      setFoods(prev=>[...(prev||[]),{id:uid(),date:foodDate,meal:window._axionMeal||"Lunch",...food}]);
+                   <button key={food.item} onClick={()=>{
+                      setFoods(prev=>[...(prev||[]),{id:uid(),date:foodDate,meal:selectedMeal,...food}]);
                       flash(`${food.item} logged ✓`);
                     }} style={{display:"flex",justifyContent:"space-between",alignItems:"center",background:"#020617",border:`1px solid ${theme.border}`,borderRadius:12,padding:"10px 14px",cursor:"pointer",textAlign:"left"}}>
                       <div>
@@ -1315,7 +1315,7 @@ export default function App() {
                     const wg=servingUnit==="oz"?parseFloat(servingWeight)*28.35:parseFloat(servingWeight);
                     if(!wg||wg<=0)return;
                     const n=calcNutrition(foodSearchResults.per_100g,wg);
-                    setFoods(prev=>[...(prev||[]),{id:uid(),date:foodDate,meal:window._axionMeal||"Lunch",item:foodSearchResults.food+(foodSearchResults.brand?` (${foodSearchResults.brand})`:""),weight_g:wg,...n}]);
+                    setFoods(prev=>[...(prev||[]),{id:uid(),date:foodDate,meal:selectedMeal,item:foodSearchResults.food+(foodSearchResults.brand?` (${foodSearchResults.brand})`:""),weight_g:wg,...n}]);
                     setFoodQuery("");setFoodSearchResults(null);setServingWeight("");
                     flash("Food logged ✓");
                   }} disabled={!servingWeight||parseFloat(servingWeight)<=0}>+ Log This Food</button>
@@ -1355,7 +1355,7 @@ export default function App() {
                 <label style={formLabel}>Fiber (g)</label><input style={DS.input} type="number" placeholder="0" value={manualFood.fiber} onChange={e=>setManualFood({...manualFood,fiber:e.target.value})}/>
                 <button style={DS.btn} onClick={()=>{
                   if(!manualFood.item)return;
-                  setFoods(prev=>[...(prev||[]),{id:uid(),date:foodDate,meal:window._axionMeal||"Lunch",item:manualFood.item,weight_g:null,calories:+(manualFood.calories||0),protein:+(manualFood.protein||0),carbs:+(manualFood.carbs||0),fat:+(manualFood.fat||0),fiber:+(manualFood.fiber||0)}]);
+                  setFoods(prev=>[...(prev||[]),{id:uid(),date:foodDate,meal:selectedMeal,item:manualFood.item,weight_g:null,calories:+(manualFood.calories||0),protein:+(manualFood.protein||0),carbs:+(manualFood.carbs||0),fat:+(manualFood.fat||0),fiber:+(manualFood.fiber||0)}]);
                   setManualFood({item:"",calories:"",protein:"",carbs:"",fat:"",fiber:""});
                   flash("Food logged ✓");
                 }}>+ Log Food</button>
