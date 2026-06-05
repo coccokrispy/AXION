@@ -105,7 +105,7 @@ const SUPPLEMENT_LIBRARY = {
 const ALL_SUPPLEMENTS = Object.values(SUPPLEMENT_LIBRARY).flat();
 const ALL_PEPTIDES = Object.values(PEPTIDE_LIBRARY).flat();
 
-function todayISO() { return new Date().toISOString().slice(0,10); }
+function todayISO() { const d=new Date(); return `${d.getFullYear()}-${String(d.getMonth()+1).padStart(2,'0')}-${String(d.getDate()).padStart(2,'0')}`; }
 function daysBetween(a,b) { return Math.max(0,Math.floor((new Date(b)-new Date(a))/86400000)); }
 function weeksBetween(a,b) { return Math.max(1,daysBetween(a,b)/7); }
 function getWeekNumber(a,b) { return Math.floor(daysBetween(a,b)/7)+1; }
