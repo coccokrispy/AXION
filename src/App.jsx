@@ -740,6 +740,16 @@ export default function App() {
               }}>💾 Save Profile</button>
             </div>
             <div style={{marginTop:16,paddingTop:16,borderTop:"1px solid #1e293b"}}>
+              <div style={{fontSize:12,color:"#94a3b8",marginBottom:8}}><b style={{color:theme.primary}}>Edit Profile</b></div>
+              <div style={{display:"grid",gridTemplateColumns:"1fr 1fr",gap:8,marginBottom:8}}>
+                <div><div style={{fontSize:10,color:"#64748b",fontFamily:"monospace",marginBottom:4}}>START WEIGHT</div><input type="number" defaultValue={START_WEIGHT} id="edit_start_weight" style={{...DS.input,fontSize:13}}/></div>
+                <div><div style={{fontSize:10,color:"#64748b",fontFamily:"monospace",marginBottom:4}}>GOAL WEIGHT</div><input type="number" defaultValue={TARGET_WEIGHT} id="edit_goal_weight" style={{...DS.input,fontSize:13}}/></div>
+                <div><div style={{fontSize:10,color:"#64748b",fontFamily:"monospace",marginBottom:4}}>START DATE</div><input type="date" defaultValue={START_DATE} id="edit_start_date" style={{...DS.input,fontSize:13}}/></div>
+                <div><div style={{fontSize:10,color:"#64748b",fontFamily:"monospace",marginBottom:4}}>CALORIE TARGET</div><input type="number" defaultValue={localStorage.getItem("tracker_calorie_target")||""} id="edit_calorie_target" style={{...DS.input,fontSize:13}}/></div>
+              </div>
+              <button style={{...DS.btn,gridColumn:"unset",width:"100%",marginBottom:16}} onClick={()=>{const sw=document.getElementById("edit_start_weight").value;const gw=document.getElementById("edit_goal_weight").value;const sd=document.getElementById("edit_start_date").value;const ct=document.getElementById("edit_calorie_target").value;if(sw)localStorage.setItem("tracker_start_weight",sw);if(gw)localStorage.setItem("tracker_target_weight",gw);if(sd)localStorage.setItem("tracker_start_date",sd);if(ct)localStorage.setItem("tracker_calorie_target",ct);setShowSettings(false);location.reload();}}>💾 Save Profile</button>
+            </div>
+            <div style={{marginTop:16,paddingTop:16,borderTop:"1px solid #1e293b"}}>
               <div style={{fontSize:12,color:"#94a3b8",marginBottom:8}}><b style={{color:theme.primary}}>Export Your Data</b></div>
               <div style={{fontSize:11,color:"#64748b",fontFamily:"monospace",marginBottom:10}}>Downloads all your AXION data as a JSON file.</div>
               <button style={{...DS.btn,gridColumn:"unset",width:"100%",background:"#0f172a",border:`1px solid ${theme.primary}`,color:theme.primary}} onClick={()=>{
