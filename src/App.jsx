@@ -760,7 +760,7 @@ export default function App() {
           <span style={{fontSize:11,color:"#94a3b8",letterSpacing:1.5,fontFamily:"monospace"}}>GOAL</span>
           <button onClick={()=>setEditingGoal(g=>!g)} style={{background:editingGoal?theme.primary+"33":"#1e293b",border:`1px solid ${editingGoal?theme.primary:"#334155"}`,color:editingGoal?theme.primary:"#64748b",borderRadius:6,padding:"2px 7px",cursor:"pointer",fontSize:10,fontFamily:"monospace",fontWeight:700}}>{editingGoal?"✕":"EDIT"}</button>
         </div>
-      </div>
+        </div>
         <div style={{gridColumn:"1/4",height:8,background:"#111827",border:"1px solid #1f2937",borderRadius:999,overflow:"hidden",marginTop:8}}><div style={{...DS.goalBarFill,width:`${progressPct}%`}}/></div>
         <div style={{gridColumn:"1/4",display:"flex",justifyContent:"space-between",color:"#94a3b8",fontFamily:"monospace",fontSize:18,fontWeight:900}}><span>{START_WEIGHT}</span><span style={{color:theme.primary}}>NOW: {latestWeight.weight}</span><span>{TARGET_WEIGHT}</span></div>
         <div style={{gridColumn:"1/-1",display:"grid",gridTemplateColumns:"1fr 1fr 1fr",gap:10,marginTop:18,paddingTop:16,borderTop:`1px solid ${theme.border}`}}>
