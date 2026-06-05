@@ -141,7 +141,6 @@ async function callClaude(apiKey,body) {
   if(!res.ok){const e=await res.text();throw new Error(`API error ${res.status}: ${e.slice(0,200)}`);}
   return await res.json();
 }
-
 function SearchBar({placeholder,value,onChange,onClear,accent}) {
   return (
     <div style={{position:"relative",marginBottom:14}}>
@@ -281,7 +280,6 @@ function PeptideCalculator({theme,DS}) {
     </div>
   );
 }
-
 export default function App() {
   const [weights,setWeights]=usePersistedState("mr_weights",[]);
   const [peptideStack,setPeptideStack]=usePersistedState("mr_peptide_stack",[]);
@@ -299,6 +297,7 @@ export default function App() {
   const [showSettings,setShowSettings]=useState(false);
   const [tempKey,setTempKey]=useState("");
   const [milestone,setMilestone]=useState(null);
+  const [confirm,setConfirm]=useState(null);
   const [setupForm,setSetupForm]=useState({name:"",heightFeet:"",heightInches:"",startWeight:"",targetWeight:"",startDate:todayISO(),activityLevel:"moderate",agreed:false});
 
   const [weightForm,setWeightForm]=useState({date:todayISO(),weight:"",type:"morning",note:""});
@@ -317,8 +316,8 @@ export default function App() {
   const [aiScanLoading,setAiScanLoading]=useState(false);
   const [aiScanError,setAiScanError]=useState("");
   const [scanServingNote,setScanServingNote]=useState("");
- const [showFoodHistory,setShowFoodHistory]=useState(false);
-  
+  const [showFoodHistory,setShowFoodHistory]=useState(false);
+
   const [accessGranted,setAccessGranted]=useState(()=>localStorage.getItem("axion_access")==="true");
   const [codeInput,setCodeInput]=useState("");
   const [codeError,setCodeError]=useState("");
@@ -391,7 +390,7 @@ export default function App() {
 
   const streak=useMemo(()=>{
     const allDates=new Set([...(weights||[]).map(w=>w.date),...(foods||[]).map(f=>f.date),...(workouts||[]).map(w=>w.date),...Object.values(peptideLogs||{}).flat().map(l=>l.date)]);
-   let count=0;let d=new Date();
+    let count=0;let d=new Date();
     const localISO=(dt)=>`${dt.getFullYear()}-${String(dt.getMonth()+1).padStart(2,'0')}-${String(dt.getDate()).padStart(2,'0')}`;
     const todayStr=localISO(d);
     if(!allDates.has(todayStr)){d.setDate(d.getDate()-1);}
@@ -444,23 +443,6 @@ export default function App() {
       setFoodSearchResults(parsed);setServingWeight("");
     }catch(e){setFoodSearchError("Search failed: "+e.message);}
     setFoodSearchLoading(false);
-  }
-
-  function logSearchedFood(){
-    if(!foodSearchResults||!servingWeight)return;
-    const wg=servingUnit==="oz"?parseFloat(servingWeight)*28.35:parseFloat(servingWeight);
-    if(!wg||wg<=0)return;
-    const n=calcNutrition(foodSearchResults.per_100g,wg);
-    setFoods(prev=>[...(prev||[]),{id:uid(),date:foodDate,item:foodSearchResults.food+(foodSearchResults.brand?` (${foodSearchResults.brand})`:""),weight_g:wg,...n}]);
-    setFoodQuery("");setFoodSearchResults(null);setServingWeight("");
-    flash("Food logged ✓");
-  }
-
-  function addManualFood(){
-    if(!manualFood.item)return;
-    setFoods(prev=>[...(prev||[]),{id:uid(),date:foodDate,item:manualFood.item,weight_g:null,calories:+(manualFood.calories||0),protein:+(manualFood.protein||0),carbs:+(manualFood.carbs||0),fat:+(manualFood.fat||0),fiber:+(manualFood.fiber||0)}]);
-    setManualFood({item:"",calories:"",protein:"",carbs:"",fat:"",fiber:""});
-    flash("Food logged ✓");
   }
 
   async function scanLabel(){
@@ -545,12 +527,12 @@ export default function App() {
     goalCircle:{width:110,height:110,borderRadius:"50%",border:"2px solid #1e293b",background:"radial-gradient(circle,#020617 45%,#0f172a 100%)",display:"flex",flexDirection:"column",alignItems:"center",justifyContent:"center",justifySelf:"center",boxShadow:`0 0 0 6px ${theme.glow},inset 0 0 24px ${theme.glow}`},
   };
 
- const pill={background:"#0f172a",border:"1px solid #1e293b",color:"#64748b",borderRadius:20,padding:"5px 12px",cursor:"pointer",fontSize:12,fontFamily:"monospace"};
+  const pill={background:"#0f172a",border:"1px solid #1e293b",color:"#64748b",borderRadius:20,padding:"5px 12px",cursor:"pointer",fontSize:12,fontFamily:"monospace"};
   const formGrid={display:"grid",gridTemplateColumns:"120px 1fr",gap:"8px 12px",alignItems:"center",marginBottom:16};
   const formLabel={fontSize:11,color:"#64748b",fontFamily:"monospace",textTransform:"uppercase",letterSpacing:1,textAlign:"right"};
+  const deleteBtn={background:"transparent",color:"#ef4444",border:"1px solid #450a0a",borderRadius:6,cursor:"pointer",padding:"3px 8px",fontSize:11};
 
   const VALID_CODES=["AXION-7K2M","AXION-9P4R","AXION-3X8W","AXION-6N1Q","AXION-5T7B","AXION-2H9F","AXION-8V4J","AXION-1L6D","AXION-4C3Y","AXION-0E5Z"];
-
   if(!accessGranted){
     return(
       <div style={DS.page}>
@@ -560,35 +542,9 @@ export default function App() {
           <div style={{...DS.panel,width:"100%",maxWidth:360}}>
             <div style={{fontSize:14,fontWeight:700,color:"#94a3b8",fontFamily:"monospace",marginBottom:6}}>Enter your invite code</div>
             <div style={{fontSize:12,color:"#475569",fontFamily:"monospace",marginBottom:16,lineHeight:1.6}}>This is a closed beta. You need an invite code to access AXION.</div>
-            <input
-              style={{...DS.input,marginBottom:10,textTransform:"uppercase",letterSpacing:2,fontSize:16,textAlign:"center"}}
-              placeholder="AXION-XXXXX"
-              value={codeInput}
-              onChange={e=>setCodeInput(e.target.value.toUpperCase())}
-              onKeyDown={e=>{
-                if(e.key==="Enter"){
-                  if(VALID_CODES.includes(codeInput.trim())){
-                    localStorage.setItem("axion_access","true");
-                    localStorage.setItem("axion_code_used",codeInput.trim());
-                    setAccessGranted(true);
-                    setCodeError("");
-                  }else{
-                    setCodeError("Invalid code. Contact the AXION team for access.");
-                  }
-                }
-              }}
-            />
+            <input style={{...DS.input,marginBottom:10,textTransform:"uppercase",letterSpacing:2,fontSize:16,textAlign:"center"}} placeholder="AXION-XXXXX" value={codeInput} onChange={e=>setCodeInput(e.target.value.toUpperCase())} onKeyDown={e=>{if(e.key==="Enter"){if(VALID_CODES.includes(codeInput.trim())){localStorage.setItem("axion_access","true");localStorage.setItem("axion_code_used",codeInput.trim());setAccessGranted(true);setCodeError("");}else{setCodeError("Invalid code. Contact the AXION team for access.");}}}}/>
             {codeError&&<div style={{color:"#ef4444",fontSize:12,fontFamily:"monospace",marginBottom:10,textAlign:"center"}}>{codeError}</div>}
-            <button style={{...DS.btn,gridColumn:"unset",width:"100%"}} onClick={()=>{
-              if(VALID_CODES.includes(codeInput.trim())){
-                localStorage.setItem("axion_access","true");
-                localStorage.setItem("axion_code_used",codeInput.trim());
-                setAccessGranted(true);
-                setCodeError("");
-              }else{
-                setCodeError("Invalid code. Contact the AXION team for access.");
-              }
-            }}>Enter AXION</button>
+            <button style={{...DS.btn,gridColumn:"unset",width:"100%"}} onClick={()=>{if(VALID_CODES.includes(codeInput.trim())){localStorage.setItem("axion_access","true");localStorage.setItem("axion_code_used",codeInput.trim());setAccessGranted(true);setCodeError("");}else{setCodeError("Invalid code. Contact the AXION team for access.");}}}>Enter AXION</button>
           </div>
           <div style={{marginTop:24,fontSize:11,color:"#334155",fontFamily:"monospace",textAlign:"center"}}>© 2026 AXION · Closed Beta · All rights reserved</div>
         </div>
@@ -596,7 +552,6 @@ export default function App() {
     );
   }
 
-  
   if(!HAS_SETUP){
     return (
       <div style={DS.page}>
@@ -628,8 +583,7 @@ export default function App() {
               <div style={{display:"flex",gap:8}}>
                 {Object.entries(THEMES).map(([k,t])=>(
                   <button key={k} onClick={()=>setThemeName(k)} style={{flex:1,padding:"12px 4px",borderRadius:12,border:`2px solid ${themeName===k?t.primary:"#1e293b"}`,background:themeName===k?t.primary+"22":"#020617",cursor:"pointer",color:t.primary,fontSize:10,fontFamily:"monospace",fontWeight:700,transition:"all 0.15s"}}>
-                    <div style={{width:20,height:20,borderRadius:"50%",background:t.primary,margin:"0 auto 6px",boxShadow:themeName===k?`0 0 10px ${t.primary}`:"none"}}/>
-                    {t.label}
+                    <div style={{width:20,height:20,borderRadius:"50%",background:t.primary,margin:"0 auto 6px",boxShadow:themeName===k?`0 0 10px ${t.primary}`:"none"}}/>{t.label}
                   </button>
                 ))}
               </div>
@@ -661,6 +615,23 @@ export default function App() {
 
   return (
     <div style={DS.page}>
+
+      {/* CONFIRM MODAL */}
+      {confirm&&(
+        <div style={{position:"fixed",inset:0,background:"rgba(0,0,0,0.88)",display:"flex",alignItems:"center",justifyContent:"center",zIndex:500,padding:24}}>
+          <div style={{background:"#0f172a",border:"1px solid #ef444466",borderRadius:18,padding:28,maxWidth:320,width:"100%",textAlign:"center",boxShadow:"0 0 40px rgba(239,68,68,0.2)"}}>
+            <div style={{fontSize:32,marginBottom:12}}>🗑️</div>
+            <div style={{fontWeight:700,color:"#f8fafc",fontSize:15,marginBottom:8,fontFamily:"monospace"}}>Delete this?</div>
+            <div style={{fontSize:12,color:"#94a3b8",fontFamily:"monospace",marginBottom:24,lineHeight:1.7,padding:"0 8px"}}>{confirm.label}<br/><span style={{color:"#475569",fontSize:11}}>This can't be undone.</span></div>
+            <div style={{display:"flex",gap:10}}>
+              <button style={{flex:1,background:"#1e293b",border:"1px solid #334155",color:"#94a3b8",borderRadius:10,padding:"12px",cursor:"pointer",fontFamily:"monospace",fontWeight:700,fontSize:13}} onClick={()=>setConfirm(null)}>Cancel</button>
+              <button style={{flex:1,background:"#450a0a",border:"1px solid #ef4444",color:"#ef4444",borderRadius:10,padding:"12px",cursor:"pointer",fontFamily:"monospace",fontWeight:700,fontSize:13}} onClick={()=>{confirm.onConfirm();setConfirm(null);}}>Delete</button>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* MILESTONE MODAL */}
       {milestone&&(
         <div style={{position:"fixed",top:0,left:0,right:0,bottom:0,background:"rgba(0,0,0,0.85)",display:"flex",alignItems:"center",justifyContent:"center",zIndex:300,padding:24}}>
           <div style={{background:`linear-gradient(145deg,#020617,${theme.primary}22)`,border:`2px solid ${theme.primary}`,borderRadius:24,padding:32,textAlign:"center",maxWidth:320,boxShadow:`0 0 60px ${theme.glowStrong}`}}>
@@ -686,7 +657,7 @@ export default function App() {
 
       {showSettings&&(
         <div style={{position:"fixed",inset:0,background:"rgba(0,0,0,0.8)",display:"flex",alignItems:"center",justifyContent:"center",zIndex:100,padding:16}} onClick={()=>setShowSettings(false)}>
-          <div style={{background:"#0f172a",border:`1px solid ${theme.border}`,borderRadius:14,padding:20,maxWidth:480,width:"100%"}} onClick={e=>e.stopPropagation()}>
+          <div style={{background:"#0f172a",border:`1px solid ${theme.border}`,borderRadius:14,padding:20,maxWidth:480,width:"100%",maxHeight:"90vh",overflowY:"auto"}} onClick={e=>e.stopPropagation()}>
             <h2 style={{margin:"0 0 16px",fontSize:15,fontWeight:700,color:"#94a3b8",fontFamily:"monospace"}}>⚙️ Settings</h2>
             <div style={{fontSize:12,color:"#94a3b8",marginBottom:8}}><b style={{color:theme.primary}}>Theme Color</b></div>
             <div style={{display:"flex",gap:8,marginBottom:20}}>
@@ -705,7 +676,6 @@ export default function App() {
               <button style={{...DS.btn,gridColumn:"unset",background:"#1e293b",color:"#94a3b8"}} onClick={()=>setShowSettings(false)}>Cancel</button>
             </div>
             <div style={{marginTop:12,fontSize:11,color:"#64748b",fontFamily:"monospace"}}>Status: {apiKey?<span style={{color:theme.primary}}>✓ AI active</span>:<span style={{color:"#fb7185"}}>✗ No key</span>}</div>
-           
             <div style={{marginTop:16,paddingTop:16,borderTop:"1px solid #1e293b"}}>
               <div style={{fontSize:12,color:"#94a3b8",marginBottom:8}}><b style={{color:theme.primary}}>Edit Profile</b></div>
               <div style={{display:"grid",gridTemplateColumns:"1fr 1fr",gap:8,marginBottom:8}}>
@@ -720,58 +690,36 @@ export default function App() {
               <div style={{fontSize:12,color:"#94a3b8",marginBottom:8}}><b style={{color:theme.primary}}>Export Your Data</b></div>
               <div style={{fontSize:11,color:"#64748b",fontFamily:"monospace",marginBottom:10}}>Downloads all your AXION data as a JSON file.</div>
               <button style={{...DS.btn,gridColumn:"unset",width:"100%",background:"#0f172a",border:`1px solid ${theme.primary}`,color:theme.primary}} onClick={()=>{
-                const data={
-                  exportDate:new Date().toISOString(),
-                  profile:{
-                    name:localStorage.getItem("tracker_name"),
-                    startWeight:localStorage.getItem("tracker_start_weight"),
-                    targetWeight:localStorage.getItem("tracker_target_weight"),
-                    startDate:localStorage.getItem("tracker_start_date"),
-                    height:`${localStorage.getItem("tracker_height_feet")}ft ${localStorage.getItem("tracker_height_inches")}in`,
-                    activityLevel:localStorage.getItem("tracker_activity_level"),
-                    calorieTarget:localStorage.getItem("tracker_calorie_target"),
-                  },
-                  weights,
-                  foods,
-                  workouts,
-                  peptideStack,
-                  peptideLogs,
-                  supplements:mySupplements,
-                };
+                const data={exportDate:new Date().toISOString(),profile:{name:localStorage.getItem("tracker_name"),startWeight:localStorage.getItem("tracker_start_weight"),targetWeight:localStorage.getItem("tracker_target_weight"),startDate:localStorage.getItem("tracker_start_date"),height:`${localStorage.getItem("tracker_height_feet")}ft ${localStorage.getItem("tracker_height_inches")}in`,activityLevel:localStorage.getItem("tracker_activity_level"),calorieTarget:localStorage.getItem("tracker_calorie_target")},weights,foods,workouts,peptideStack,peptideLogs,supplements:mySupplements};
                 const blob=new Blob([JSON.stringify(data,null,2)],{type:"application/json"});
                 const url=URL.createObjectURL(blob);
-                const a=document.createElement("a");
-                a.href=url;
-                a.download=`axion-export-${new Date().toISOString().slice(0,10)}.json`;
-                a.click();
-                URL.revokeObjectURL(url);
+                const a=document.createElement("a");a.href=url;a.download=`axion-export-${new Date().toISOString().slice(0,10)}.json`;a.click();URL.revokeObjectURL(url);
                 flash("Data exported ✓");
               }}>⬇️ Export All Data</button>
             </div>
           </div>
         </div>
       )}
-
       {/* GOAL CARD */}
       <div style={{display:"grid",gridTemplateColumns:"1fr 120px 1fr",alignItems:"center",gap:12,background:`radial-gradient(circle at center,${theme.bg},rgba(0,0,0,0.98) 58%)`,border:`1px solid ${theme.border}`,borderRadius:24,padding:"26px 18px 20px",marginBottom:20,boxShadow:`0 0 36px ${theme.glow}`}}>
         <div style={{textAlign:"left"}}><div><span style={{fontSize:34,fontWeight:900,color:"#f8fafc",fontFamily:"Impact,Arial Black,sans-serif"}}>{START_WEIGHT}</span><span style={{marginLeft:6,fontSize:15,fontWeight:800,color:"#f8fafc",fontFamily:"monospace"}}>LBS</span></div><div style={{marginTop:6,fontSize:11,color:"#94a3b8",letterSpacing:1.5,fontFamily:"monospace"}}>START</div></div>
         <div style={DS.goalCircle}><div style={{fontSize:29,fontWeight:900,color:theme.primary,fontFamily:"monospace"}}>{progressPct.toFixed(1)}%</div><div style={{fontSize:11,color:"#cbd5e1",letterSpacing:1.5,fontFamily:"monospace"}}>TO GOAL</div></div>
         <div style={{textAlign:"right"}}>
-        {editingGoal?(
-          <div style={{display:"flex",alignItems:"baseline",justifyContent:"flex-end",gap:4}}>
-            <input autoFocus type="number" defaultValue={TARGET_WEIGHT} onBlur={e=>{if(e.target.value&&+e.target.value>0){localStorage.setItem("tracker_target_weight",e.target.value);location.reload();}else{setEditingGoal(false);}}} onKeyDown={e=>{if(e.key==="Enter"&&e.target.value&&+e.target.value>0){localStorage.setItem("tracker_target_weight",e.target.value);location.reload();}if(e.key==="Escape")setEditingGoal(false);}} style={{width:80,background:"#020617",border:`1px solid ${theme.primary}`,borderRadius:8,color:theme.primary,fontSize:28,fontWeight:900,fontFamily:"monospace",textAlign:"center",outline:"none",padding:"4px 6px"}}/>
-            <span style={{fontSize:15,fontWeight:800,color:"#f8fafc",fontFamily:"monospace"}}>LBS</span>
+          {editingGoal?(
+            <div style={{display:"flex",alignItems:"baseline",justifyContent:"flex-end",gap:4}}>
+              <input autoFocus type="number" defaultValue={TARGET_WEIGHT} onBlur={e=>{if(e.target.value&&+e.target.value>0){localStorage.setItem("tracker_target_weight",e.target.value);location.reload();}else{setEditingGoal(false);}}} onKeyDown={e=>{if(e.key==="Enter"&&e.target.value&&+e.target.value>0){localStorage.setItem("tracker_target_weight",e.target.value);location.reload();}if(e.key==="Escape")setEditingGoal(false);}} style={{width:80,background:"#020617",border:`1px solid ${theme.primary}`,borderRadius:8,color:theme.primary,fontSize:28,fontWeight:900,fontFamily:"monospace",textAlign:"center",outline:"none",padding:"4px 6px"}}/>
+              <span style={{fontSize:15,fontWeight:800,color:"#f8fafc",fontFamily:"monospace"}}>LBS</span>
+            </div>
+          ):(
+            <div style={{display:"flex",alignItems:"baseline",justifyContent:"flex-end",gap:4}}>
+              <span style={{fontSize:34,fontWeight:900,color:"#f8fafc",fontFamily:"Impact,Arial Black,sans-serif"}}>{TARGET_WEIGHT}</span>
+              <span style={{fontSize:15,fontWeight:800,color:"#f8fafc",fontFamily:"monospace"}}>LBS</span>
+            </div>
+          )}
+          <div style={{display:"flex",alignItems:"center",justifyContent:"flex-end",gap:6,marginTop:6}}>
+            <span style={{fontSize:11,color:"#94a3b8",letterSpacing:1.5,fontFamily:"monospace"}}>GOAL</span>
+            <button onClick={()=>setEditingGoal(g=>!g)} style={{background:editingGoal?theme.primary+"33":"#1e293b",border:`1px solid ${editingGoal?theme.primary:"#334155"}`,color:editingGoal?theme.primary:"#64748b",borderRadius:6,padding:"2px 7px",cursor:"pointer",fontSize:10,fontFamily:"monospace",fontWeight:700}}>{editingGoal?"✕":"EDIT"}</button>
           </div>
-        ):(
-          <div style={{display:"flex",alignItems:"baseline",justifyContent:"flex-end",gap:4}}>
-            <span style={{fontSize:34,fontWeight:900,color:"#f8fafc",fontFamily:"Impact,Arial Black,sans-serif"}}>{TARGET_WEIGHT}</span>
-            <span style={{fontSize:15,fontWeight:800,color:"#f8fafc",fontFamily:"monospace"}}>LBS</span>
-          </div>
-        )}
-        <div style={{display:"flex",alignItems:"center",justifyContent:"flex-end",gap:6,marginTop:6}}>
-          <span style={{fontSize:11,color:"#94a3b8",letterSpacing:1.5,fontFamily:"monospace"}}>GOAL</span>
-          <button onClick={()=>setEditingGoal(g=>!g)} style={{background:editingGoal?theme.primary+"33":"#1e293b",border:`1px solid ${editingGoal?theme.primary:"#334155"}`,color:editingGoal?theme.primary:"#64748b",borderRadius:6,padding:"2px 7px",cursor:"pointer",fontSize:10,fontFamily:"monospace",fontWeight:700}}>{editingGoal?"✕":"EDIT"}</button>
-        </div>
         </div>
         <div style={{gridColumn:"1/4",height:8,background:"#111827",border:"1px solid #1f2937",borderRadius:999,overflow:"hidden",marginTop:8}}><div style={{...DS.goalBarFill,width:`${progressPct}%`}}/></div>
         <div style={{gridColumn:"1/4",display:"flex",justifyContent:"space-between",color:"#94a3b8",fontFamily:"monospace",fontSize:18,fontWeight:900}}><span>{START_WEIGHT}</span><span style={{color:theme.primary}}>NOW: {latestWeight.weight}</span><span>{TARGET_WEIGHT}</span></div>
@@ -870,7 +818,6 @@ export default function App() {
           <span style={{fontSize:18}}>⚠️</span><span>If energy tanks, digestion stalls, or workouts fall apart — hydrate, hit protein, add carbs, sleep, keep dose changes disciplined.</span>
         </div>
       </>}
-
       {/* WEIGHT */}
       {tab==="weight"&&(
         <div style={DS.panel}>
@@ -924,7 +871,7 @@ export default function App() {
                           {entries.map(e=>(
                             <div key={e.id} style={{display:"flex",justifyContent:"space-between",alignItems:"center",padding:"8px 0",borderTop:"1px solid #1e293b"}}>
                               <div><span style={{color:theme.primary,fontWeight:700}}>{e.weight} lbs</span><span style={{color:"#64748b",fontSize:11,fontFamily:"monospace",marginLeft:8}}>{e.type}{e.note?` · ${e.note}`:""}</span></div>
-                              <button style={{background:"transparent",color:"#ef4444",border:"1px solid #450a0a",borderRadius:6,cursor:"pointer",padding:"3px 8px",fontSize:11}} onClick={()=>setWeights((weights||[]).filter(x=>x.id!==e.id))}>✕</button>
+                              <button style={deleteBtn} onClick={()=>setConfirm({label:`${e.weight} lbs · ${e.date}`,onConfirm:()=>setWeights((weights||[]).filter(x=>x.id!==e.id))})}>✕</button>
                             </div>
                           ))}
                         </div>
@@ -972,7 +919,7 @@ export default function App() {
                                 {entries.map(e=>(
                                   <div key={e.id} style={{display:"flex",justifyContent:"space-between",alignItems:"center",padding:"8px 0",borderTop:"1px solid #1e293b"}}>
                                     <div><span style={{color:theme.primary,fontWeight:700}}>{e.weight} lbs</span><span style={{color:"#64748b",fontSize:11,fontFamily:"monospace",marginLeft:8}}>{e.type}{e.note?` · ${e.note}`:""}</span></div>
-                                    <button style={{background:"transparent",color:"#ef4444",border:"1px solid #450a0a",borderRadius:6,cursor:"pointer",padding:"3px 8px",fontSize:11}} onClick={()=>setWeights((weights||[]).filter(x=>x.id!==e.id))}>✕</button>
+                                    <button style={deleteBtn} onClick={()=>setConfirm({label:`${e.weight} lbs · ${e.date}`,onConfirm:()=>setWeights((weights||[]).filter(x=>x.id!==e.id))})}>✕</button>
                                   </div>
                                 ))}
                               </div>
@@ -1026,7 +973,7 @@ export default function App() {
                     {logs.slice(0,10).map(l=>(
                       <div key={l.id} style={{display:"flex",justifyContent:"space-between",alignItems:"center",gap:10,background:"#020617",border:"1px solid #1e293b",borderRadius:8,padding:"10px 12px",fontSize:13}}>
                         <span style={{flex:1}}><b style={{color:"#fb7185"}}>{l.dose} {pep.unit}</b> · {l.date}{l.note?` · ${l.note}`:""}</span>
-                        <button style={{background:"transparent",color:"#ef4444",border:"1px solid #450a0a",borderRadius:6,cursor:"pointer",padding:"3px 8px",fontSize:11}} onClick={()=>removePeptideDose(pep.id,l.id)}>✕</button>
+                        <button style={deleteBtn} onClick={()=>setConfirm({label:`${l.dose}${pep.unit} dose on ${l.date}`,onConfirm:()=>removePeptideDose(pep.id,l.id)})}>✕</button>
                       </div>
                     ))}
                   </div>
@@ -1036,7 +983,6 @@ export default function App() {
           })}
         </div>
       )}
-
       {/* PEPTIDES */}
       {tab==="peptides"&&(
         <div style={DS.panel}>
@@ -1069,7 +1015,7 @@ export default function App() {
                     </div>
                     <div style={{display:"flex",gap:6,flexShrink:0}}>
                       <button onClick={()=>{setEditingPep(p);setPepForm({dose:p.dose==="—"?"":p.dose,unit:p.unit,frequency:p.frequency,cycle:p.cycle,notes:p.notes||"",status:p.status});setPepView("edit");}} style={{background:"#0f172a",border:"1px solid #1e293b",color:"#60a5fa",cursor:"pointer",borderRadius:6,padding:"4px 8px",fontSize:11}}>Edit</button>
-                      <button onClick={()=>deletePep(p.id)} style={{background:"transparent",border:"1px solid #450a0a",color:"#ef4444",cursor:"pointer",borderRadius:6,padding:"4px 8px",fontSize:11}}>✕</button>
+                      <button onClick={()=>setConfirm({label:`Remove ${p.name} from your stack?`,onConfirm:()=>deletePep(p.id)})} style={{background:"transparent",border:"1px solid #450a0a",color:"#ef4444",cursor:"pointer",borderRadius:6,padding:"4px 8px",fontSize:11}}>✕</button>
                     </div>
                   </div>
                 </div>
@@ -1090,7 +1036,7 @@ export default function App() {
                 <label style={formLabel}>Notes</label><input style={DS.input} value={pepForm.notes} onChange={e=>setPepForm({...pepForm,notes:e.target.value})}/>
               </div>
               <div style={{display:"flex",gap:8,marginTop:8}}>
-                <button style={{...DS.btn,gridColumn:"unset",flex:1,background:"#7f1d1d"}} onClick={()=>deletePep(editingPep.id)}>Remove</button>
+                <button style={{...DS.btn,gridColumn:"unset",flex:1,background:"#7f1d1d"}} onClick={()=>setConfirm({label:`Remove ${editingPep.name} from your stack?`,onConfirm:()=>deletePep(editingPep.id)})}>Remove</button>
                 <button style={{...DS.btn,gridColumn:"unset",flex:1}} onClick={savePepEdit}>Save changes</button>
               </div>
               <button style={{...DS.btn,gridColumn:"unset",width:"100%",marginTop:8,background:"#1e293b",color:"#94a3b8"}} onClick={()=>{setPepView("stack");setEditingPep(null);}}>Cancel</button>
@@ -1145,11 +1091,9 @@ export default function App() {
           )}
         </div>
       )}
-
       {/* FOOD */}
       {tab==="food"&&(
         <div>
-          {/* DAILY NUTRITION SUMMARY */}
           <div style={DS.panel}>
             <div style={{display:"flex",justifyContent:"space-between",alignItems:"center",marginBottom:12}}>
               <h2 style={{margin:0,fontSize:15,fontWeight:700,color:"#94a3b8",fontFamily:"monospace"}}>📊 Today's Nutrition</h2>
@@ -1191,27 +1135,23 @@ export default function App() {
             })()}
           </div>
 
-          {/* LOG FORM */}
           <div style={DS.panel}>
             <div style={{display:"flex",gap:6,marginBottom:16}}>
               {[["search","🔍 Search"],["quick","⚡ Quick"],["ai","📷 Scan"],["manual","✏️ Manual"]].map(([m,l])=>(
                 <button key={m} onClick={()=>setFoodMode(m)} style={{flex:1,padding:"8px 4px",borderRadius:10,border:`1px solid ${foodMode===m?theme.primary:"#334155"}`,background:foodMode===m?theme.primary+"22":"#020617",color:foodMode===m?theme.primary:"#64748b",cursor:"pointer",fontSize:10,fontFamily:"monospace",fontWeight:700}}>{l}</button>
               ))}
             </div>
-
             <div style={{marginBottom:12}}>
               <div style={{fontSize:11,color:"#64748b",fontFamily:"monospace",textTransform:"uppercase",letterSpacing:1,marginBottom:6}}>Date</div>
               <input style={{...DS.input,width:"auto",minWidth:160}} type="date" value={foodDate} onChange={e=>setFoodDate(e.target.value)}/>
             </div>
-
-            {/* MEAL TAG */}
             <div style={{marginBottom:14}}>
               <div style={{fontSize:11,color:"#64748b",fontFamily:"monospace",textTransform:"uppercase",letterSpacing:1,marginBottom:8}}>Meal</div>
               <div style={{display:"flex",gap:6,flexWrap:"wrap"}}>
                 {[["🌅","Breakfast"],["☀️","Lunch"],["🌙","Dinner"],["🍎","Snack"]].map(([icon,meal])=>{
                   const selected=selectedMeal===meal;
-                    return(
-                      <button key={meal} onClick={()=>setSelectedMeal(meal)} style={{padding:"7px 12px",borderRadius:10,cursor:"pointer",fontFamily:"monospace",fontSize:11,fontWeight:700,border:`1px solid ${selected?theme.primary:theme.border}`,background:selected?theme.primary+"22":"#020617",color:selected?theme.primary:"#94a3b8",transition:"all 0.15s"}}>
+                  return(
+                    <button key={meal} onClick={()=>setSelectedMeal(meal)} style={{padding:"7px 12px",borderRadius:10,cursor:"pointer",fontFamily:"monospace",fontSize:11,fontWeight:700,border:`1px solid ${selected?theme.primary:theme.border}`,background:selected?theme.primary+"22":"#020617",color:selected?theme.primary:"#94a3b8",transition:"all 0.15s"}}>
                       {icon} {meal}
                     </button>
                   );
@@ -1219,10 +1159,8 @@ export default function App() {
               </div>
             </div>
 
-            {/* QUICK ADD */}
             {foodMode==="quick"&&(
               <div>
-                {/* Recent foods */}
                 {(()=>{
                   const recent=[...new Map((foods||[]).slice().reverse().map(f=>[f.item,f])).values()].slice(0,8);
                   if(recent.length===0)return <div style={{color:"#475569",fontSize:13,fontFamily:"monospace",padding:"12px 0"}}>No recent foods yet. Search or add some food first.</div>;
@@ -1231,14 +1169,8 @@ export default function App() {
                       <div style={{fontSize:11,color:"#64748b",fontFamily:"monospace",textTransform:"uppercase",letterSpacing:1,marginBottom:10}}>Recent — tap to re-log</div>
                       <div style={{display:"flex",flexDirection:"column",gap:6,marginBottom:16}}>
                         {recent.map(f=>(
-                          <button key={f.id} onClick={()=>{
-                            setFoods(prev=>[...(prev||[]),{...f,id:uid(),date:foodDate,meal:selectedMeal}]);
-                            flash(`${f.item} logged ✓`);
-                          }} style={{display:"flex",justifyContent:"space-between",alignItems:"center",background:"#020617",border:`1px solid ${theme.border}`,borderRadius:12,padding:"10px 14px",cursor:"pointer",textAlign:"left"}}>
-                            <div>
-                              <div style={{fontWeight:700,color:"#f8fafc",fontSize:13}}>{f.item}</div>
-                              <div style={{fontSize:11,color:"#64748b",fontFamily:"monospace"}}>{f.calories}cal · {f.protein}g pro</div>
-                            </div>
+                          <button key={f.id} onClick={()=>{setFoods(prev=>[...(prev||[]),{...f,id:uid(),date:foodDate,meal:selectedMeal}]);flash(`${f.item} logged ✓`);}} style={{display:"flex",justifyContent:"space-between",alignItems:"center",background:"#020617",border:`1px solid ${theme.border}`,borderRadius:12,padding:"10px 14px",cursor:"pointer",textAlign:"left"}}>
+                            <div><div style={{fontWeight:700,color:"#f8fafc",fontSize:13}}>{f.item}</div><div style={{fontSize:11,color:"#64748b",fontFamily:"monospace"}}>{f.calories}cal · {f.protein}g pro</div></div>
                             <div style={{fontSize:20,color:theme.primary}}>+</div>
                           </button>
                         ))}
@@ -1246,8 +1178,6 @@ export default function App() {
                     </div>
                   );
                 })()}
-
-                {/* Common staples */}
                 <div style={{fontSize:11,color:"#64748b",fontFamily:"monospace",textTransform:"uppercase",letterSpacing:1,marginBottom:10}}>Common Staples</div>
                 <div style={{display:"flex",flexDirection:"column",gap:6}}>
                   {[
@@ -1264,14 +1194,8 @@ export default function App() {
                     {item:"Oatmeal (40g dry)",calories:150,protein:5,carbs:27,fat:2.5,fiber:4},
                     {item:"Ground Beef 80/20 (100g)",calories:254,protein:17,carbs:0,fat:20,fiber:0},
                   ].map(food=>(
-                   <button key={food.item} onClick={()=>{
-                      setFoods(prev=>[...(prev||[]),{id:uid(),date:foodDate,meal:selectedMeal,...food}]);
-                      flash(`${food.item} logged ✓`);
-                    }} style={{display:"flex",justifyContent:"space-between",alignItems:"center",background:"#020617",border:`1px solid ${theme.border}`,borderRadius:12,padding:"10px 14px",cursor:"pointer",textAlign:"left"}}>
-                      <div>
-                        <div style={{fontWeight:700,color:"#f8fafc",fontSize:13}}>{food.item}</div>
-                        <div style={{fontSize:11,color:"#64748b",fontFamily:"monospace"}}>{food.calories}cal · {food.protein}g pro · {food.carbs}g carb · {food.fat}g fat</div>
-                      </div>
+                    <button key={food.item} onClick={()=>{setFoods(prev=>[...(prev||[]),{id:uid(),date:foodDate,meal:selectedMeal,...food}]);flash(`${food.item} logged ✓`);}} style={{display:"flex",justifyContent:"space-between",alignItems:"center",background:"#020617",border:`1px solid ${theme.border}`,borderRadius:12,padding:"10px 14px",cursor:"pointer",textAlign:"left"}}>
+                      <div><div style={{fontWeight:700,color:"#f8fafc",fontSize:13}}>{food.item}</div><div style={{fontSize:11,color:"#64748b",fontFamily:"monospace"}}>{food.calories}cal · {food.protein}g pro · {food.carbs}g carb · {food.fat}g fat</div></div>
                       <div style={{fontSize:20,color:theme.primary}}>+</div>
                     </button>
                   ))}
@@ -1279,7 +1203,6 @@ export default function App() {
               </div>
             )}
 
-            {/* AI SEARCH */}
             {foodMode==="search"&&<>
               {!apiKey&&<div style={{background:"#451a03",border:"1px solid #fb923c",borderRadius:8,padding:12,marginBottom:12,fontSize:12,color:"#fb923c",fontFamily:"monospace"}}>Add your API key in Settings to enable food search</div>}
               <div style={{display:"flex",gap:8,marginBottom:10}}>
@@ -1335,7 +1258,6 @@ export default function App() {
               )}
             </>}
 
-            {/* SCAN */}
             {foodMode==="ai"&&<>
               {!apiKey&&<div style={{background:"#451a03",border:"1px solid #fb923c",borderRadius:8,padding:12,marginBottom:12,fontSize:12,color:"#fb923c",fontFamily:"monospace"}}>Add your API key in Settings to enable scanning</div>}
               <div style={{display:"flex",gap:8,marginBottom:10}}>
@@ -1355,7 +1277,6 @@ export default function App() {
               {aiScanError&&<div style={{color:"#ef4444",fontSize:13,fontFamily:"monospace"}}>{aiScanError}</div>}
             </>}
 
-            {/* MANUAL */}
             {foodMode==="manual"&&(
               <div style={formGrid}>
                 <label style={formLabel}>Food name</label><input style={DS.input} placeholder="Chicken breast" value={manualFood.item} onChange={e=>setManualFood({...manualFood,item:e.target.value})}/>
@@ -1374,17 +1295,11 @@ export default function App() {
             )}
           </div>
 
-          {/* FOOD LOG - grouped by meal */}
           <div style={DS.panel}>
             <div style={{display:"flex",justifyContent:"space-between",alignItems:"center",marginBottom:14}}>
-              <h2 style={{margin:0,fontSize:15,fontWeight:700,color:"#94a3b8",fontFamily:"monospace"}}>
-                {showFoodHistory?"All History":"Today's Log"}
-              </h2>
-              <button onClick={()=>setShowFoodHistory(h=>!h)} style={{background:"#020617",border:`1px solid ${theme.border}`,color:"#64748b",borderRadius:8,padding:"5px 10px",cursor:"pointer",fontFamily:"monospace",fontSize:11}}>
-                {showFoodHistory?"Today":"All history"}
-              </button>
+              <h2 style={{margin:0,fontSize:15,fontWeight:700,color:"#94a3b8",fontFamily:"monospace"}}>{showFoodHistory?"All History":"Today's Log"}</h2>
+              <button onClick={()=>setShowFoodHistory(h=>!h)} style={{background:"#020617",border:`1px solid ${theme.border}`,color:"#64748b",borderRadius:8,padding:"5px 10px",cursor:"pointer",fontFamily:"monospace",fontSize:11}}>{showFoodHistory?"Today":"All history"}</button>
             </div>
-
             {showFoodHistory?(
               <div>
                 {[...(foods||[])].sort((a,b)=>new Date(b.date)-new Date(a.date)).length===0
@@ -1395,7 +1310,7 @@ export default function App() {
                         <div style={{fontWeight:700,color:"#f59e0b",fontSize:13}}>{f.item}</div>
                         <div style={{fontSize:11,color:"#64748b",fontFamily:"monospace"}}>{f.date}{f.meal?` · ${f.meal}`:""} · {f.calories}cal · {f.protein}g pro</div>
                       </div>
-                      <button style={{background:"transparent",color:"#ef4444",border:"1px solid #450a0a",borderRadius:6,cursor:"pointer",padding:"3px 8px",fontSize:11,flexShrink:0}} onClick={()=>setFoods((foods||[]).filter(x=>x.id!==f.id))}>✕</button>
+                      <button style={{...deleteBtn,flexShrink:0}} onClick={()=>setConfirm({label:`${f.item} · ${f.date}`,onConfirm:()=>setFoods((foods||[]).filter(x=>x.id!==f.id))})}>✕</button>
                     </div>
                   ))
                 }
@@ -1426,7 +1341,7 @@ export default function App() {
                                 <div style={{fontWeight:700,color:"#f59e0b",fontSize:13}}>{f.item}</div>
                                 <div style={{fontSize:11,color:"#64748b",fontFamily:"monospace"}}>{f.calories}cal · {f.protein}g pro · {f.carbs}g carb · {f.fat}g fat{f.fiber?` · ${f.fiber}g fiber`:""}</div>
                               </div>
-                              <button style={{background:"transparent",color:"#ef4444",border:"1px solid #450a0a",borderRadius:6,cursor:"pointer",padding:"3px 8px",fontSize:11,flexShrink:0}} onClick={()=>setFoods((foods||[]).filter(x=>x.id!==f.id))}>✕</button>
+                              <button style={{...deleteBtn,flexShrink:0}} onClick={()=>setConfirm({label:`${f.item} · ${f.calories}cal`,onConfirm:()=>setFoods((foods||[]).filter(x=>x.id!==f.id))})}>✕</button>
                             </div>
                           ))}
                         </div>
@@ -1439,7 +1354,6 @@ export default function App() {
           </div>
         </div>
       )}
-
       {/* WORKOUTS */}
       {tab==="workouts"&&(
         <div>
@@ -1499,9 +1413,7 @@ export default function App() {
                 <div style={{fontSize:11,color:"#64748b",fontFamily:"monospace",textTransform:"uppercase",letterSpacing:1,marginBottom:8}}>Run Type</div>
                 <div style={{display:"flex",flexWrap:"wrap",gap:6,marginBottom:12}}>
                   {["Easy Run","Tempo","Intervals","Long Run","Race","Treadmill"].map(rt=>(
-                    <button key={rt} onClick={()=>setWorkoutForm({...workoutForm,runType:rt})} style={{padding:"7px 12px",borderRadius:10,cursor:"pointer",fontFamily:"monospace",fontSize:11,fontWeight:700,border:`1px solid ${workoutForm.runType===rt?theme.primary:theme.border}`,background:workoutForm.runType===rt?theme.primary+"22":"#020617",color:workoutForm.runType===rt?theme.primary:"#94a3b8",transition:"all 0.15s"}}>
-                      {rt}
-                    </button>
+                    <button key={rt} onClick={()=>setWorkoutForm({...workoutForm,runType:rt})} style={{padding:"7px 12px",borderRadius:10,cursor:"pointer",fontFamily:"monospace",fontSize:11,fontWeight:700,border:`1px solid ${workoutForm.runType===rt?theme.primary:theme.border}`,background:workoutForm.runType===rt?theme.primary+"22":"#020617",color:workoutForm.runType===rt?theme.primary:"#94a3b8",transition:"all 0.15s"}}>{rt}</button>
                   ))}
                 </div>
                 <div style={{display:"grid",gridTemplateColumns:"1fr 1fr",gap:10,marginBottom:10}}>
@@ -1528,10 +1440,7 @@ export default function App() {
                     return(
                       <div style={{background:`linear-gradient(145deg,#020617,${theme.primary}11)`,border:`1px solid ${theme.primary}44`,borderRadius:12,padding:12,display:"grid",gridTemplateColumns:"1fr 1fr 1fr",gap:8,textAlign:"center",marginBottom:10}}>
                         {[["Distance",`${milesNum.toFixed(2)} mi`],["Total Time",workoutForm.runTime],["Avg Pace",`${paceMin}:${paceSec} /mi`]].map(([l,v])=>(
-                          <div key={l}>
-                            <div style={{fontSize:10,color:"#64748b",fontFamily:"monospace",textTransform:"uppercase",letterSpacing:1,marginBottom:4}}>{l}</div>
-                            <div style={{fontSize:15,fontWeight:900,color:theme.primary,fontFamily:"monospace"}}>{v}</div>
-                          </div>
+                          <div key={l}><div style={{fontSize:10,color:"#64748b",fontFamily:"monospace",textTransform:"uppercase",letterSpacing:1,marginBottom:4}}>{l}</div><div style={{fontSize:15,fontWeight:900,color:theme.primary,fontFamily:"monospace"}}>{v}</div></div>
                         ))}
                       </div>
                     );
@@ -1576,7 +1485,7 @@ export default function App() {
                             <div style={{fontSize:11,color:"#64748b",fontFamily:"monospace"}}>{w.date} · {w.minutes} min{w.calories?` · ${w.calories} cal burned`:""}{w.miles?` · ${w.miles} mi`:""}{w.runTime?` · ${w.runTime}`:""}</div>
                             {w.note&&<div style={{fontSize:11,color:"#94a3b8",marginTop:4,fontStyle:"italic"}}>{w.note}</div>}
                           </div>
-                          <button style={{background:"transparent",color:"#ef4444",border:"1px solid #450a0a",borderRadius:6,cursor:"pointer",padding:"3px 8px",fontSize:11,flexShrink:0,marginLeft:8}} onClick={()=>setWorkouts((workouts||[]).filter(x=>x.id!==w.id))}>✕</button>
+                          <button style={{...deleteBtn,flexShrink:0,marginLeft:8}} onClick={()=>setConfirm({label:`${w.type} · ${w.date} · ${w.minutes}min`,onConfirm:()=>setWorkouts((workouts||[]).filter(x=>x.id!==w.id))})}>✕</button>
                         </div>
                       </div>
                     ))}
@@ -1587,7 +1496,6 @@ export default function App() {
           </div>
         </div>
       )}
-
       {/* SUPPLEMENTS */}
       {tab==="supplements"&&(
         <div style={DS.panel}>
@@ -1624,7 +1532,7 @@ export default function App() {
                 <select style={DS.input} value={suppForm.time} onChange={e=>setSuppForm({...suppForm,time:e.target.value})}>{["Morning","Afternoon","Evening","Night","With meals","Pre-workout","Post-workout"].map(o=><option key={o}>{o}</option>)}</select>
               </div>
               <div style={{display:"flex",gap:8,marginTop:8}}>
-                <button style={{...DS.btn,gridColumn:"unset",flex:1,background:"#7f1d1d"}} onClick={()=>deleteSupp(editingSupp.id)}>Remove</button>
+                <button style={{...DS.btn,gridColumn:"unset",flex:1,background:"#7f1d1d"}} onClick={()=>setConfirm({label:`Remove ${editingSupp.name} from your supplements?`,onConfirm:()=>deleteSupp(editingSupp.id)})}>Remove</button>
                 <button style={{...DS.btn,gridColumn:"unset",flex:1}} onClick={saveSuppEdit}>Save changes</button>
               </div>
               <button style={{...DS.btn,gridColumn:"unset",width:"100%",marginTop:8,background:"#1e293b",color:"#94a3b8"}} onClick={()=>{setSuppView("my");setEditingSupp(null);}}>Cancel</button>
