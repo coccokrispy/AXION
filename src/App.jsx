@@ -703,6 +703,38 @@ export default function App() {
               <button style={{...DS.btn,gridColumn:"unset",background:"#1e293b",color:"#94a3b8"}} onClick={()=>setShowSettings(false)}>Cancel</button>
             </div>
             <div style={{marginTop:12,fontSize:11,color:"#64748b",fontFamily:"monospace"}}>Status: {apiKey?<span style={{color:theme.primary}}>✓ AI active</span>:<span style={{color:"#fb7185"}}>✗ No key</span>}</div>
+            <div style={{marginTop:16,paddingTop:16,borderTop:"1px solid #1e293b"}}>
+              <div style={{fontSize:12,color:"#94a3b8",marginBottom:8}}><b style={{color:theme.primary}}>Export Your Data</b></div>
+              <div style={{fontSize:11,color:"#64748b",fontFamily:"monospace",marginBottom:10}}>Downloads all your AXION data as a JSON file.</div>
+              <button style={{...DS.btn,gridColumn:"unset",width:"100%",background:"#0f172a",border:`1px solid ${theme.primary}`,color:theme.primary}} onClick={()=>{
+                const data={
+                  exportDate:new Date().toISOString(),
+                  profile:{
+                    name:localStorage.getItem("tracker_name"),
+                    startWeight:localStorage.getItem("tracker_start_weight"),
+                    targetWeight:localStorage.getItem("tracker_target_weight"),
+                    startDate:localStorage.getItem("tracker_start_date"),
+                    height:`${localStorage.getItem("tracker_height_feet")}ft ${localStorage.getItem("tracker_height_inches")}in`,
+                    activityLevel:localStorage.getItem("tracker_activity_level"),
+                    calorieTarget:localStorage.getItem("tracker_calorie_target"),
+                  },
+                  weights,
+                  foods,
+                  workouts,
+                  peptideStack,
+                  peptideLogs,
+                  supplements:mySupplements,
+                };
+                const blob=new Blob([JSON.stringify(data,null,2)],{type:"application/json"});
+                const url=URL.createObjectURL(blob);
+                const a=document.createElement("a");
+                a.href=url;
+                a.download=`axion-export-${new Date().toISOString().slice(0,10)}.json`;
+                a.click();
+                URL.revokeObjectURL(url);
+                flash("Data exported ✓");
+              }}>⬇️ Export All Data</button>
+            </div>
           </div>
         </div>
       )}
