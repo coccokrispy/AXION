@@ -344,6 +344,7 @@ export default function App() {
 
   const [doseTab,setDoseTab]=useState(null);
   const [doseForm,setDoseForm]=useState({date:todayISO(),dose:"",note:""});
+  const [editingGoal,setEditingGoal]=useState(false);
 
   const sortedWeights=useMemo(()=>(weights||[]).slice().sort((a,b)=>new Date(a.date)-new Date(b.date)),[weights]);
   const latestWeight=sortedWeights[sortedWeights.length-1]||{id:0,date:todayISO(),weight:START_WEIGHT||0};
