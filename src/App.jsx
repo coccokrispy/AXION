@@ -743,7 +743,23 @@ export default function App() {
       <div style={{display:"grid",gridTemplateColumns:"1fr 120px 1fr",alignItems:"center",gap:12,background:`radial-gradient(circle at center,${theme.bg},rgba(0,0,0,0.98) 58%)`,border:`1px solid ${theme.border}`,borderRadius:24,padding:"26px 18px 20px",marginBottom:20,boxShadow:`0 0 36px ${theme.glow}`}}>
         <div style={{textAlign:"left"}}><div><span style={{fontSize:34,fontWeight:900,color:"#f8fafc",fontFamily:"Impact,Arial Black,sans-serif"}}>{START_WEIGHT}</span><span style={{marginLeft:6,fontSize:15,fontWeight:800,color:"#f8fafc",fontFamily:"monospace"}}>LBS</span></div><div style={{marginTop:6,fontSize:11,color:"#94a3b8",letterSpacing:1.5,fontFamily:"monospace"}}>START</div></div>
         <div style={DS.goalCircle}><div style={{fontSize:29,fontWeight:900,color:theme.primary,fontFamily:"monospace"}}>{progressPct.toFixed(1)}%</div><div style={{fontSize:11,color:"#cbd5e1",letterSpacing:1.5,fontFamily:"monospace"}}>TO GOAL</div></div>
-        <div style={{textAlign:"right"}}><div style={{display:"flex",alignItems:"baseline",justifyContent:"flex-end",gap:4}}><input type="number" value={TARGET_WEIGHT} onChange={e=>{localStorage.setItem("tracker_target_weight",e.target.value);location.reload();}} style={{width:80,background:"transparent",border:"none",borderBottom:`1px solid ${theme.primary}44`,color:"#f8fafc",fontSize:34,fontWeight:900,fontFamily:"Impact,Arial Black,sans-serif",textAlign:"right",outline:"none",padding:"0 2px"}}/><span style={{fontSize:15,fontWeight:800,color:"#f8fafc",fontFamily:"monospace"}}>LBS</span></div><div style={{marginTop:6,fontSize:11,color:"#94a3b8",letterSpacing:1.5,fontFamily:"monospace"}}>GOAL</div></div>
+        <div style={{textAlign:"right"}}>
+        {editingGoal?(
+          <div style={{display:"flex",alignItems:"baseline",justifyContent:"flex-end",gap:4}}>
+            <input autoFocus type="number" defaultValue={TARGET_WEIGHT} onBlur={e=>{if(e.target.value&&+e.target.value>0){localStorage.setItem("tracker_target_weight",e.target.value);location.reload();}else{setEditingGoal(false);}}} onKeyDown={e=>{if(e.key==="Enter"&&e.target.value&&+e.target.value>0){localStorage.setItem("tracker_target_weight",e.target.value);location.reload();}if(e.key==="Escape")setEditingGoal(false);}} style={{width:80,background:"#020617",border:`1px solid ${theme.primary}`,borderRadius:8,color:theme.primary,fontSize:28,fontWeight:900,fontFamily:"monospace",textAlign:"center",outline:"none",padding:"4px 6px"}}/>
+            <span style={{fontSize:15,fontWeight:800,color:"#f8fafc",fontFamily:"monospace"}}>LBS</span>
+          </div>
+        ):(
+          <div style={{display:"flex",alignItems:"baseline",justifyContent:"flex-end",gap:4}}>
+            <span style={{fontSize:34,fontWeight:900,color:"#f8fafc",fontFamily:"Impact,Arial Black,sans-serif"}}>{TARGET_WEIGHT}</span>
+            <span style={{fontSize:15,fontWeight:800,color:"#f8fafc",fontFamily:"monospace"}}>LBS</span>
+          </div>
+        )}
+        <div style={{display:"flex",alignItems:"center",justifyContent:"flex-end",gap:6,marginTop:6}}>
+          <span style={{fontSize:11,color:"#94a3b8",letterSpacing:1.5,fontFamily:"monospace"}}>GOAL</span>
+          <button onClick={()=>setEditingGoal(g=>!g)} style={{background:editingGoal?theme.primary+"33":"#1e293b",border:`1px solid ${editingGoal?theme.primary:"#334155"}`,color:editingGoal?theme.primary:"#64748b",borderRadius:6,padding:"2px 7px",cursor:"pointer",fontSize:10,fontFamily:"monospace",fontWeight:700}}>{editingGoal?"✕":"EDIT"}</button>
+        </div>
+      </div>
         <div style={{gridColumn:"1/4",height:8,background:"#111827",border:"1px solid #1f2937",borderRadius:999,overflow:"hidden",marginTop:8}}><div style={{...DS.goalBarFill,width:`${progressPct}%`}}/></div>
         <div style={{gridColumn:"1/4",display:"flex",justifyContent:"space-between",color:"#94a3b8",fontFamily:"monospace",fontSize:18,fontWeight:900}}><span>{START_WEIGHT}</span><span style={{color:theme.primary}}>NOW: {latestWeight.weight}</span><span>{TARGET_WEIGHT}</span></div>
         <div style={{gridColumn:"1/-1",display:"grid",gridTemplateColumns:"1fr 1fr 1fr",gap:10,marginTop:18,paddingTop:16,borderTop:`1px solid ${theme.border}`}}>
