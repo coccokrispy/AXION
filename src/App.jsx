@@ -859,10 +859,8 @@ export default function App() {
                           <div style={{fontSize:11,color:"#64748b",fontFamily:"monospace"}}>{entries.length} entr{entries.length===1?"y":"ies"} · avg {avg} lbs</div>
                         </div>
                         <div style={{display:"flex",alignItems:"center",gap:8}}>
-                          {trend==="down"&&<TrendingDown size={16} color="#4ade80"/>}
-                          {trend==="up"&&<TrendingUp size={16} color="#ef4444"/>}
-                          {trend==="flat"&&<Minus size={16} color="#f59e0b"/>}
-                          <span style={{fontSize:16,fontWeight:900,color:theme.primary}}>{avg} lbs</span>
+                      
+                      <span style={{fontSize:16,fontWeight:900,color:theme.primary}}>{avg} lbs</span>
                           {isOpen?<ChevronUp size={16} color="#64748b"/>:<ChevronDown size={16} color="#64748b"/>}
                         </div>
                       </button>
@@ -907,9 +905,7 @@ export default function App() {
                                 <div style={{fontSize:11,color:"#64748b",fontFamily:"monospace"}}>{entries.length} entr{entries.length===1?"y":"ies"} · avg {avg} lbs</div>
                               </div>
                               <div style={{display:"flex",alignItems:"center",gap:8}}>
-                                {trend==="down"&&<TrendingDown size={14} color="#4ade80"/>}
-                                {trend==="up"&&<TrendingUp size={14} color="#ef4444"/>}
-                                {trend==="flat"&&<Minus size={14} color="#f59e0b"/>}
+
                                 <span style={{fontSize:14,fontWeight:900,color:theme.primary}}>{avg} lbs</span>
                                 {isOpen?<ChevronUp size={14} color="#64748b"/>:<ChevronDown size={14} color="#64748b"/>}
                               </div>
