@@ -298,6 +298,7 @@ export default function App() {
   const [tempKey,setTempKey]=useState("");
   const [milestone,setMilestone]=useState(null);
   const [confirm,setConfirm]=useState(null);
+   const [suppReminder,setSuppReminder]=useState(false);
   const [setupForm,setSetupForm]=useState({name:"",heightFeet:"",heightInches:"",startWeight:"",targetWeight:"",startDate:todayISO(),activityLevel:"moderate",agreed:false});
 
   const [weightForm,setWeightForm]=useState({date:todayISO(),weight:"",type:"morning",note:""});
@@ -415,6 +416,17 @@ export default function App() {
       setTimeout(()=>setMilestone(null),4000);
     }
   },[totalLost,progressPct]);
+  useEffect(()=>{
+    if(mySupplements.length===0)return;
+    const hour=new Date().getHours();
+    if(hour<20)return; // only after 8pm
+    const allTaken=mySupplements.every(s=>takenToday.includes(s.id));
+    if(allTaken)return;
+    const key="axion_supp_reminder_"+todayISO();
+    if(localStorage.getItem(key))return; // only show once per day
+    setSuppReminder(true);
+    localStorage.setItem(key,"shown");
+  },[mySupplements,takenToday]);
 
   const suppSearchResults=useMemo(()=>{if(!suppSearch.trim())return[];const q=suppSearch.toLowerCase();return ALL_SUPPLEMENTS.filter(s=>s.toLowerCase().includes(q)).slice(0,20);},[suppSearch]);
   const pepSearchResults=useMemo(()=>{if(!pepSearch.trim())return[];const q=pepSearch.toLowerCase();return ALL_PEPTIDES.filter(p=>p.name.toLowerCase().includes(q)||p.desc.toLowerCase().includes(q)).slice(0,10);},[pepSearch]);
@@ -626,6 +638,24 @@ export default function App() {
             <div style={{display:"flex",gap:10}}>
               <button style={{flex:1,background:"#1e293b",border:"1px solid #334155",color:"#94a3b8",borderRadius:10,padding:"12px",cursor:"pointer",fontFamily:"monospace",fontWeight:700,fontSize:13}} onClick={()=>setConfirm(null)}>Cancel</button>
               <button style={{flex:1,background:"#450a0a",border:"1px solid #ef4444",color:"#ef4444",borderRadius:10,padding:"12px",cursor:"pointer",fontFamily:"monospace",fontWeight:700,fontSize:13}} onClick={()=>{confirm.onConfirm();setConfirm(null);}}>Delete</button>
+            </div>
+          </div>
+        </div>
+      )}
+      {suppReminder&&(
+        <div style={{position:"fixed",inset:0,background:"rgba(0,0,0,0.88)",display:"flex",alignItems:"center",justifyContent:"center",zIndex:500,padding:24}}>
+          <div style={{background:"#0f172a",border:`1px solid ${theme.primary}66`,borderRadius:18,padding:28,maxWidth:320,width:"100%",textAlign:"center",boxShadow:`0 0 40px ${theme.glow}`}}>
+            <div style={{fontSize:32,marginBottom:12}}>💊</div>
+            <div style={{fontWeight:700,color:"#f8fafc",fontSize:15,marginBottom:8,fontFamily:"monospace"}}>Supplement Check</div>
+            <div style={{fontSize:13,color:"#94a3b8",fontFamily:"monospace",marginBottom:8,lineHeight:1.7}}>
+              You haven't marked all your supplements as taken today.
+            </div>
+            <div style={{fontSize:12,color:"#475569",fontFamily:"monospace",marginBottom:24}}>
+              {takenToday.filter(id=>mySupplements.find(s=>s.id===id)).length} of {mySupplements.length} taken
+            </div>
+            <div style={{display:"flex",gap:10}}>
+              <button style={{flex:1,background:"#1e293b",border:"1px solid #334155",color:"#94a3b8",borderRadius:10,padding:"12px",cursor:"pointer",fontFamily:"monospace",fontWeight:700,fontSize:13}} onClick={()=>setSuppReminder(false)}>Dismiss</button>
+              <button style={{flex:1,background:`linear-gradient(135deg,${theme.primaryDark},${theme.primary})`,border:"none",color:"#020617",borderRadius:10,padding:"12px",cursor:"pointer",fontFamily:"monospace",fontWeight:700,fontSize:13}} onClick={()=>{setSuppReminder(false);setTab("supplements");}}>Go Log Them</button>
             </div>
           </div>
         </div>
