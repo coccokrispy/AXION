@@ -344,6 +344,8 @@ export default function App() {
 
   const [doseTab,setDoseTab]=useState(null);
   const [doseForm,setDoseForm]=useState({date:todayISO(),dose:"",note:""});
+  const [editingDoseNote,setEditingDoseNote]=useState(null);
+  const [doseNoteText,setDoseNoteText]=useState("");
   const [editingGoal,setEditingGoal]=useState(false);
 
   const sortedWeights=useMemo(()=>(weights||[]).slice().sort((a,b)=>new Date(a.date)-new Date(b.date)),[weights]);
@@ -998,8 +1000,23 @@ export default function App() {
                   <div style={{display:"flex",flexDirection:"column",gap:6}}>
                     {logs.slice(0,10).map(l=>(
                       <div key={l.id} style={{display:"flex",justifyContent:"space-between",alignItems:"center",gap:10,background:"#020617",border:"1px solid #1e293b",borderRadius:8,padding:"10px 12px",fontSize:13}}>
-                        <span style={{flex:1}}><b style={{color:"#fb7185"}}>{l.dose} {pep.unit}</b> · {l.date}{l.note?` · ${l.note}`:""}</span>
-                        <button style={deleteBtn} onClick={()=>setConfirm({label:`${l.dose}${pep.unit} dose on ${l.date}`,onConfirm:()=>removePeptideDose(pep.id,l.id)})}>✕</button>
+<div style={{flex:1}}>
+                          <div><b style={{color:"#fb7185"}}>{l.dose} {pep.unit}</b> · {l.date}</div>
+                          {editingDoseNote===l.id?(
+                            <div style={{marginTop:8}}>
+                              <textarea value={doseNoteText} onChange={e=>setDoseNoteText(e.target.value)} placeholder="How did this dose make you feel? Side effects, energy, sleep..." style={{width:"100%",boxSizing:"border-box",background:"#0f172a",border:`1px solid ${theme.primary}`,color:"#f8fafc",borderRadius:10,padding:"10px 12px",fontSize:12,fontFamily:"monospace",outline:"none",resize:"vertical",minHeight:80}}/>
+                              <div style={{display:"flex",gap:8,marginTop:8}}>
+                                <button style={{flex:1,background:"#1e293b",border:"1px solid #334155",color:"#94a3b8",borderRadius:8,padding:"8px",cursor:"pointer",fontFamily:"monospace",fontSize:12,fontWeight:700}} onClick={()=>{setEditingDoseNote(null);setDoseNoteText("");}}>Cancel</button>
+                                <button style={{flex:1,background:`linear-gradient(135deg,${theme.primaryDark},${theme.primary})`,border:"none",color:"#020617",borderRadius:8,padding:"8px",cursor:"pointer",fontFamily:"monospace",fontSize:12,fontWeight:700}} onClick={()=>{setPeptideLogs(prev=>({...prev,[pep.id]:(prev[pep.id]||[]).map(e=>e.id===l.id?{...e,note:doseNoteText}:e)}));setEditingDoseNote(null);setDoseNoteText("");flash("Note saved ✓");}}>Save Note</button>
+                              </div>
+                            </div>
+                          ):(
+                            <div onClick={()=>{setEditingDoseNote(l.id);setDoseNoteText(l.note||"");}} style={{marginTop:4,fontSize:11,color:l.note?"#94a3b8":"#475569",fontFamily:"monospace",cursor:"pointer",fontStyle:l.note?"normal":"italic",borderBottom:"1px dashed #1e293b",paddingBottom:4}}>
+                              {l.note?l.note:"+ tap to add how you felt..."}
+                            </div>
+                          )}
+                        </div>
+                        <button style={{...deleteBtn,flexShrink:0,alignSelf:"flex-start"}} onClick={()=>setConfirm({label:`${l.dose}${pep.unit} dose on ${l.date}`,onConfirm:()=>removePeptideDose(pep.id,l.id)})}>✕</button>
                       </div>
                     ))}
                   </div>
