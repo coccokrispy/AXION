@@ -857,9 +857,9 @@ export default function App() {
           <div style={formGrid}>
             <label style={formLabel}>Date</label><input style={DS.input} type="date" value={weightForm.date} onChange={e=>setWeightForm({...weightForm,date:e.target.value})}/>
             <label style={formLabel}>Weight (lbs)</label><input style={DS.input} type="number" step="0.1" placeholder="e.g. 221.8" value={weightForm.weight} onChange={e=>setWeightForm({...weightForm,weight:e.target.value})}/>
-            <label style={formLabel}>Type</label>
+            <label style={formLabel}>Time of Day</label>
             <select style={DS.input} value={weightForm.type} onChange={e=>setWeightForm({...weightForm,type:e.target.value})}>
-              {["morning","post-bathroom","pre-bathroom","bedtime","other"].map(o=><option key={o}>{o}</option>)}
+              {["Morning","Afternoon","Night"].map(o=><option key={o}>{o}</option>)}
             </select>
             <label style={formLabel}>Note</label><input style={DS.input} placeholder="Optional" value={weightForm.note} onChange={e=>setWeightForm({...weightForm,note:e.target.value})}/>
             <button style={DS.btn} onClick={addWeight}>+ Add Weight</button>
