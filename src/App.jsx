@@ -782,7 +782,11 @@ export default function App() {
         </button>
       </div>
 
-      {saved&&<div style={{position:"fixed",top:16,left:"50%",transform:"translateX(-50%)",background:"#14532d",color:theme.primary,border:`1px solid ${theme.primary}`,borderRadius:8,padding:"8px 20px",fontSize:13,fontFamily:"monospace",zIndex:200,whiteSpace:"nowrap"}}>{saved}</div>}
+     {saved&&(
+        <div style={{position:"fixed",top:"50%",left:"50%",transform:"translate(-50%,-50%)",background:"#0f172a",color:theme.primary,border:`2px solid ${theme.primary}`,borderRadius:16,padding:"24px 32px",fontSize:15,fontFamily:"monospace",fontWeight:700,zIndex:600,whiteSpace:"nowrap",textAlign:"center",boxShadow:`0 0 60px ${theme.glowStrong}`,maxWidth:"80vw",wordBreak:"break-word"}}>
+          {saved}
+        </div>
+      )}
 
       {showSettings&&(
         <div style={{position:"fixed",inset:0,background:"rgba(0,0,0,0.8)",display:"flex",alignItems:"center",justifyContent:"center",zIndex:100,padding:16}} onClick={()=>setShowSettings(false)}>
