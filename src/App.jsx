@@ -359,6 +359,7 @@ export default function App() {
   const [saved,setSaved]=useState("");
    const [junkAlert,setJunkAlert]=useState(null);
   const [weightAlert,setWeightAlert]=useState(null);
+  const [upliftAlert,setUpliftAlert]=useState(null);
   const [showSettings,setShowSettings]=useState(false);
   const [tempKey,setTempKey]=useState("");
   const [milestone,setMilestone]=useState(null);
@@ -567,6 +568,34 @@ export default function App() {
         `Down ${Math.abs(diff)} lbs. Now push harder.`,
       ];
       setWeightAlert({msg:lossRoasts[Math.floor(Math.random()*lossRoasts.length)],type:"loss"});
+} else if(motivationMode==="uplifting"&&msgType==="weight_down"){
+      const upMessages=[
+        `⬇️ Down ${Math.abs(diff)} lbs${userName?" "+userName:""}. You're doing it. Keep going.`,
+        `${Math.abs(diff)} lbs gone${userName?" "+userName:""}. That's real progress. Be proud.`,
+        `Down ${Math.abs(diff)} lbs. Every single pound counts. Keep showing up.`,
+        `${Math.abs(diff)} lbs lighter${userName?" "+userName:""}. The work is working.`,
+        `Down ${Math.abs(diff)} lbs. That's not luck. That's discipline.`,
+        `${Math.abs(diff)} lbs down${userName?" "+userName:""}. You earned that. Don't stop now.`,
+        `Look at that. Down ${Math.abs(diff)} lbs. You should be proud of yourself.`,
+        `${Math.abs(diff)} lbs gone. The goal is getting closer${userName?" "+userName:""}. Stay the course.`,
+        `Down ${Math.abs(diff)} lbs${userName?" "+userName:""}. This is what consistency looks like.`,
+        `${Math.abs(diff)} lbs lighter. You're proving something to yourself right now.`,
+      ];
+      setUpliftAlert(upMessages[Math.floor(Math.random()*upMessages.length)]);
+    } else if(motivationMode==="uplifting"&&msgType==="weight_up_big"){
+      const upGainMessages=[
+        `Up ${Math.abs(diff)} lbs${userName?" "+userName:""}. That's okay. One day doesn't define the journey.`,
+        `${Math.abs(diff)} lbs up. Bodies fluctuate. You're still in this. Reset and go.`,
+        `Up ${Math.abs(diff)} lbs${userName?" "+userName:""}. Don't spiral. Just get back on protocol tomorrow.`,
+        `${Math.abs(diff)} lbs up. Happens to everyone. What matters is what you do next.`,
+        `Up ${Math.abs(diff)} lbs${userName?" "+userName:""}. Zoom out. The trend is still yours to control.`,
+        `${Math.abs(diff)} lbs up. Could be water, could be stress. Stay consistent and trust the process.`,
+        `Up ${Math.abs(diff)} lbs${userName?" "+userName:""}. One number doesn't erase all your progress.`,
+        `${Math.abs(diff)} lbs up. Don't let this shake you. You've got this.`,
+        `Up ${Math.abs(diff)} lbs${userName?" "+userName:""}. Breathe. Reset. Tomorrow is a new day.`,
+        `${Math.abs(diff)} lbs up. The comeback is always stronger than the setback.`,
+      ];
+      setUpliftAlert(upGainMessages[Math.floor(Math.random()*upGainMessages.length)]);
     } else {
       flash(getMotivationMessage(msgType,motivationMode,userName,{diff:Math.abs(diff||0)}));
     }
@@ -756,6 +785,15 @@ export default function App() {
               <button style={{flex:1,background:"#1e293b",border:"1px solid #334155",color:"#94a3b8",borderRadius:10,padding:"12px",cursor:"pointer",fontFamily:"monospace",fontWeight:700,fontSize:13}} onClick={()=>setConfirm(null)}>Cancel</button>
               <button style={{flex:1,background:"#450a0a",border:"1px solid #ef4444",color:"#ef4444",borderRadius:10,padding:"12px",cursor:"pointer",fontFamily:"monospace",fontWeight:700,fontSize:13}} onClick={()=>{confirm.onConfirm();setConfirm(null);}}>Delete</button>
             </div>
+          </div>
+        </div>
+      )}
+      {upliftAlert&&(
+        <div style={{position:"fixed",inset:0,background:"rgba(0,0,0,0.92)",display:"flex",alignItems:"center",justifyContent:"center",zIndex:600,padding:24}}>
+          <div style={{background:"#0f172a",border:"2px solid #60a5fa",borderRadius:20,padding:32,maxWidth:340,width:"100%",textAlign:"center",boxShadow:"0 0 60px rgba(96,165,250,0.4)"}}>
+            <div style={{fontSize:48,marginBottom:8}}>💙💙💙</div>
+            <div style={{fontSize:13,color:"#60a5fa",fontFamily:"monospace",fontWeight:700,marginBottom:20,lineHeight:1.8}}>{upliftAlert}</div>
+            <button style={{background:"#1e3a5f",border:"2px solid #60a5fa",color:"#60a5fa",borderRadius:12,padding:"12px 28px",cursor:"pointer",fontFamily:"monospace",fontWeight:900,fontSize:16}} onClick={()=>setUpliftAlert(null)}>✕</button>
           </div>
         </div>
       )}
