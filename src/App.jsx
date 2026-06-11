@@ -814,9 +814,30 @@ const data=await callClaude(apiKey,{system:`You are a precise nutrition database
           
 
  <div style={{marginTop:16,paddingTop:16,borderTop:"1px solid #1e293b"}}>
-              <div style={{fontSize:12,color:"#94a3b8",marginBottom:8}}><b style={{color:theme.primary}}>Edit Profile</b></div>
+              <div style={{fontSize:12,color:"#94a3b8",marginBottom:8}}><b style={{color:theme.primary}}>Motivation Mode</b></div>
+              <div style={{display:"grid",gridTemplateColumns:"1fr 1fr 1fr",gap:8,marginBottom:16}}>
+                {[["none","🔇","None"],["uplifting","💚","Uplifting"],["drill","🪖","Drill"]].map(([mode,icon,label])=>(
+                  <button key={mode} onClick={()=>setMotivationMode(mode)} style={{padding:"12px 8px",borderRadius:12,border:`2px solid ${motivationMode===mode?theme.primary:"#1e293b"}`,background:motivationMode===mode?theme.primary+"22":"#020617",cursor:"pointer",color:motivationMode===mode?theme.primary:"#64748b",fontFamily:"monospace",fontSize:11,fontWeight:700,textAlign:"center"}}>
+                    <div style={{fontSize:20,marginBottom:4}}>{icon}</div>{label}
+                  </button>
+                ))}
+              </div>
+              <div style={{fontSize:11,color:"#475569",fontFamily:"monospace",lineHeight:1.6,marginBottom:16}}>
+                {motivationMode==="none"&&"Silent mode. No commentary, just data."}
+                {motivationMode==="uplifting"&&"Positive and encouraging. Celebrates every win."}
+                {motivationMode==="drill"&&"Tough love. Calls out bad choices and weight gains over 2 lbs."}
+              </div>
+            </div>
             <div style={{marginTop:16,paddingTop:16,borderTop:"1px solid #1e293b"}}>
               <div style={{fontSize:12,color:"#94a3b8",marginBottom:8}}><b style={{color:theme.primary}}>Edit Profile</b></div>
+              <div style={{display:"grid",gridTemplateColumns:"1fr 1fr",gap:8,marginBottom:8}}>
+                <div><div style={{fontSize:10,color:"#64748b",fontFamily:"monospace",marginBottom:4}}>START WEIGHT</div><input type="number" defaultValue={START_WEIGHT} id="edit_start_weight" style={{...DS.input,fontSize:13}}/></div>
+                <div><div style={{fontSize:10,color:"#64748b",fontFamily:"monospace",marginBottom:4}}>GOAL WEIGHT</div><input type="number" defaultValue={TARGET_WEIGHT} id="edit_goal_weight" style={{...DS.input,fontSize:13}}/></div>
+                <div><div style={{fontSize:10,color:"#64748b",fontFamily:"monospace",marginBottom:4}}>START DATE</div><input type="date" defaultValue={START_DATE} id="edit_start_date" style={{...DS.input,fontSize:13}}/></div>
+                <div><div style={{fontSize:10,color:"#64748b",fontFamily:"monospace",marginBottom:4}}>CALORIE TARGET</div><input type="number" defaultValue={localStorage.getItem("tracker_calorie_target")||""} id="edit_calorie_target" style={{...DS.input,fontSize:13}}/></div>
+              </div>
+              <button style={{...DS.btn,gridColumn:"unset",width:"100%",marginBottom:16}} onClick={()=>{const sw=document.getElementById("edit_start_weight").value;const gw=document.getElementById("edit_goal_weight").value;const sd=document.getElementById("edit_start_date").value;const ct=document.getElementById("edit_calorie_target").value;if(sw)localStorage.setItem("tracker_start_weight",sw);if(gw)localStorage.setItem("tracker_target_weight",gw);if(sd)localStorage.setItem("tracker_start_date",sd);if(ct)localStorage.setItem("tracker_calorie_target",ct);setShowSettings(false);location.reload();}}>💾 Save Profile</button>
+            </div>
               <div style={{display:"grid",gridTemplateColumns:"1fr 1fr",gap:8,marginBottom:8}}>
                 <div><div style={{fontSize:10,color:"#64748b",fontFamily:"monospace",marginBottom:4}}>START WEIGHT</div><input type="number" defaultValue={START_WEIGHT} id="edit_start_weight" style={{...DS.input,fontSize:13}}/></div>
                 <div><div style={{fontSize:10,color:"#64748b",fontFamily:"monospace",marginBottom:4}}>GOAL WEIGHT</div><input type="number" defaultValue={TARGET_WEIGHT} id="edit_goal_weight" style={{...DS.input,fontSize:13}}/></div>
