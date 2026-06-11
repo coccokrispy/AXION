@@ -111,6 +111,7 @@ function weeksBetween(a,b) { return Math.max(1,daysBetween(a,b)/7); }
 function getWeekNumber(a,b) { return Math.floor(daysBetween(a,b)/7)+1; }
 function pctLost(w) { return (((START_WEIGHT-w)/START_WEIGHT)*100).toFixed(1); }
 function uid() { return Date.now()+Math.floor(Math.random()*10000); }
+
 const JUNK_FOODS=["pizza","burger","cheeseburger","hamburger","whopper","big mac","quarter pounder","mcdonald","mcdonalds","wendy","wendys","taco bell","kfc","popeyes","chick-fil-a","chickfila","five guys","shake shack","in-n-out","innout","sonic","dairy queen","dq blizzard","jack in the box","carl's jr","carls jr","hardees","white castle","waffle house","dominos","papa john","little caesar","pizza hut","calzone","stromboli","hot dog","corn dog","bratwurst","sausage biscuit","mcmuffin","egg mcmuffin","breakfast burrito","french fries","fries","onion rings","mozzarella sticks","fried chicken","chicken nuggets","nuggets","chicken strips","chicken tenders","fried fish","fish and chips","funnel cake","fried oreos","fried twinkies","chips","doritos","cheetos","lays","pringles","fritos","funyuns","crackers","goldfish crackers","cheez its","ritz crackers","popcorn chicken","nachos","queso","tater tots","hash browns","waffle fries","curly fries","cheese fries","loaded fries","chili cheese fries","cookie","cookies","oreo","oreos","chips ahoy","nutter butter","girl scout cookies","donut","donuts","doughnut","krispy kreme","dunkin","munchkins","pastry","croissant","danish","cinnamon roll","cinnabon","pop tart","toaster strudel","cake","birthday cake","chocolate cake","cheesecake","cupcake","muffin","brownie","brownie sundae","ice cream","gelato","sorbet","frozen yogurt","froyo","milkshake","shake","sundae","banana split","hot fudge","whipped cream","candy","m&ms","skittles","starburst","gummy bears","gummy worms","sour patch","swedish fish","nerds","twix","snickers","kit kat","reese","peanut butter cup","butterfinger","milky way","3 musketeers","almond joy","mounds","hershey","cadbury","toblerone","ferrero rocher","nutella","cotton candy","caramel corn","kettle corn","chocolate bar","candy bar","lollipop","jolly rancher","airheads","laffy taffy","marshmallow","peeps","twinkies","ding dongs","ho hos","little debbie","hostess","swiss rolls","oatmeal cream pie","soda","cola","pepsi","coca cola","coke","sprite","fanta","mountain dew","dr pepper","root beer","ginger ale","cream soda","orange soda","grape soda","energy drink","red bull","monster","rockstar","bang energy","full throttle","nos energy","5 hour energy","slurpee","icee","slushie","juice box","kool aid","sweet tea","lemonade","punch","sports drink","gatorade","powerade","vitamin water","alcohol","beer","lager","ale","ipa","stout","porter","hard seltzer","white claw","truly","bud light","budweiser","coors","miller lite","corona","modelo","heineken","stella","guinness","wine","red wine","white wine","rose","champagne","prosecco","sangria","mimosa","hard cider","spiked","vodka","tequila","whiskey","bourbon","rum","gin","margarita","mojito","daiquiri","pina colada","long island","cosmopolitan","bloody mary","hard lemonade","mikes hard","twisted tea","four loko","mac and cheese","velveeta","kraft dinner","ramen","instant noodles","cup noodles","top ramen","spam","bologna","hot pocket","lean pocket","totinos","pizza roll","bagel bite","lunchable","tv dinner","frozen pizza","frozen burrito","microwave burrito","frozen meal","hungry man","marie callender","stouffers","banquet meal","fried rice","lo mein","chow mein","egg roll","spring roll","crab rangoon","general tso","orange chicken","sweet and sour","fried wonton","pad see ew","drunken noodles","waffle","pancake","french toast","syrup","maple syrup","powdered sugar","whipped butter","biscuits and gravy","fried egg sandwich","bacon sandwich","sausage sandwich","philly cheesesteak","cheesesteak","sub","hoagie","meatball sub","italian sub","club sandwich","blt","grilled cheese","quesadilla","loaded quesadilla","nachos supreme","loaded nachos","chipotle bowl","mission burrito","smash burger","animal style","double double","triple triple","loaded burger","bacon burger","bbq burger","mushroom swiss","patty melt","fried bologna","pulled pork sandwich","bbq sandwich","chicken sandwich","popcorn shrimp","coconut shrimp","fried shrimp","lobster roll","clam chowder bread bowl","deep dish","stuffed crust","extra cheese","double pepperoni","meat lovers","supreme pizza","hawaiian pizza","buffalo wings","wings","boneless wings","lemon pepper wings","garlic parmesan wings","teriyaki wings","bbq wings","dry rub wings","ranch dressing","blue cheese dressing","thousand island","caesar dressing","honey mustard","special sauce"];
 
 function isJunkFood(foodName){
@@ -177,6 +178,7 @@ async function callClaude(apiKey,body) {
   if(!res.ok){const e=await res.text();throw new Error(`API error ${res.status}: ${e.slice(0,200)}`);}
   return await res.json();
 }
+
 function SearchBar({placeholder,value,onChange,onClear,accent}) {
   return (
     <div style={{position:"relative",marginBottom:14}}>
@@ -216,7 +218,6 @@ function WeightLineChart({weights,color}) {
     </div>
   );
 }
-
 function PeptideCalculator({theme,DS}) {
   const [syringe,setSyringe]=useState(null);
   const [vialMg,setVialMg]=useState(null);
@@ -336,12 +337,11 @@ export default function App() {
   const [tempKey,setTempKey]=useState("");
   const [milestone,setMilestone]=useState(null);
   const [confirm,setConfirm]=useState(null);
-   const [suppReminder,setSuppReminder]=useState(false);
+  const [suppReminder,setSuppReminder]=useState(false);
   const [weeklyRecap,setWeeklyRecap]=useState(null);
-
   const [setupForm,setSetupForm]=useState({name:"",heightFeet:"",heightInches:"",startWeight:"",targetWeight:"",startDate:todayISO(),activityLevel:"moderate",agreed:false});
 
-  const [weightForm,setWeightForm]=useState({date:todayISO(),weight:"",type:"morning",note:""});
+  const [weightForm,setWeightForm]=useState({date:todayISO(),weight:"",type:"Morning",note:""});
   const [expandedWeightDay,setExpandedWeightDay]=useState(null);
 
   const [foodQuery,setFoodQuery]=useState("");
@@ -458,18 +458,20 @@ export default function App() {
       setTimeout(()=>setMilestone(null),4000);
     }
   },[totalLost,progressPct]);
+
   useEffect(()=>{
     if(mySupplements.length===0)return;
     const hour=new Date().getHours();
-    if(hour<20)return; // only after 8pm
+    if(hour<20)return;
     const allTaken=mySupplements.every(s=>takenToday.includes(s.id));
     if(allTaken)return;
     const key="axion_supp_reminder_"+todayISO();
-    if(localStorage.getItem(key))return; // only show once per day
+    if(localStorage.getItem(key))return;
     setSuppReminder(true);
     localStorage.setItem(key,"shown");
   },[mySupplements,takenToday]);
-useEffect(()=>{
+
+  useEffect(()=>{
     const day=new Date().getDay();
     if(day!==0)return;
     const key="axion_weekly_recap_"+todayISO();
@@ -488,6 +490,7 @@ useEffect(()=>{
     localStorage.setItem(key,"shown");
     setWeeklyRecap({lostThisWeek,avgCals,avgProtein,totalMins,workoutCount:weekWorkouts.length,streak});
   },[weights,foods,workouts,streak]);
+
   const suppSearchResults=useMemo(()=>{if(!suppSearch.trim())return[];const q=suppSearch.toLowerCase();return ALL_SUPPLEMENTS.filter(s=>s.toLowerCase().includes(q)).slice(0,20);},[suppSearch]);
   const pepSearchResults=useMemo(()=>{if(!pepSearch.trim())return[];const q=pepSearch.toLowerCase();return ALL_PEPTIDES.filter(p=>p.name.toLowerCase().includes(q)||p.desc.toLowerCase().includes(q)).slice(0,10);},[pepSearch]);
 
@@ -511,7 +514,6 @@ useEffect(()=>{
     setWeights([...(weights||[]),{...weightForm,id:uid(),weight:curr}]);
     setWeightForm({date:todayISO(),weight:"",type:"Morning",note:""});
     flash(getMotivationMessage(msgType,motivationMode,userName,{diff:Math.abs(diff||0)}));
-  
   }
 
   function calcNutrition(per100g,weightG){const r=weightG/100;return{calories:Math.round((per100g.calories||0)*r),protein:+((per100g.protein||0)*r).toFixed(1),carbs:+((per100g.carbs||0)*r).toFixed(1),fat:+((per100g.fat||0)*r).toFixed(1),fiber:+((per100g.fiber||0)*r).toFixed(1),sugar:+((per100g.sugar||0)*r).toFixed(1),sodium:+((per100g.sodium||0)*r).toFixed(0)};}
@@ -521,7 +523,7 @@ useEffect(()=>{
     if(!apiKey){setFoodSearchError("Add your API key in Settings to search foods.");return;}
     setFoodSearchLoading(true);setFoodSearchError("");setFoodSearchResults(null);
     try{
-const data=await callClaude(apiKey,{system:`You are a precise nutrition database. Return detailed nutrition facts per 100g for any food. CRITICAL: Always return nutrition for the COOKED/PREPARED state of the food, not raw. For example, chicken breast should reflect grilled/baked cooked weight, rice should reflect cooked weight, ground beef should reflect cooked weight. If a food is not typically cooked (raw vegetables, fruits, packaged foods, drinks), return as-is. For name-brand packaged foods (Oreos, Quest Bar, Chobani, etc) use actual label data. Return ONLY valid JSON: {"food":"Official name (cooked)","brand":"brand name or null","is_packaged":true/false,"per_100g":{"calories":n,"protein":n,"carbs":n,"fat":n,"fiber":n,"sugar":n,"sodium":n},"serving_sizes":[{"label":"1 cup (240g)","weight_g":240}],"notes":"any note"}`,messages:[{role:"user",content:foodQuery}]});
+      const data=await callClaude(apiKey,{system:`You are a precise nutrition database. Return detailed nutrition facts per 100g for any food. CRITICAL: Always return nutrition for the COOKED/PREPARED state of the food, not raw. For example, chicken breast should reflect grilled/baked cooked weight, rice should reflect cooked weight, ground beef should reflect cooked weight. If a food is not typically cooked (raw vegetables, fruits, packaged foods, drinks), return as-is. For name-brand packaged foods (Oreos, Quest Bar, Chobani, etc) use actual label data. Return ONLY valid JSON: {"food":"Official name (cooked)","brand":"brand name or null","is_packaged":true/false,"per_100g":{"calories":n,"protein":n,"carbs":n,"fat":n,"fiber":n,"sugar":n,"sodium":n},"serving_sizes":[{"label":"1 cup (240g)","weight_g":240}],"notes":"any note"}`,messages:[{role:"user",content:foodQuery}]});
       const parsed=JSON.parse(data.content.map(b=>b.text||"").join("").replace(/```json|```/g,"").trim());
       setFoodSearchResults(parsed);setServingWeight("");
     }catch(e){setFoodSearchError("Search failed: "+e.message);}
@@ -543,18 +545,7 @@ const data=await callClaude(apiKey,{system:`You are a precise nutrition database
   function addWorkout(){
     try{
       if(!workoutForm.type)return;
-      const w={
-        id:uid(),
-        date:workoutForm.date||todayISO(),
-        type:String(workoutForm.type||""),
-        minutes:+(workoutForm.minutes||0),
-        calories:+(workoutForm.calories||0),
-        intensity:String(workoutForm.intensity||""),
-        note:String(workoutForm.note||""),
-        runType:String(workoutForm.runType||""),
-        miles:String(workoutForm.miles||""),
-        runTime:String(workoutForm.runTime||""),
-      };
+      const w={id:uid(),date:workoutForm.date||todayISO(),type:String(workoutForm.type||""),minutes:+(workoutForm.minutes||0),calories:+(workoutForm.calories||0),intensity:String(workoutForm.intensity||""),note:String(workoutForm.note||""),runType:String(workoutForm.runType||""),miles:String(workoutForm.miles||""),runTime:String(workoutForm.runTime||"")};
       setWorkouts(prev=>[...(prev||[]),w]);
       setWorkoutForm({date:todayISO(),type:"",minutes:"",note:"",calories:"",intensity:"",runType:"",miles:"",runTime:""});
       flash(getMotivationMessage("workout_saved",motivationMode,userName));
@@ -614,7 +605,6 @@ const data=await callClaude(apiKey,{system:`You are a precise nutrition database
   const formGrid={display:"grid",gridTemplateColumns:"120px 1fr",gap:"8px 12px",alignItems:"center",marginBottom:16};
   const formLabel={fontSize:11,color:"#64748b",fontFamily:"monospace",textTransform:"uppercase",letterSpacing:1,textAlign:"right"};
   const deleteBtn={background:"transparent",color:"#ef4444",border:"1px solid #450a0a",borderRadius:6,cursor:"pointer",padding:"3px 8px",fontSize:11};
-
   const VALID_CODES=["AXION-7K2M","AXION-9P4R","AXION-3X8W","AXION-6N1Q","AXION-5T7B","AXION-2H9F","AXION-8V4J","AXION-1L6D","AXION-4C3Y","AXION-0E5Z"];
   if(!accessGranted){
     return(
@@ -713,6 +703,8 @@ const data=await callClaude(apiKey,{system:`You are a precise nutrition database
           </div>
         </div>
       )}
+
+      {/* SUPPLEMENT REMINDER */}
       {suppReminder&&(
         <div style={{position:"fixed",inset:0,background:"rgba(0,0,0,0.88)",display:"flex",alignItems:"center",justifyContent:"center",zIndex:500,padding:24}}>
           <div style={{background:"#0f172a",border:`1px solid ${theme.primary}66`,borderRadius:18,padding:28,maxWidth:320,width:"100%",textAlign:"center",boxShadow:`0 0 40px ${theme.glow}`}}>
@@ -731,6 +723,8 @@ const data=await callClaude(apiKey,{system:`You are a precise nutrition database
           </div>
         </div>
       )}
+
+      {/* WEEKLY RECAP */}
       {weeklyRecap&&(
         <div style={{position:"fixed",inset:0,background:"rgba(0,0,0,0.92)",display:"flex",alignItems:"center",justifyContent:"center",zIndex:500,padding:24}}>
           <div style={{background:"#0f172a",border:`1px solid ${theme.primary}66`,borderRadius:20,padding:28,maxWidth:340,width:"100%",boxShadow:`0 0 60px ${theme.glow}`}}>
@@ -811,18 +805,16 @@ const data=await callClaude(apiKey,{system:`You are a precise nutrition database
               <button style={{...DS.btn,gridColumn:"unset",background:"#1e293b",color:"#94a3b8"}} onClick={()=>setShowSettings(false)}>Cancel</button>
             </div>
             <div style={{marginTop:12,fontSize:11,color:"#64748b",fontFamily:"monospace"}}>Status: {apiKey?<span style={{color:theme.primary}}>✓ AI active</span>:<span style={{color:"#fb7185"}}>✗ No key</span>}</div>
-          
-
- <div style={{marginTop:16,paddingTop:16,borderTop:"1px solid #1e293b"}}>
+            <div style={{marginTop:16,paddingTop:16,borderTop:"1px solid #1e293b"}}>
               <div style={{fontSize:12,color:"#94a3b8",marginBottom:8}}><b style={{color:theme.primary}}>Motivation Mode</b></div>
-              <div style={{display:"grid",gridTemplateColumns:"1fr 1fr 1fr",gap:8,marginBottom:16}}>
+              <div style={{display:"grid",gridTemplateColumns:"1fr 1fr 1fr",gap:8,marginBottom:12}}>
                 {[["none","🔇","None"],["uplifting","💚","Uplifting"],["drill","🪖","Drill"]].map(([mode,icon,label])=>(
                   <button key={mode} onClick={()=>setMotivationMode(mode)} style={{padding:"12px 8px",borderRadius:12,border:`2px solid ${motivationMode===mode?theme.primary:"#1e293b"}`,background:motivationMode===mode?theme.primary+"22":"#020617",cursor:"pointer",color:motivationMode===mode?theme.primary:"#64748b",fontFamily:"monospace",fontSize:11,fontWeight:700,textAlign:"center"}}>
                     <div style={{fontSize:20,marginBottom:4}}>{icon}</div>{label}
                   </button>
                 ))}
               </div>
-              <div style={{fontSize:11,color:"#475569",fontFamily:"monospace",lineHeight:1.6,marginBottom:16}}>
+              <div style={{fontSize:11,color:"#475569",fontFamily:"monospace",lineHeight:1.6,marginBottom:4}}>
                 {motivationMode==="none"&&"Silent mode. No commentary, just data."}
                 {motivationMode==="uplifting"&&"Positive and encouraging. Celebrates every win."}
                 {motivationMode==="drill"&&"Tough love. Calls out bad choices and weight gains over 2 lbs."}
@@ -830,14 +822,6 @@ const data=await callClaude(apiKey,{system:`You are a precise nutrition database
             </div>
             <div style={{marginTop:16,paddingTop:16,borderTop:"1px solid #1e293b"}}>
               <div style={{fontSize:12,color:"#94a3b8",marginBottom:8}}><b style={{color:theme.primary}}>Edit Profile</b></div>
-              <div style={{display:"grid",gridTemplateColumns:"1fr 1fr",gap:8,marginBottom:8}}>
-                <div><div style={{fontSize:10,color:"#64748b",fontFamily:"monospace",marginBottom:4}}>START WEIGHT</div><input type="number" defaultValue={START_WEIGHT} id="edit_start_weight" style={{...DS.input,fontSize:13}}/></div>
-                <div><div style={{fontSize:10,color:"#64748b",fontFamily:"monospace",marginBottom:4}}>GOAL WEIGHT</div><input type="number" defaultValue={TARGET_WEIGHT} id="edit_goal_weight" style={{...DS.input,fontSize:13}}/></div>
-                <div><div style={{fontSize:10,color:"#64748b",fontFamily:"monospace",marginBottom:4}}>START DATE</div><input type="date" defaultValue={START_DATE} id="edit_start_date" style={{...DS.input,fontSize:13}}/></div>
-                <div><div style={{fontSize:10,color:"#64748b",fontFamily:"monospace",marginBottom:4}}>CALORIE TARGET</div><input type="number" defaultValue={localStorage.getItem("tracker_calorie_target")||""} id="edit_calorie_target" style={{...DS.input,fontSize:13}}/></div>
-              </div>
-              <button style={{...DS.btn,gridColumn:"unset",width:"100%",marginBottom:16}} onClick={()=>{const sw=document.getElementById("edit_start_weight").value;const gw=document.getElementById("edit_goal_weight").value;const sd=document.getElementById("edit_start_date").value;const ct=document.getElementById("edit_calorie_target").value;if(sw)localStorage.setItem("tracker_start_weight",sw);if(gw)localStorage.setItem("tracker_target_weight",gw);if(sd)localStorage.setItem("tracker_start_date",sd);if(ct)localStorage.setItem("tracker_calorie_target",ct);setShowSettings(false);location.reload();}}>💾 Save Profile</button>
-            </div>
               <div style={{display:"grid",gridTemplateColumns:"1fr 1fr",gap:8,marginBottom:8}}>
                 <div><div style={{fontSize:10,color:"#64748b",fontFamily:"monospace",marginBottom:4}}>START WEIGHT</div><input type="number" defaultValue={START_WEIGHT} id="edit_start_weight" style={{...DS.input,fontSize:13}}/></div>
                 <div><div style={{fontSize:10,color:"#64748b",fontFamily:"monospace",marginBottom:4}}>GOAL WEIGHT</div><input type="number" defaultValue={TARGET_WEIGHT} id="edit_goal_weight" style={{...DS.input,fontSize:13}}/></div>
@@ -989,7 +973,7 @@ const data=await callClaude(apiKey,{system:`You are a precise nutrition database
             <select style={DS.input} value={weightForm.type} onChange={e=>setWeightForm({...weightForm,type:e.target.value})}>
               {["Morning","Afternoon","Night"].map(o=><option key={o}>{o}</option>)}
             </select>
-            <label style={formLabel}>Note</label><input style={DS.input} placeholder="Optional" value={weightForm.note} onChange={e=>setWeightForm({...weightForm,note:e.target.value})}/>
+            <label style={formLabel}>Note</label><input style={DS.input} placeholder="e.g. before bathroom, post gym..." value={weightForm.note} onChange={e=>setWeightForm({...weightForm,note:e.target.value})}/>
             <button style={DS.btn} onClick={addWeight}>+ Add Weight</button>
           </div>
           {weightDays.length===0&&(<div style={{color:"#475569",padding:16,textAlign:"center",fontFamily:"monospace",fontSize:13}}>No entries yet. Log your first weight above.</div>)}
@@ -1010,7 +994,6 @@ const data=await callClaude(apiKey,{system:`You are a precise nutrition database
                   const entries=weightsByDay[day];
                   const avg=(entries.reduce((s,e)=>s+Number(e.weight),0)/entries.length).toFixed(1);
                   const isOpen=expandedWeightDay===day;
-                  const trend=getTrendForDay(day);
                   return(
                     <div key={day} style={{background:"#020617",border:`1px solid ${isOpen?theme.primary+"66":"#1e293b"}`,borderRadius:12,marginBottom:8,overflow:"hidden"}}>
                       <button onClick={()=>setExpandedWeightDay(isOpen?null:day)} style={{width:"100%",background:"none",border:"none",padding:"12px 14px",cursor:"pointer",display:"flex",justifyContent:"space-between",alignItems:"center"}}>
@@ -1019,8 +1002,7 @@ const data=await callClaude(apiKey,{system:`You are a precise nutrition database
                           <div style={{fontSize:11,color:"#64748b",fontFamily:"monospace"}}>{entries.length} entr{entries.length===1?"y":"ies"} · avg {avg} lbs</div>
                         </div>
                         <div style={{display:"flex",alignItems:"center",gap:8}}>
-                      
-                      <span style={{fontSize:16,fontWeight:900,color:theme.primary}}>{avg} lbs</span>
+                          <span style={{fontSize:16,fontWeight:900,color:theme.primary}}>{avg} lbs</span>
                           {isOpen?<ChevronUp size={16} color="#64748b"/>:<ChevronDown size={16} color="#64748b"/>}
                         </div>
                       </button>
@@ -1056,7 +1038,6 @@ const data=await callClaude(apiKey,{system:`You are a precise nutrition database
                         const entries=weightsByDay[day];
                         const avg=(entries.reduce((s,e)=>s+Number(e.weight),0)/entries.length).toFixed(1);
                         const isOpen=expandedWeightDay===day;
-                        const trend=getTrendForDay(day);
                         return(
                           <div key={day} style={{background:"#020617",border:`1px solid ${isOpen?theme.primary+"66":"#1e293b"}`,borderRadius:10,marginBottom:6,overflow:"hidden"}}>
                             <button onClick={()=>setExpandedWeightDay(isOpen?null:day)} style={{width:"100%",background:"none",border:"none",padding:"10px 14px",cursor:"pointer",display:"flex",justifyContent:"space-between",alignItems:"center"}}>
@@ -1065,7 +1046,6 @@ const data=await callClaude(apiKey,{system:`You are a precise nutrition database
                                 <div style={{fontSize:11,color:"#64748b",fontFamily:"monospace"}}>{entries.length} entr{entries.length===1?"y":"ies"} · avg {avg} lbs</div>
                               </div>
                               <div style={{display:"flex",alignItems:"center",gap:8}}>
-
                                 <span style={{fontSize:14,fontWeight:900,color:theme.primary}}>{avg} lbs</span>
                                 {isOpen?<ChevronUp size={14} color="#64748b"/>:<ChevronDown size={14} color="#64748b"/>}
                               </div>
@@ -1127,8 +1107,8 @@ const data=await callClaude(apiKey,{system:`You are a precise nutrition database
                 {logs.length>0?(
                   <div style={{display:"flex",flexDirection:"column",gap:6}}>
                     {logs.slice(0,10).map(l=>(
-                      <div key={l.id} style={{display:"flex",justifyContent:"space-between",alignItems:"center",gap:10,background:"#020617",border:"1px solid #1e293b",borderRadius:8,padding:"10px 12px",fontSize:13}}>
-<div style={{flex:1}}>
+                      <div key={l.id} style={{display:"flex",justifyContent:"space-between",alignItems:"flex-start",gap:10,background:"#020617",border:"1px solid #1e293b",borderRadius:8,padding:"10px 12px",fontSize:13}}>
+                        <div style={{flex:1}}>
                           <div><b style={{color:"#fb7185"}}>{l.dose} {pep.unit}</b> · {l.date}</div>
                           {editingDoseNote===l.id?(
                             <div style={{marginTop:8}}>
@@ -1271,7 +1251,7 @@ const data=await callClaude(apiKey,{system:`You are a precise nutrition database
               <span style={{fontSize:11,color:"#475569",fontFamily:"monospace"}}>{new Date().toLocaleDateString("en-US",{month:"short",day:"numeric"})}</span>
             </div>
             <div style={{display:"grid",gridTemplateColumns:"repeat(4,1fr)",gap:8,marginBottom:12}}>
-              {[["Calories",todayCals,"kcal",calorieTarget],["Protein",todayProtein,"g",Number(localStorage.getItem("tracker_protein_target"))||null],["Carbs",todayFoods.reduce((s,f)=>s+(f.carbs||0),0),"g",null],["Fat",todayFoods.reduce((s,f)=>s+(f.fat||0),0),"g",null]].map(([l,v,u,target])=>(
+              {[["Calories",todayCals,"kcal"],["Protein",todayProtein,"g"],["Carbs",todayFoods.reduce((s,f)=>s+(f.carbs||0),0),"g"],["Fat",todayFoods.reduce((s,f)=>s+(f.fat||0),0),"g"]].map(([l,v,u])=>(
                 <div key={l} style={{background:"#020617",border:`1px solid ${theme.border}`,borderRadius:12,padding:10,textAlign:"center"}}>
                   <div style={{fontSize:10,color:"#475569",fontFamily:"monospace",textTransform:"uppercase",letterSpacing:1,marginBottom:4}}>{l}</div>
                   <div style={{fontSize:18,fontWeight:900,color:v>0?theme.primary:"#334155",fontFamily:"monospace"}}>{v>0?v:"--"}</div>
@@ -1365,8 +1345,7 @@ const data=await callClaude(apiKey,{system:`You are a precise nutrition database
                     {item:"Oatmeal (40g dry)",calories:150,protein:5,carbs:27,fat:2.5,fiber:4},
                     {item:"Ground Beef 80/20 (100g)",calories:254,protein:17,carbs:0,fat:20,fiber:0},
                   ].map(food=>(
-                    <button key={food.item} onClick={()=>{setFoods(prev=>[...(prev||[]),{id:uid(),date:foodDate,meal:selectedMeal,...food}]);
-                    flash(getMotivationMessage(isJunkFood(food.item)?"junk_food":"food_logged",motivationMode,userName,{food:food.item}));}} style={{display:"flex",justifyContent:"space-between",alignItems:"center",background:"#020617",border:`1px solid ${theme.border}`,borderRadius:12,padding:"10px 14px",cursor:"pointer",textAlign:"left"}}>
+                    <button key={food.item} onClick={()=>{setFoods(prev=>[...(prev||[]),{id:uid(),date:foodDate,meal:selectedMeal,...food}]);flash(getMotivationMessage(isJunkFood(food.item)?"junk_food":"food_logged",motivationMode,userName,{food:food.item}));}} style={{display:"flex",justifyContent:"space-between",alignItems:"center",background:"#020617",border:`1px solid ${theme.border}`,borderRadius:12,padding:"10px 14px",cursor:"pointer",textAlign:"left"}}>
                       <div><div style={{fontWeight:700,color:"#f8fafc",fontSize:13}}>{food.item}</div><div style={{fontSize:11,color:"#64748b",fontFamily:"monospace"}}>{food.calories}cal · {food.protein}g pro · {food.carbs}g carb · {food.fat}g fat</div></div>
                       <div style={{fontSize:20,color:theme.primary}}>+</div>
                     </button>
@@ -1422,8 +1401,8 @@ const data=await callClaude(apiKey,{system:`You are a precise nutrition database
                     if(!wg||wg<=0)return;
                     const n=calcNutrition(foodSearchResults.per_100g,wg);
                     setFoods(prev=>[...(prev||[]),{id:uid(),date:foodDate,meal:selectedMeal,item:foodSearchResults.food+(foodSearchResults.brand?` (${foodSearchResults.brand})`:""),weight_g:wg,...n}]);
-                    setFoodQuery("");setFoodSearchResults(null);setServingWeight("");
                     const foodName=foodSearchResults.food+(foodSearchResults.brand?` (${foodSearchResults.brand})`:"");
+                    setFoodQuery("");setFoodSearchResults(null);setServingWeight("");
                     flash(getMotivationMessage(isJunkFood(foodName)?"junk_food":"food_logged",motivationMode,userName,{food:foodSearchResults.food}));
                   }} disabled={!servingWeight||parseFloat(servingWeight)<=0}>+ Log This Food</button>
                   {foodSearchResults.notes&&<div style={{fontSize:11,color:"#64748b",fontFamily:"monospace",marginTop:8,fontStyle:"italic"}}>💬 {foodSearchResults.notes}</div>}
@@ -1461,8 +1440,9 @@ const data=await callClaude(apiKey,{system:`You are a precise nutrition database
                 <button style={DS.btn} onClick={()=>{
                   if(!manualFood.item)return;
                   setFoods(prev=>[...(prev||[]),{id:uid(),date:foodDate,meal:selectedMeal,item:manualFood.item,weight_g:null,calories:+(manualFood.calories||0),protein:+(manualFood.protein||0),carbs:+(manualFood.carbs||0),fat:+(manualFood.fat||0),fiber:+(manualFood.fiber||0)}]);
+                  const item=manualFood.item;
                   setManualFood({item:"",calories:"",protein:"",carbs:"",fat:"",fiber:""});
-                  flash(getMotivationMessage(isJunkFood(manualFood.item)?"junk_food":"food_logged",motivationMode,userName,{food:manualFood.item}));
+                  flash(getMotivationMessage(isJunkFood(item)?"junk_food":"food_logged",motivationMode,userName,{food:item}));
                 }}>+ Log Food</button>
               </div>
             )}
