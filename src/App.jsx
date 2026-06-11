@@ -299,6 +299,8 @@ export default function App() {
   const [milestone,setMilestone]=useState(null);
   const [confirm,setConfirm]=useState(null);
    const [suppReminder,setSuppReminder]=useState(false);
+  const [weeklyRecap,setWeeklyRecap]=useState(null);
+
   const [setupForm,setSetupForm]=useState({name:"",heightFeet:"",heightInches:"",startWeight:"",targetWeight:"",startDate:todayISO(),activityLevel:"moderate",agreed:false});
 
   const [weightForm,setWeightForm]=useState({date:todayISO(),weight:"",type:"morning",note:""});
@@ -429,7 +431,25 @@ export default function App() {
     setSuppReminder(true);
     localStorage.setItem(key,"shown");
   },[mySupplements,takenToday]);
-
+useEffect(()=>{
+    const day=new Date().getDay();
+    if(day!==0)return;
+    const key="axion_weekly_recap_"+todayISO();
+    if(localStorage.getItem(key))return;
+    const ws=new Date();ws.setDate(ws.getDate()-7);ws.setHours(0,0,0,0);
+    const we=new Date();we.setHours(23,59,59,999);
+    const weekWeights=(weights||[]).filter(w=>new Date(w.date)>=ws&&new Date(w.date)<=we);
+    const weekFoods=(foods||[]).filter(f=>new Date(f.date)>=ws&&new Date(f.date)<=we);
+    const weekWorkouts=(workouts||[]).filter(w=>new Date(w.date)>=ws&&new Date(w.date)<=we);
+    const startW=weekWeights.length?+weekWeights[0].weight:null;
+    const endW=weekWeights.length?+weekWeights[weekWeights.length-1].weight:null;
+    const lostThisWeek=startW&&endW?+(startW-endW).toFixed(1):null;
+    const avgCals=weekFoods.length>0?Math.round(weekFoods.reduce((s,f)=>s+(f.calories||0),0)/Math.max(1,new Set(weekFoods.map(f=>f.date)).size)):null;
+    const avgProtein=weekFoods.length>0?Math.round(weekFoods.reduce((s,f)=>s+(f.protein||0),0)/Math.max(1,new Set(weekFoods.map(f=>f.date)).size)):null;
+    const totalMins=weekWorkouts.reduce((s,w)=>s+(w.minutes||0),0);
+    localStorage.setItem(key,"shown");
+    setWeeklyRecap({lostThisWeek,avgCals,avgProtein,totalMins,workoutCount:weekWorkouts.length,streak});
+  },[weights,foods,workouts,streak]);
   const suppSearchResults=useMemo(()=>{if(!suppSearch.trim())return[];const q=suppSearch.toLowerCase();return ALL_SUPPLEMENTS.filter(s=>s.toLowerCase().includes(q)).slice(0,20);},[suppSearch]);
   const pepSearchResults=useMemo(()=>{if(!pepSearch.trim())return[];const q=pepSearch.toLowerCase();return ALL_PEPTIDES.filter(p=>p.name.toLowerCase().includes(q)||p.desc.toLowerCase().includes(q)).slice(0,10);},[pepSearch]);
 
@@ -659,6 +679,40 @@ const data=await callClaude(apiKey,{system:`You are a precise nutrition database
               <button style={{flex:1,background:"#1e293b",border:"1px solid #334155",color:"#94a3b8",borderRadius:10,padding:"12px",cursor:"pointer",fontFamily:"monospace",fontWeight:700,fontSize:13}} onClick={()=>setSuppReminder(false)}>Dismiss</button>
               <button style={{flex:1,background:`linear-gradient(135deg,${theme.primaryDark},${theme.primary})`,border:"none",color:"#020617",borderRadius:10,padding:"12px",cursor:"pointer",fontFamily:"monospace",fontWeight:700,fontSize:13}} onClick={()=>{setSuppReminder(false);setTab("supplements");}}>Go Log Them</button>
             </div>
+          </div>
+        </div>
+      )}
+      {weeklyRecap&&(
+        <div style={{position:"fixed",inset:0,background:"rgba(0,0,0,0.92)",display:"flex",alignItems:"center",justifyContent:"center",zIndex:500,padding:24}}>
+          <div style={{background:"#0f172a",border:`1px solid ${theme.primary}66`,borderRadius:20,padding:28,maxWidth:340,width:"100%",boxShadow:`0 0 60px ${theme.glow}`}}>
+            <div style={{textAlign:"center",marginBottom:20}}>
+              <div style={{fontSize:36,marginBottom:8}}>📊</div>
+              <div style={{fontWeight:900,color:"#f8fafc",fontSize:18,fontFamily:"monospace",letterSpacing:1}}>WEEKLY RECAP</div>
+              <div style={{fontSize:11,color:"#475569",fontFamily:"monospace",marginTop:4}}>{new Date().toLocaleDateString("en-US",{month:"long",day:"numeric",year:"numeric"})}</div>
+            </div>
+            <div style={{display:"grid",gridTemplateColumns:"1fr 1fr",gap:10,marginBottom:20}}>
+              {[
+                ["⚖️ Lost This Week",weeklyRecap.lostThisWeek!==null?`${weeklyRecap.lostThisWeek>0?"-":"+"}${Math.abs(weeklyRecap.lostThisWeek)} lbs`:"No data"],
+                ["🔥 Streak",`${weeklyRecap.streak} days`],
+                ["💪 Workouts",`${weeklyRecap.workoutCount} sessions`],
+                ["⏱️ Training",`${weeklyRecap.totalMins} min`],
+                ["🍽️ Avg Calories",weeklyRecap.avgCals?`${weeklyRecap.avgCals} kcal`:"No data"],
+                ["🥩 Avg Protein",weeklyRecap.avgProtein?`${weeklyRecap.avgProtein}g`:"No data"],
+              ].map(([l,v])=>(
+                <div key={l} style={{background:"#020617",border:`1px solid ${theme.border}`,borderRadius:12,padding:12,textAlign:"center"}}>
+                  <div style={{fontSize:11,color:"#475569",fontFamily:"monospace",marginBottom:6}}>{l}</div>
+                  <div style={{fontSize:15,fontWeight:900,color:theme.primary,fontFamily:"monospace"}}>{v}</div>
+                </div>
+              ))}
+            </div>
+            {weeklyRecap.lostThisWeek!==null&&weeklyRecap.lostThisWeek>0&&(
+              <div style={{background:`linear-gradient(145deg,#020617,${theme.primary}11)`,border:`1px solid ${theme.primary}44`,borderRadius:12,padding:14,marginBottom:16,textAlign:"center"}}>
+                <div style={{fontSize:13,color:theme.primary,fontFamily:"monospace",fontWeight:700}}>
+                  {weeklyRecap.lostThisWeek>=2?"🔥 Incredible week. Keep that momentum.":weeklyRecap.lostThisWeek>=1?"💪 Solid progress. Stay the course.":"⚡ Every bit counts. Keep going."}
+                </div>
+              </div>
+            )}
+            <button style={{width:"100%",background:`linear-gradient(135deg,${theme.primaryDark},${theme.primary})`,border:"none",color:"#020617",borderRadius:12,padding:"14px",cursor:"pointer",fontFamily:"monospace",fontWeight:900,fontSize:14,letterSpacing:1}} onClick={()=>setWeeklyRecap(null)}>LET'S CRUSH THIS WEEK</button>
           </div>
         </div>
       )}
