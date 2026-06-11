@@ -728,6 +728,15 @@ export default function App() {
           </div>
         </div>
       )}
+      {junkAlert&&(
+        <div style={{position:"fixed",inset:0,background:"rgba(0,0,0,0.92)",display:"flex",alignItems:"center",justifyContent:"center",zIndex:600,padding:24}}>
+          <div style={{background:"#0f172a",border:"2px solid #ef4444",borderRadius:20,padding:32,maxWidth:340,width:"100%",textAlign:"center",boxShadow:"0 0 60px rgba(239,68,68,0.4)"}}>
+            <div style={{fontSize:48,marginBottom:8}}>❗❗❗</div>
+            <div style={{fontSize:13,color:"#ef4444",fontFamily:"monospace",fontWeight:700,marginBottom:20,lineHeight:1.8}}>{junkAlert}</div>
+            <button style={{background:"#450a0a",border:"2px solid #ef4444",color:"#ef4444",borderRadius:12,padding:"12px 28px",cursor:"pointer",fontFamily:"monospace",fontWeight:900,fontSize:16}} onClick={()=>setJunkAlert(null)}>✕</button>
+          </div>
+        </div>
+      )}
 
       {/* SUPPLEMENT REMINDER */}
       {suppReminder&&(
@@ -1374,7 +1383,8 @@ export default function App() {
                     {item:"Oatmeal (40g dry)",calories:150,protein:5,carbs:27,fat:2.5,fiber:4},
                     {item:"Ground Beef 80/20 (100g)",calories:254,protein:17,carbs:0,fat:20,fiber:0},
                   ].map(food=>(
-                    <button key={food.item} onClick={()=>{setFoods(prev=>[...(prev||[]),{id:uid(),date:foodDate,meal:selectedMeal,...food}]);flash(getMotivationMessage(isJunkFood(food.item)?"junk_food":"food_logged",motivationMode,userName,{food:food.item}));}} style={{display:"flex",justifyContent:"space-between",alignItems:"center",background:"#020617",border:`1px solid ${theme.border}`,borderRadius:12,padding:"10px 14px",cursor:"pointer",textAlign:"left"}}>
+                    <button key={food.item} onClick={()=>{setFoods(prev=>[...(prev||[]),{id:uid(),date:foodDate,meal:selectedMeal,...food}]);const msg2=getMotivationMessage(isJunkFood(food.item)?"junk_food":"food_logged",motivationMode,userName,{food:food.item});
+                    if(motivationMode==="drill"&&isJunkFood(food.item))setJunkAlert(msg2);else flash(msg2);}} style={{display:"flex",justifyContent:"space-between",alignItems:"center",background:"#020617",border:`1px solid ${theme.border}`,borderRadius:12,padding:"10px 14px",cursor:"pointer",textAlign:"left"}}>
                       <div><div style={{fontWeight:700,color:"#f8fafc",fontSize:13}}>{food.item}</div><div style={{fontSize:11,color:"#64748b",fontFamily:"monospace"}}>{food.calories}cal · {food.protein}g pro · {food.carbs}g carb · {food.fat}g fat</div></div>
                       <div style={{fontSize:20,color:theme.primary}}>+</div>
                     </button>
@@ -1431,8 +1441,8 @@ export default function App() {
                     const n=calcNutrition(foodSearchResults.per_100g,wg);
                     setFoods(prev=>[...(prev||[]),{id:uid(),date:foodDate,meal:selectedMeal,item:foodSearchResults.food+(foodSearchResults.brand?` (${foodSearchResults.brand})`:""),weight_g:wg,...n}]);
                     const foodName=foodSearchResults.food+(foodSearchResults.brand?` (${foodSearchResults.brand})`:"");
-                    setFoodQuery("");setFoodSearchResults(null);setServingWeight("");
-                    flash(getMotivationMessage(isJunkFood(foodName)?"junk_food":"food_logged",motivationMode,userName,{food:foodSearchResults.food}));
+                    const msg1=getMotivationMessage(isJunkFood(foodName)?"junk_food":"food_logged",motivationMode,userName,{food:foodSearchResults.food});
+                    if(motivationMode==="drill"&&isJunkFood(foodName))setJunkAlert(msg1);else flash(msg1);
                   }} disabled={!servingWeight||parseFloat(servingWeight)<=0}>+ Log This Food</button>
                   {foodSearchResults.notes&&<div style={{fontSize:11,color:"#64748b",fontFamily:"monospace",marginTop:8,fontStyle:"italic"}}>💬 {foodSearchResults.notes}</div>}
                 </div>
@@ -1471,7 +1481,8 @@ export default function App() {
                   setFoods(prev=>[...(prev||[]),{id:uid(),date:foodDate,meal:selectedMeal,item:manualFood.item,weight_g:null,calories:+(manualFood.calories||0),protein:+(manualFood.protein||0),carbs:+(manualFood.carbs||0),fat:+(manualFood.fat||0),fiber:+(manualFood.fiber||0)}]);
                   const item=manualFood.item;
                   setManualFood({item:"",calories:"",protein:"",carbs:"",fat:"",fiber:""});
-                  flash(getMotivationMessage(isJunkFood(item)?"junk_food":"food_logged",motivationMode,userName,{food:item}));
+             const msg3=getMotivationMessage(isJunkFood(item)?"junk_food":"food_logged",motivationMode,userName,{food:item});
+                  if(motivationMode==="drill"&&isJunkFood(item))setJunkAlert(msg3);else flash(msg3);
                 }}>+ Log Food</button>
               </div>
             )}
