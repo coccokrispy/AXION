@@ -111,6 +111,42 @@ function weeksBetween(a,b) { return Math.max(1,daysBetween(a,b)/7); }
 function getWeekNumber(a,b) { return Math.floor(daysBetween(a,b)/7)+1; }
 function pctLost(w) { return (((START_WEIGHT-w)/START_WEIGHT)*100).toFixed(1); }
 function uid() { return Date.now()+Math.floor(Math.random()*10000); }
+const JUNK_FOODS=["pizza","burger","cheeseburger","hamburger","whopper","big mac","quarter pounder","mcdonald","mcdonalds","wendy","wendys","taco bell","kfc","popeyes","chick-fil-a","chickfila","five guys","shake shack","in-n-out","innout","sonic","dairy queen","dq blizzard","jack in the box","carl's jr","carls jr","hardees","white castle","waffle house","dominos","papa john","little caesar","pizza hut","calzone","stromboli","hot dog","corn dog","bratwurst","sausage biscuit","mcmuffin","egg mcmuffin","breakfast burrito","french fries","fries","onion rings","mozzarella sticks","fried chicken","chicken nuggets","nuggets","chicken strips","chicken tenders","fried fish","fish and chips","funnel cake","fried oreos","fried twinkies","chips","doritos","cheetos","lays","pringles","fritos","funyuns","crackers","goldfish crackers","cheez its","ritz crackers","popcorn chicken","nachos","queso","tater tots","hash browns","waffle fries","curly fries","cheese fries","loaded fries","chili cheese fries","cookie","cookies","oreo","oreos","chips ahoy","nutter butter","girl scout cookies","donut","donuts","doughnut","krispy kreme","dunkin","munchkins","pastry","croissant","danish","cinnamon roll","cinnabon","pop tart","toaster strudel","cake","birthday cake","chocolate cake","cheesecake","cupcake","muffin","brownie","brownie sundae","ice cream","gelato","sorbet","frozen yogurt","froyo","milkshake","shake","sundae","banana split","hot fudge","whipped cream","candy","m&ms","skittles","starburst","gummy bears","gummy worms","sour patch","swedish fish","nerds","twix","snickers","kit kat","reese","peanut butter cup","butterfinger","milky way","3 musketeers","almond joy","mounds","hershey","cadbury","toblerone","ferrero rocher","nutella","cotton candy","caramel corn","kettle corn","chocolate bar","candy bar","lollipop","jolly rancher","airheads","laffy taffy","marshmallow","peeps","twinkies","ding dongs","ho hos","little debbie","hostess","swiss rolls","oatmeal cream pie","soda","cola","pepsi","coca cola","coke","sprite","fanta","mountain dew","dr pepper","root beer","ginger ale","cream soda","orange soda","grape soda","energy drink","red bull","monster","rockstar","bang energy","full throttle","nos energy","5 hour energy","slurpee","icee","slushie","juice box","kool aid","sweet tea","lemonade","punch","sports drink","gatorade","powerade","vitamin water","alcohol","beer","lager","ale","ipa","stout","porter","hard seltzer","white claw","truly","bud light","budweiser","coors","miller lite","corona","modelo","heineken","stella","guinness","wine","red wine","white wine","rose","champagne","prosecco","sangria","mimosa","hard cider","spiked","vodka","tequila","whiskey","bourbon","rum","gin","margarita","mojito","daiquiri","pina colada","long island","cosmopolitan","bloody mary","hard lemonade","mikes hard","twisted tea","four loko","mac and cheese","velveeta","kraft dinner","ramen","instant noodles","cup noodles","top ramen","spam","bologna","hot pocket","lean pocket","totinos","pizza roll","bagel bite","lunchable","tv dinner","frozen pizza","frozen burrito","microwave burrito","frozen meal","hungry man","marie callender","stouffers","banquet meal","fried rice","lo mein","chow mein","egg roll","spring roll","crab rangoon","general tso","orange chicken","sweet and sour","fried wonton","pad see ew","drunken noodles","waffle","pancake","french toast","syrup","maple syrup","powdered sugar","whipped butter","biscuits and gravy","fried egg sandwich","bacon sandwich","sausage sandwich","philly cheesesteak","cheesesteak","sub","hoagie","meatball sub","italian sub","club sandwich","blt","grilled cheese","quesadilla","loaded quesadilla","nachos supreme","loaded nachos","chipotle bowl","mission burrito","smash burger","animal style","double double","triple triple","loaded burger","bacon burger","bbq burger","mushroom swiss","patty melt","fried bologna","pulled pork sandwich","bbq sandwich","chicken sandwich","popcorn shrimp","coconut shrimp","fried shrimp","lobster roll","clam chowder bread bowl","deep dish","stuffed crust","extra cheese","double pepperoni","meat lovers","supreme pizza","hawaiian pizza","buffalo wings","wings","boneless wings","lemon pepper wings","garlic parmesan wings","teriyaki wings","bbq wings","dry rub wings","ranch dressing","blue cheese dressing","thousand island","caesar dressing","honey mustard","special sauce"];
+
+function isJunkFood(foodName){
+  const lower=foodName.toLowerCase();
+  return JUNK_FOODS.some(j=>lower.includes(j));
+}
+
+function getMotivationMessage(type,mode,userName,data={}){
+  const name=userName?` ${userName}`:"";
+  if(mode==="none"){
+    if(type==="weight_saved")return"Weight saved ✓";
+    if(type==="workout_saved")return"Workout saved ✓";
+    if(type==="food_logged")return"Food logged ✓";
+    return"Saved ✓";
+  }
+  if(mode==="uplifting"){
+    if(type==="weight_down")return`⬇️ Down ${data.diff} lbs. Keep it up!`;
+    if(type==="weight_up_small")return`Slight uptick. Could be water weight. Stay consistent!`;
+    if(type==="weight_up_big")return`Up ${data.diff} lbs. Happens to everyone. Reset and push forward 💪`;
+    if(type==="weight_same")return`Weight saved ✓`;
+    if(type==="workout_saved")return`Crushed it! 💪 Great work today.`;
+    if(type==="food_logged")return`Food logged ✓`;
+    if(type==="junk_food")return`Food logged ✓`;
+    return"Saved ✓";
+  }
+  if(mode==="drill"){
+    if(type==="weight_down")return`⬇️ Down ${data.diff} lbs${name}. Good. Keep going.`;
+    if(type==="weight_up_small")return`Up ${data.diff} lbs. Could be water. Stay on protocol.`;
+    if(type==="weight_up_big")return`Up ${data.diff} lbs${name}. What happened? Get back on track. Now.`;
+    if(type==="weight_same")return`Weight saved ✓`;
+    if(type==="workout_saved")return`Good${name}. Show up again tomorrow. No excuses.`;
+    if(type==="food_logged")return`Food logged ✓`;
+    if(type==="junk_food")return`${data.food}${name}? Really? You know what that does to your progress.`;
+    return"Saved ✓";
+  }
+}
 
 function usePersistedState(key,seed) {
   const [data,setData] = useState(() => {
@@ -290,6 +326,8 @@ export default function App() {
   const [takenToday,setTakenToday]=usePersistedState("supp_taken_"+todayISO(),[]);
   const [apiKey,setApiKey]=useApiKey();
   const [themeName,setThemeName]=usePersistedState("axion_theme","green");
+  const [motivationMode,setMotivationMode]=usePersistedState("axion_motivation_mode","uplifting");
+  const userName=localStorage.getItem("tracker_name")||"";
   const theme=THEMES[themeName]||THEMES.green;
 
   const [tab,setTab]=useState("dashboard");
@@ -460,9 +498,20 @@ useEffect(()=>{
 
   function addWeight(){
     if(!weightForm.weight)return;
-    setWeights([...(weights||[]),{...weightForm,id:uid(),weight:+weightForm.weight}]);
-    setWeightForm({date:todayISO(),weight:"",type:"morning",note:""});
-    flash("Weight saved ✓");
+    const prev=sortedWeights.length?+sortedWeights[sortedWeights.length-1].weight:null;
+    const curr=+weightForm.weight;
+    const diff=prev?+(prev-curr).toFixed(1):null;
+    let msgType="weight_saved";
+    if(diff!==null){
+      if(diff>0)msgType="weight_down";
+      else if(diff<0&&Math.abs(diff)<2)msgType="weight_up_small";
+      else if(diff<0&&Math.abs(diff)>=2)msgType="weight_up_big";
+      else msgType="weight_same";
+    }
+    setWeights([...(weights||[]),{...weightForm,id:uid(),weight:curr}]);
+    setWeightForm({date:todayISO(),weight:"",type:"Morning",note:""});
+    flash(getMotivationMessage(msgType,motivationMode,userName,{diff:Math.abs(diff||0)}));
+  
   }
 
   function calcNutrition(per100g,weightG){const r=weightG/100;return{calories:Math.round((per100g.calories||0)*r),protein:+((per100g.protein||0)*r).toFixed(1),carbs:+((per100g.carbs||0)*r).toFixed(1),fat:+((per100g.fat||0)*r).toFixed(1),fiber:+((per100g.fiber||0)*r).toFixed(1),sugar:+((per100g.sugar||0)*r).toFixed(1),sodium:+((per100g.sodium||0)*r).toFixed(0)};}
@@ -508,7 +557,7 @@ const data=await callClaude(apiKey,{system:`You are a precise nutrition database
       };
       setWorkouts(prev=>[...(prev||[]),w]);
       setWorkoutForm({date:todayISO(),type:"",minutes:"",note:"",calories:"",intensity:"",runType:"",miles:"",runTime:""});
-      flash("Workout saved ✓");
+      flash(getMotivationMessage("workout_saved",motivationMode,userName));
     }catch(e){console.error("Workout error:",e);}
   }
 
@@ -670,7 +719,7 @@ const data=await callClaude(apiKey,{system:`You are a precise nutrition database
             <div style={{fontSize:32,marginBottom:12}}>💊</div>
             <div style={{fontWeight:700,color:"#f8fafc",fontSize:15,marginBottom:8,fontFamily:"monospace"}}>Supplement Check</div>
             <div style={{fontSize:13,color:"#94a3b8",fontFamily:"monospace",marginBottom:8,lineHeight:1.7}}>
-              You haven't marked all your supplements as taken today.
+              {motivationMode==="drill"?`${userName?userName+", you":""} forgot your supplements again. Not acceptable.`:motivationMode==="none"?"You have untaken supplements today.":"Hey! Don't forget your supplements tonight 💊"}
             </div>
             <div style={{fontSize:12,color:"#475569",fontFamily:"monospace",marginBottom:24}}>
               {takenToday.filter(id=>mySupplements.find(s=>s.id===id)).length} of {mySupplements.length} taken
@@ -762,6 +811,10 @@ const data=await callClaude(apiKey,{system:`You are a precise nutrition database
               <button style={{...DS.btn,gridColumn:"unset",background:"#1e293b",color:"#94a3b8"}} onClick={()=>setShowSettings(false)}>Cancel</button>
             </div>
             <div style={{marginTop:12,fontSize:11,color:"#64748b",fontFamily:"monospace"}}>Status: {apiKey?<span style={{color:theme.primary}}>✓ AI active</span>:<span style={{color:"#fb7185"}}>✗ No key</span>}</div>
+          
+
+ <div style={{marginTop:16,paddingTop:16,borderTop:"1px solid #1e293b"}}>
+              <div style={{fontSize:12,color:"#94a3b8",marginBottom:8}}><b style={{color:theme.primary}}>Edit Profile</b></div>
             <div style={{marginTop:16,paddingTop:16,borderTop:"1px solid #1e293b"}}>
               <div style={{fontSize:12,color:"#94a3b8",marginBottom:8}}><b style={{color:theme.primary}}>Edit Profile</b></div>
               <div style={{display:"grid",gridTemplateColumns:"1fr 1fr",gap:8,marginBottom:8}}>
@@ -1291,7 +1344,8 @@ const data=await callClaude(apiKey,{system:`You are a precise nutrition database
                     {item:"Oatmeal (40g dry)",calories:150,protein:5,carbs:27,fat:2.5,fiber:4},
                     {item:"Ground Beef 80/20 (100g)",calories:254,protein:17,carbs:0,fat:20,fiber:0},
                   ].map(food=>(
-                    <button key={food.item} onClick={()=>{setFoods(prev=>[...(prev||[]),{id:uid(),date:foodDate,meal:selectedMeal,...food}]);flash(`${food.item} logged ✓`);}} style={{display:"flex",justifyContent:"space-between",alignItems:"center",background:"#020617",border:`1px solid ${theme.border}`,borderRadius:12,padding:"10px 14px",cursor:"pointer",textAlign:"left"}}>
+                    <button key={food.item} onClick={()=>{setFoods(prev=>[...(prev||[]),{id:uid(),date:foodDate,meal:selectedMeal,...food}]);
+                    flash(getMotivationMessage(isJunkFood(food.item)?"junk_food":"food_logged",motivationMode,userName,{food:food.item}));}} style={{display:"flex",justifyContent:"space-between",alignItems:"center",background:"#020617",border:`1px solid ${theme.border}`,borderRadius:12,padding:"10px 14px",cursor:"pointer",textAlign:"left"}}>
                       <div><div style={{fontWeight:700,color:"#f8fafc",fontSize:13}}>{food.item}</div><div style={{fontSize:11,color:"#64748b",fontFamily:"monospace"}}>{food.calories}cal · {food.protein}g pro · {food.carbs}g carb · {food.fat}g fat</div></div>
                       <div style={{fontSize:20,color:theme.primary}}>+</div>
                     </button>
@@ -1348,7 +1402,8 @@ const data=await callClaude(apiKey,{system:`You are a precise nutrition database
                     const n=calcNutrition(foodSearchResults.per_100g,wg);
                     setFoods(prev=>[...(prev||[]),{id:uid(),date:foodDate,meal:selectedMeal,item:foodSearchResults.food+(foodSearchResults.brand?` (${foodSearchResults.brand})`:""),weight_g:wg,...n}]);
                     setFoodQuery("");setFoodSearchResults(null);setServingWeight("");
-                    flash("Food logged ✓");
+                    const foodName=foodSearchResults.food+(foodSearchResults.brand?` (${foodSearchResults.brand})`:"");
+                    flash(getMotivationMessage(isJunkFood(foodName)?"junk_food":"food_logged",motivationMode,userName,{food:foodSearchResults.food}));
                   }} disabled={!servingWeight||parseFloat(servingWeight)<=0}>+ Log This Food</button>
                   {foodSearchResults.notes&&<div style={{fontSize:11,color:"#64748b",fontFamily:"monospace",marginTop:8,fontStyle:"italic"}}>💬 {foodSearchResults.notes}</div>}
                 </div>
@@ -1386,7 +1441,7 @@ const data=await callClaude(apiKey,{system:`You are a precise nutrition database
                   if(!manualFood.item)return;
                   setFoods(prev=>[...(prev||[]),{id:uid(),date:foodDate,meal:selectedMeal,item:manualFood.item,weight_g:null,calories:+(manualFood.calories||0),protein:+(manualFood.protein||0),carbs:+(manualFood.carbs||0),fat:+(manualFood.fat||0),fiber:+(manualFood.fiber||0)}]);
                   setManualFood({item:"",calories:"",protein:"",carbs:"",fat:"",fiber:""});
-                  flash("Food logged ✓");
+                  flash(getMotivationMessage(isJunkFood(manualFood.item)?"junk_food":"food_logged",motivationMode,userName,{food:manualFood.item}));
                 }}>+ Log Food</button>
               </div>
             )}
