@@ -144,7 +144,31 @@ function getMotivationMessage(type,mode,userName,data={}){
     if(type==="weight_same")return`Weight saved ✓`;
     if(type==="workout_saved")return`Good${name}. Show up again tomorrow. No excuses.`;
     if(type==="food_logged")return`Food logged ✓`;
-    if(type==="junk_food")return`${data.food}${name}? Really? You know what that does to your progress.`;
+    if(type==="junk_food"){
+      const roasts=[
+        `Really${name}? We doing this today?`,
+        `I'm not mad${name}. I'm just disappointed.`,
+        `${data.food}${name}. Wow. Just... wow.`,
+        `That's not food. That's a setback with seasoning.`,
+        `I saw that${name}. You think ${data.food} is gonna help you hit your goal?`,
+        `${data.food}${name}. After everything we've been through?`,
+        `Logged a moment of weakness. Hope it was worth it.`,
+        `Bold choice${name}. Real bold.`,
+        `You came this far to eat ${data.food}? Come on.`,
+        `${data.food}? That's not on the protocol. You know that right?`,
+        `I expected more from you${name}. Really?`,
+        `${data.food}. Logged. Don't make it a habit.`,
+        `Oh we're eating ${data.food} now? Cool. Cool cool cool.`,
+        `Your future self just shook their head${name}.`,
+        `Logged. The scale is taking notes too.`,
+        `I'm not gonna yell${name}. I'm just gonna remember this at weigh-in.`,
+        `You put in all that work at the gym for ${data.food}${name}?`,
+        `That's a choice. A bad one. But a choice.`,
+        `I log what I see${name}. And I see ${data.food}. Disappointing.`,
+        `We're better than this${name}. At least we should be.`,
+      ];
+      return roasts[Math.floor(Math.random()*roasts.length)];
+    }
     return"Saved ✓";
   }
 }
@@ -333,6 +357,7 @@ export default function App() {
 
   const [tab,setTab]=useState("dashboard");
   const [saved,setSaved]=useState("");
+   const [junkAlert,setJunkAlert]=useState(null);
   const [showSettings,setShowSettings]=useState(false);
   const [tempKey,setTempKey]=useState("");
   const [milestone,setMilestone]=useState(null);
