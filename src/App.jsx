@@ -358,6 +358,7 @@ export default function App() {
   const [tab,setTab]=useState("dashboard");
   const [saved,setSaved]=useState("");
    const [junkAlert,setJunkAlert]=useState(null);
+  const [weightAlert,setWeightAlert]=useState(null);
   const [showSettings,setShowSettings]=useState(false);
   const [tempKey,setTempKey]=useState("");
   const [milestone,setMilestone]=useState(null);
@@ -538,7 +539,37 @@ export default function App() {
     }
     setWeights([...(weights||[]),{...weightForm,id:uid(),weight:curr}]);
     setWeightForm({date:todayISO(),weight:"",type:"Morning",note:""});
-    flash(getMotivationMessage(msgType,motivationMode,userName,{diff:Math.abs(diff||0)}));
+    if(motivationMode==="drill"&&msgType==="weight_up_big"){
+      const gainRoasts=[
+        `Up ${Math.abs(diff)} lbs${userName?" "+userName:""}. What happened? We need to talk.`,
+        `${Math.abs(diff)} lbs up. That's not water weight. That's a decision.`,
+        `The scale doesn't lie${userName?" "+userName:""}. ${Math.abs(diff)} lbs. What did you eat?`,
+        `Up ${Math.abs(diff)} lbs. I'm not yelling. But I'm thinking about it.`,
+        `${Math.abs(diff)} lbs${userName?" "+userName:""}. After all that work. Come on.`,
+        `That's ${Math.abs(diff)} lbs in the wrong direction. Reset. Now.`,
+        `Up ${Math.abs(diff)} lbs. The protocol exists for a reason. Use it.`,
+        `${Math.abs(diff)} lbs up${userName?" "+userName:""}. I saw what you logged this week.`,
+        `That's a ${Math.abs(diff)} lb gain. Not acceptable. Get back on track.`,
+        `Up ${Math.abs(diff)} lbs. We don't panic. But we do better tomorrow.`,
+      ];
+      setWeightAlert({msg:gainRoasts[Math.floor(Math.random()*gainRoasts.length)],type:"gain"});
+    } else if(motivationMode==="drill"&&msgType==="weight_down"){
+      const lossRoasts=[
+        `Down ${Math.abs(diff)} lbs${userName?" "+userName:""}. Good. Don't get comfortable.`,
+        `${Math.abs(diff)} lbs gone. That's the job. Keep going.`,
+        `Down ${Math.abs(diff)} lbs. Noted. Now do it again.`,
+        `${Math.abs(diff)} lbs down${userName?" "+userName:""}. Respect. Don't slow down now.`,
+        `That's ${Math.abs(diff)} lbs lost. Good. You're not done yet.`,
+        `Down ${Math.abs(diff)} lbs. The work is paying off. Stay locked in.`,
+        `${Math.abs(diff)} lbs lighter${userName?" "+userName:""}. That's what discipline looks like.`,
+        `Down ${Math.abs(diff)} lbs. Good. The goal doesn't care about your feelings.`,
+        `${Math.abs(diff)} lbs gone${userName?" "+userName:""}. Keep that energy.`,
+        `Down ${Math.abs(diff)} lbs. Now push harder.`,
+      ];
+      setWeightAlert({msg:lossRoasts[Math.floor(Math.random()*lossRoasts.length)],type:"loss"});
+    } else {
+      flash(getMotivationMessage(msgType,motivationMode,userName,{diff:Math.abs(diff||0)}));
+    }
   }
 
   function calcNutrition(per100g,weightG){const r=weightG/100;return{calories:Math.round((per100g.calories||0)*r),protein:+((per100g.protein||0)*r).toFixed(1),carbs:+((per100g.carbs||0)*r).toFixed(1),fat:+((per100g.fat||0)*r).toFixed(1),fiber:+((per100g.fiber||0)*r).toFixed(1),sugar:+((per100g.sugar||0)*r).toFixed(1),sodium:+((per100g.sodium||0)*r).toFixed(0)};}
@@ -725,6 +756,15 @@ export default function App() {
               <button style={{flex:1,background:"#1e293b",border:"1px solid #334155",color:"#94a3b8",borderRadius:10,padding:"12px",cursor:"pointer",fontFamily:"monospace",fontWeight:700,fontSize:13}} onClick={()=>setConfirm(null)}>Cancel</button>
               <button style={{flex:1,background:"#450a0a",border:"1px solid #ef4444",color:"#ef4444",borderRadius:10,padding:"12px",cursor:"pointer",fontFamily:"monospace",fontWeight:700,fontSize:13}} onClick={()=>{confirm.onConfirm();setConfirm(null);}}>Delete</button>
             </div>
+          </div>
+        </div>
+      )}
+      {weightAlert&&(
+        <div style={{position:"fixed",inset:0,background:"rgba(0,0,0,0.92)",display:"flex",alignItems:"center",justifyContent:"center",zIndex:600,padding:24}}>
+          <div style={{background:"#0f172a",border:`2px solid ${weightAlert.type==="gain"?"#ef4444":"#4ade80"}`,borderRadius:20,padding:32,maxWidth:340,width:"100%",textAlign:"center",boxShadow:`0 0 60px ${weightAlert.type==="gain"?"rgba(239,68,68,0.4)":"rgba(74,222,128,0.4)"}`}}>
+            <div style={{fontSize:48,marginBottom:8}}>{weightAlert.type==="gain"?"❗❗❗":"💪💪💪"}</div>
+            <div style={{fontSize:13,color:weightAlert.type==="gain"?"#ef4444":"#4ade80",fontFamily:"monospace",fontWeight:700,marginBottom:20,lineHeight:1.8}}>{weightAlert.msg}</div>
+            <button style={{background:weightAlert.type==="gain"?"#450a0a":"#14532d",border:`2px solid ${weightAlert.type==="gain"?"#ef4444":"#4ade80"}`,color:weightAlert.type==="gain"?"#ef4444":"#4ade80",borderRadius:12,padding:"12px 28px",cursor:"pointer",fontFamily:"monospace",fontWeight:900,fontSize:16}} onClick={()=>setWeightAlert(null)}>✕</button>
           </div>
         </div>
       )}
