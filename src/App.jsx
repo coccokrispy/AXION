@@ -959,7 +959,7 @@ export default function App() {
             <div style={{marginTop:16,paddingTop:16,borderTop:"1px solid #1e293b"}}>
               <div style={{fontSize:12,color:"#94a3b8",marginBottom:8}}><b style={{color:theme.primary}}>Motivation Mode</b></div>
               <div style={{display:"grid",gridTemplateColumns:"1fr 1fr 1fr",gap:8,marginBottom:12}}>
-                {[["none","🔇","None"],["uplifting","💚","Uplifting"],["drill","🪖","Drill"]].map(([mode,icon,label])=>(
+                {[["none","🔇","None"],["uplifting","🦁","Driven"],["drill","🐉","Beast Mode"]].map(([mode,icon,label])=>(
                   <button key={mode} onClick={()=>setMotivationMode(mode)} style={{padding:"12px 8px",borderRadius:12,border:`2px solid ${motivationMode===mode?theme.primary:"#1e293b"}`,background:motivationMode===mode?theme.primary+"22":"#020617",cursor:"pointer",color:motivationMode===mode?theme.primary:"#64748b",fontFamily:"monospace",fontSize:11,fontWeight:700,textAlign:"center"}}>
                     <div style={{fontSize:20,marginBottom:4}}>{icon}</div>{label}
                   </button>
