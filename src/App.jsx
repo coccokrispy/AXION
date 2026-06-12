@@ -2086,3 +2086,68 @@ export default function App() {
               <div style={{fontSize:13,fontWeight:700,color:"#94a3b8",fontFamily:"monospace",marginBottom:10}}>{suppActiveCat.replace(/([A-Z])/g," $1").trim()}</div>
               <div style={{display:"flex",flexDirection:"column",gap:8}}>
                 {SUPPLEMENT_LIBRARY[suppActiveCat].
+map(item=>(<button key={item} onClick={()=>{setPendingSupp({name:item,category:suppActiveCat});setSuppForm({dose:"",unit:"mg",schedule:"Daily",time:"Morning"});setSuppView("add");}} style={{background:"#020617",border:`1px solid ${theme.primary}33`,borderRadius:12,padding:"11px 14px",color:"#e2e8f0",fontWeight:700,textAlign:"left",cursor:"pointer"}}>{item}</button>))}
+              </div>
+            </>
+          )}
+        </div>
+      )}
+
+      {/* NOTES TAB */}
+      {tab==="notes"&&(
+        <div>
+          <div style={DS.panel}>
+            <h2 style={{margin:"0 0 14px",fontSize:15,fontWeight:700,color:"#94a3b8",fontFamily:"monospace"}}>📓 Daily Journal</h2>
+            <div style={{marginBottom:12}}>
+              <div style={{fontSize:11,color:"#64748b",fontFamily:"monospace",textTransform:"uppercase",letterSpacing:1,marginBottom:6}}>Date</div>
+              <input style={{...DS.input,width:"auto",minWidth:160}} type="date" value={noteDate} onChange={e=>setNoteDate(e.target.value)}/>
+            </div>
+            <textarea value={noteText} onChange={e=>setNoteText(e.target.value)} placeholder="How are you feeling today? Energy levels, sleep quality, how the protocol is going, anything on your mind..." style={{width:"100%",boxSizing:"border-box",background:"#020617",border:`1px solid ${theme.border}`,color:"#f8fafc",borderRadius:12,padding:"12px 14px",fontSize:13,fontFamily:"monospace",outline:"none",resize:"vertical",minHeight:120,marginBottom:12,lineHeight:1.7}}/>
+            <button style={{...DS.btn,gridColumn:"unset",width:"100%"}} onClick={addNote}>+ Save Note</button>
+          </div>
+          <div style={DS.panel}>
+            <h2 style={{margin:"0 0 14px",fontSize:15,fontWeight:700,color:"#94a3b8",fontFamily:"monospace"}}>Journal History</h2>
+            {(notes||[]).length===0&&<div style={{color:"#475569",fontSize:13,fontFamily:"monospace"}}>No notes yet. Start writing above.</div>}
+            {(()=>{
+              const sorted=[...(notes||[])].sort((a,b)=>new Date(b.date)-new Date(a.date));
+              const byDay={};
+              sorted.forEach(n=>{if(!byDay[n.date])byDay[n.date]=[];byDay[n.date].push(n);});
+              return Object.entries(byDay).sort((a,b)=>new Date(b[0])-new Date(a[0])).map(([day,dayNotes])=>{
+                const isOpen=expandedNoteDay===day;
+                return(
+                  <div key={day} style={{background:"#020617",border:`1px solid ${isOpen?theme.primary+"66":"#1e293b"}`,borderRadius:12,marginBottom:8,overflow:"hidden"}}>
+                    <button onClick={()=>setExpandedNoteDay(isOpen?null:day)} style={{width:"100%",background:"none",border:"none",padding:"12px 14px",cursor:"pointer",display:"flex",justifyContent:"space-between",alignItems:"center"}}>
+                      <div style={{textAlign:"left"}}>
+                        <div style={{fontWeight:700,color:"#e2e8f0",fontSize:14}}>{new Date(day+"T12:00:00").toLocaleDateString("en-US",{weekday:"short",month:"short",day:"numeric",year:"numeric"})}</div>
+                        <div style={{fontSize:11,color:"#64748b",fontFamily:"monospace"}}>{dayNotes.length} entr{dayNotes.length===1?"y":"ies"}</div>
+                      </div>
+                      <div style={{display:"flex",alignItems:"center",gap:8}}>
+                        <span style={{fontSize:12,color:"#475569",fontFamily:"monospace",maxWidth:120,overflow:"hidden",textOverflow:"ellipsis",whiteSpace:"nowrap"}}>{dayNotes[0].text.slice(0,40)}{dayNotes[0].text.length>40?"...":""}</span>
+                        {isOpen?<ChevronUp size={16} color="#64748b"/>:<ChevronDown size={16} color="#64748b"/>}
+                      </div>
+                    </button>
+                    {isOpen&&(
+                      <div style={{padding:"0 14px 12px"}}>
+                        {dayNotes.map(n=>(
+                          <div key={n.id} style={{padding:"10px 0",borderTop:"1px solid #1e293b"}}>
+                            <div style={{display:"flex",justifyContent:"space-between",alignItems:"flex-start",gap:10}}>
+                              <div style={{flex:1,fontSize:13,color:"#94a3b8",lineHeight:1.7,fontFamily:"monospace",whiteSpace:"pre-wrap"}}>{n.text}</div>
+                              <button style={{...deleteBtn,flexShrink:0}} onClick={()=>setConfirm({label:`Delete this journal entry?`,onConfirm:()=>setNotes((notes||[]).filter(x=>x.id!==n.id))})}>✕</button>
+                            </div>
+                            <div style={{fontSize:10,color:"#334155",fontFamily:"monospace",marginTop:6}}>{new Date(n.created).toLocaleTimeString("en-US",{hour:"numeric",minute:"2-digit"})}</div>
+                          </div>
+                        ))}
+                      </div>
+                    )}
+                  </div>
+                );
+              });
+            })()}
+          </div>
+        </div>
+      )}
+
+      {tab==="calculator"&&<PeptideCalculator theme={theme} DS={DS}/>}
+    </div>
+  );
+}
