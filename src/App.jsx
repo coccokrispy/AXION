@@ -360,6 +360,7 @@ export default function App() {
    const [junkAlert,setJunkAlert]=useState(null);
   const [weightAlert,setWeightAlert]=useState(null);
   const [upliftAlert,setUpliftAlert]=useState(null);
+  const [pinAlert,setPinAlert]=useState(null);
   const [showSettings,setShowSettings]=useState(false);
   const [tempKey,setTempKey]=useState("");
   const [milestone,setMilestone]=useState(null);
@@ -406,7 +407,7 @@ export default function App() {
   const [pepActiveCat,setPepActiveCat]=useState(null);
   const [pendingPep,setPendingPep]=useState(null);
   const [editingPep,setEditingPep]=useState(null);
-  const [pepForm,setPepForm]=useState({dose:"",unit:"mg",frequency:"",cycle:"",notes:"",status:"active"});
+  const [pepForm,setPepForm]=useState({dose:"",unit:"mg",frequency:"",cycle:"",notes:"",status:"active",pinDays:[]});
   const [pepSearch,setPepSearch]=useState("");
 
   const [doseTab,setDoseTab]=useState(null);
@@ -517,6 +518,28 @@ export default function App() {
     localStorage.setItem(key,"shown");
     setWeeklyRecap({lostThisWeek,avgCals,avgProtein,totalMins,workoutCount:weekWorkouts.length,streak});
   },[weights,foods,workouts,streak]);
+  useEffect(()=>{
+    const todayDay=["Sun","Mon","Tue","Wed","Thu","Fri","Sat"][new Date().getDay()];
+    const duePeptides=(peptideStack||[]).filter(p=>p.status==="active"&&(p.pinDays||[]).includes(todayDay));
+    if(duePeptides.length===0)return;
+    const hour=new Date().getHours();
+    const morningKey="axion_pin_morning_"+todayISO();
+    const eveningKey="axion_pin_evening_"+todayISO();
+    const names=duePeptides.map(p=>p.name).join(", ");
+    if(hour<20&&!localStorage.getItem(morningKey)){
+      localStorage.setItem(morningKey,"shown");
+      setPinAlert({type:"morning",msg:`📌 Pin Day — ${names} are due today. Don't forget to log your dose.`});
+      return;
+    }
+    if(hour>=20&&!localStorage.getItem(eveningKey)){
+      const loggedToday=duePeptides.filter(p=>(peptideLogs[p.id]||[]).some(l=>l.date===todayISO()));
+      const unlogged=duePeptides.filter(p=>!(peptideLogs[p.id]||[]).some(l=>l.date===todayISO()));
+      if(unlogged.length===0)return;
+      localStorage.setItem(eveningKey,"shown");
+      const unloggedNames=unlogged.map(p=>p.name).join(", ");
+      setPinAlert({type:"evening",msg:`⏰ Still waiting — You haven't logged your dose of ${unloggedNames} yet today.`});
+    }
+  },[peptideStack,peptideLogs]);
 
   const suppSearchResults=useMemo(()=>{if(!suppSearch.trim())return[];const q=suppSearch.toLowerCase();return ALL_SUPPLEMENTS.filter(s=>s.toLowerCase().includes(q)).slice(0,20);},[suppSearch]);
   const pepSearchResults=useMemo(()=>{if(!pepSearch.trim())return[];const q=pepSearch.toLowerCase();return ALL_PEPTIDES.filter(p=>p.name.toLowerCase().includes(q)||p.desc.toLowerCase().includes(q)).slice(0,10);},[pepSearch]);
@@ -653,7 +676,7 @@ export default function App() {
     setPepView("stack");setPendingPep(null);setPepForm({dose:"",unit:"mg",frequency:"",cycle:"",notes:"",status:"active"});
     flash("Peptide added ✓");
   }
-  function savePepEdit(){setPeptideStack(prev=>prev.map(p=>p.id===editingPep.id?{...p,dose:pepForm.dose||"—",unit:pepForm.unit,frequency:pepForm.frequency,cycle:pepForm.cycle,notes:pepForm.notes,status:pepForm.status}:p));setEditingPep(null);setPepView("stack");}
+  function savePepEdit(){setPeptideStack(prev=>prev.map(p=>p.id===editingPep.id?{...p,dose:pepForm.dose||"—",unit:pepForm.unit,frequency:pepForm.frequency,cycle:pepForm.cycle,notes:pepForm.notes,status:pepForm.status,pinDays:pepForm.pinDays||[]}:p));setEditingPep(null);setPepView("stack");}
   function deletePep(id){setPeptideStack(prev=>prev.filter(p=>p.id!==id));setPeptideLogs(prev=>{const n={...prev};delete n[id];return n;});setEditingPep(null);setPepView("stack");}
   function logPeptideDose(peptideId){if(!doseForm.dose)return;setPeptideLogs(prev=>({...prev,[peptideId]:[...(prev[peptideId]||[]),{id:uid(),date:doseForm.date,dose:+doseForm.dose,note:doseForm.note}]}));setDoseForm({date:todayISO(),dose:"",note:""});flash("Dose logged ✓");}
   function removePeptideDose(peptideId,entryId){setPeptideLogs(prev=>({...prev,[peptideId]:(prev[peptideId]||[]).filter(e=>e.id!==entryId)}));}
@@ -784,6 +807,18 @@ export default function App() {
             <div style={{display:"flex",gap:10}}>
               <button style={{flex:1,background:"#1e293b",border:"1px solid #334155",color:"#94a3b8",borderRadius:10,padding:"12px",cursor:"pointer",fontFamily:"monospace",fontWeight:700,fontSize:13}} onClick={()=>setConfirm(null)}>Cancel</button>
               <button style={{flex:1,background:"#450a0a",border:"1px solid #ef4444",color:"#ef4444",borderRadius:10,padding:"12px",cursor:"pointer",fontFamily:"monospace",fontWeight:700,fontSize:13}} onClick={()=>{confirm.onConfirm();setConfirm(null);}}>Delete</button>
+            </div>
+          </div>
+        </div>
+      )}
+      {pinAlert&&(
+        <div style={{position:"fixed",inset:0,background:"rgba(0,0,0,0.92)",display:"flex",alignItems:"center",justifyContent:"center",zIndex:600,padding:24}}>
+          <div style={{background:"#0f172a",border:"2px solid #60a5fa",borderRadius:20,padding:32,maxWidth:340,width:"100%",textAlign:"center",boxShadow:"0 0 60px rgba(96,165,250,0.4)"}}>
+            <div style={{fontSize:48,marginBottom:8}}>{pinAlert.type==="morning"?"📌":"⏰"}</div>
+            <div style={{fontSize:13,color:"#60a5fa",fontFamily:"monospace",fontWeight:700,marginBottom:20,lineHeight:1.8}}>{pinAlert.msg}</div>
+            <div style={{display:"flex",gap:10,justifyContent:"center"}}>
+              <button style={{background:"#1e293b",border:"2px solid #60a5fa",color:"#60a5fa",borderRadius:12,padding:"12px 20px",cursor:"pointer",fontFamily:"monospace",fontWeight:900,fontSize:14}} onClick={()=>setPinAlert(null)}>✕</button>
+              <button style={{background:"linear-gradient(135deg,#1d4ed8,#60a5fa)",border:"none",color:"#020617",borderRadius:12,padding:"12px 20px",cursor:"pointer",fontFamily:"monospace",fontWeight:900,fontSize:14}} onClick={()=>{setPinAlert(null);setTab("doses");}}>Log Dose</button>
             </div>
           </div>
         </div>
@@ -1281,7 +1316,7 @@ export default function App() {
                       {p.notes&&<div style={{fontSize:11,color:"#94a3b8",marginTop:4,fontStyle:"italic"}}>{p.notes}</div>}
                     </div>
                     <div style={{display:"flex",gap:6,flexShrink:0}}>
-                      <button onClick={()=>{setEditingPep(p);setPepForm({dose:p.dose==="—"?"":p.dose,unit:p.unit,frequency:p.frequency,cycle:p.cycle,notes:p.notes||"",status:p.status});setPepView("edit");}} style={{background:"#0f172a",border:"1px solid #1e293b",color:"#60a5fa",cursor:"pointer",borderRadius:6,padding:"4px 8px",fontSize:11}}>Edit</button>
+                      <button onClick={()=>{setEditingPep(p);setPepForm({dose:p.dose==="—"?"":p.dose,unit:p.unit,frequency:p.frequency,cycle:p.cycle,notes:p.notes||"",status:p.status,pinDays:p.pinDays||[]});setPepView("edit");}} style={{background:"#0f172a",border:"1px solid #1e293b",color:"#60a5fa",cursor:"pointer",borderRadius:6,padding:"4px 8px",fontSize:11}}>Edit</button>
                       <button onClick={()=>setConfirm({label:`Remove ${p.name} from your stack?`,onConfirm:()=>deletePep(p.id)})} style={{background:"transparent",border:"1px solid #450a0a",color:"#ef4444",cursor:"pointer",borderRadius:6,padding:"4px 8px",fontSize:11}}>✕</button>
                     </div>
                   </div>
@@ -1301,6 +1336,17 @@ export default function App() {
                 <label style={formLabel}>Status</label>
                 <select style={DS.input} value={pepForm.status} onChange={e=>setPepForm({...pepForm,status:e.target.value})}>{["active","planned","completed"].map(o=><option key={o}>{o}</option>)}</select>
                 <label style={formLabel}>Notes</label><input style={DS.input} value={pepForm.notes} onChange={e=>setPepForm({...pepForm,notes:e.target.value})}/>
+                <label style={formLabel}>Pin Days</label>
+                <div style={{display:"flex",gap:6,flexWrap:"wrap"}}>
+                  {["Mon","Tue","Wed","Thu","Fri","Sat","Sun"].map(day=>{
+                    const selected=(pepForm.pinDays||[]).includes(day);
+                    return(
+                      <button key={day} type="button" onClick={()=>setPepForm(f=>({...f,pinDays:selected?(f.pinDays||[]).filter(d=>d!==day):[...(f.pinDays||[]),day]}))} style={{padding:"6px 10px",borderRadius:8,cursor:"pointer",fontFamily:"monospace",fontSize:11,fontWeight:700,border:`1px solid ${selected?theme.primary:"#334155"}`,background:selected?theme.primary+"22":"#020617",color:selected?theme.primary:"#64748b"}}>
+                        {day}
+                      </button>
+                    );
+                  })}
+                </div>
               </div>
               <div style={{display:"flex",gap:8,marginTop:8}}>
                 <button style={{...DS.btn,gridColumn:"unset",flex:1,background:"#7f1d1d"}} onClick={()=>setConfirm({label:`Remove ${editingPep.name} from your stack?`,onConfirm:()=>deletePep(editingPep.id)})}>Remove</button>
@@ -1349,6 +1395,17 @@ export default function App() {
                 <label style={formLabel}>Status</label>
                 <select style={DS.input} value={pepForm.status} onChange={e=>setPepForm({...pepForm,status:e.target.value})}>{["active","planned","completed"].map(o=><option key={o}>{o}</option>)}</select>
                 <label style={formLabel}>Notes</label><input style={DS.input} placeholder="Protocol notes..." value={pepForm.notes} onChange={e=>setPepForm({...pepForm,notes:e.target.value})}/>
+                <label style={formLabel}>Pin Days</label>
+                <div style={{display:"flex",gap:6,flexWrap:"wrap"}}>
+                  {["Mon","Tue","Wed","Thu","Fri","Sat","Sun"].map(day=>{
+                    const selected=(pepForm.pinDays||[]).includes(day);
+                    return(
+                      <button key={day} type="button" onClick={()=>setPepForm(f=>({...f,pinDays:selected?(f.pinDays||[]).filter(d=>d!==day):[...(f.pinDays||[]),day]}))} style={{padding:"6px 10px",borderRadius:8,cursor:"pointer",fontFamily:"monospace",fontSize:11,fontWeight:700,border:`1px solid ${selected?theme.primary:"#334155"}`,background:selected?theme.primary+"22":"#020617",color:selected?theme.primary:"#64748b"}}>
+                        {day}
+                      </button>
+                    );
+                  })}
+                </div>
               </div>
               <div style={{display:"flex",gap:8,marginTop:8}}>
                 <button style={{...DS.btn,gridColumn:"unset",flex:1,background:"#1e293b",color:"#94a3b8"}} onClick={()=>{setPepView("items");setPendingPep(null);}}>Cancel</button>
