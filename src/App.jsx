@@ -1155,11 +1155,19 @@ export default function App() {
       </div>
 
       {/* TABS */}
-      <nav style={{display:"flex",gap:5,marginBottom:16,flexWrap:"wrap"}}>
-        {TABS.map(t=>{const Icon=ICONS[t];return(
-          <button key={t} onClick={()=>setTab(t)} style={tab===t?DS.activeTab:{flex:"1 1 50px",display:"flex",flexDirection:"column",alignItems:"center",gap:6,padding:"14px 4px",background:"linear-gradient(145deg,#000000,#020806)",border:`1px solid ${theme.border}`,borderRadius:18,cursor:"pointer",color:theme.primary+"99",fontFamily:"monospace",transition:"all 0.18s ease"}}>
-            <Icon size={24} strokeWidth={1.8} color={tab===t?theme.primary:theme.primary+"99"}/>
-            <span style={{fontSize:10,textTransform:"capitalize"}}>{t}</span>
+      <nav style={{display:"grid",gridTemplateColumns:"1fr 1fr 1fr 1fr 1fr",gap:5,marginBottom:5}}>
+        {["dashboard","weight","food","peptides","supplements"].map(t=>{const Icon=ICONS[t];return(
+          <button key={t} onClick={()=>setTab(t)} style={tab===t?{...DS.activeTab,flex:"unset"}:{display:"flex",flexDirection:"column",alignItems:"center",gap:6,padding:"14px 4px",background:"linear-gradient(145deg,#000000,#020806)",border:`1px solid ${theme.border}`,borderRadius:18,cursor:"pointer",color:theme.primary+"99",fontFamily:"monospace",transition:"all 0.18s ease"}}>
+            <Icon size={22} strokeWidth={1.8} color={tab===t?theme.primary:theme.primary+"99"}/>
+            <span style={{fontSize:9,textTransform:"capitalize"}}>{t==="supplements"?"supps":t}</span>
+          </button>
+        );})}
+      </nav>
+      <nav style={{display:"grid",gridTemplateColumns:"1fr 1fr 1fr 1fr",gap:5,marginBottom:16}}>
+        {["workouts","notes","doses","calculator"].map(t=>{const Icon=ICONS[t];return(
+          <button key={t} onClick={()=>setTab(t)} style={tab===t?{...DS.activeTab,flex:"unset"}:{display:"flex",flexDirection:"column",alignItems:"center",gap:6,padding:"14px 4px",background:"linear-gradient(145deg,#000000,#020806)",border:`1px solid ${theme.border}`,borderRadius:18,cursor:"pointer",color:theme.primary+"99",fontFamily:"monospace",transition:"all 0.18s ease"}}>
+            <Icon size={22} strokeWidth={1.8} color={tab===t?theme.primary:theme.primary+"99"}/>
+            <span style={{fontSize:9,textTransform:"capitalize"}}>{t}</span>
           </button>
         );})}
       </nav>
