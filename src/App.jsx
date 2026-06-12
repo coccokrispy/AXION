@@ -1,5 +1,5 @@
 import { useMemo, useState, useCallback, useEffect } from "react";
-import { Zap, Scale, Syringe, Dna, Utensils, Dumbbell, Pill, Calculator, Settings, Search, X, ChevronDown, ChevronUp, Flame, TrendingDown, TrendingUp, Minus, Trophy } from "lucide-react";
+import { Zap, Scale, Syringe, Dna, Utensils, Dumbbell, Pill, Calculator, Settings, Search, X, ChevronDown, ChevronUp, Flame, TrendingDown, TrendingUp, Minus, Trophy, BookOpen, Droplets } from "lucide-react";
 
 const THEMES = {
   green:  { primary:"#4ade80", primaryDark:"#16a34a", border:"rgba(74,222,128,0.28)", glow:"rgba(74,222,128,0.18)", glowStrong:"rgba(74,222,128,0.35)", bg:"rgba(22,163,74,0.18)", tabBg:"rgba(5,46,22,0.92)", label:"Green" },
@@ -7,6 +7,7 @@ const THEMES = {
   pink:   { primary:"#f472b6", primaryDark:"#be185d", border:"rgba(244,114,182,0.28)", glow:"rgba(244,114,182,0.18)", glowStrong:"rgba(244,114,182,0.35)", bg:"rgba(190,24,93,0.18)", tabBg:"rgba(46,5,22,0.92)", label:"Pink" },
   purple: { primary:"#a78bfa", primaryDark:"#6d28d9", border:"rgba(167,139,250,0.28)", glow:"rgba(167,139,250,0.18)", glowStrong:"rgba(167,139,250,0.35)", bg:"rgba(109,40,217,0.18)", tabBg:"rgba(20,5,46,0.92)", label:"Purple" },
   red:    { primary:"#f87171", primaryDark:"#b91c1c", border:"rgba(248,113,113,0.28)", glow:"rgba(248,113,113,0.18)", glowStrong:"rgba(248,113,113,0.35)", bg:"rgba(185,28,28,0.18)", tabBg:"rgba(46,5,5,0.92)", label:"Red" },
+  wolf:   { primary:"#94a3b8", primaryDark:"#475569", border:"rgba(148,163,184,0.28)", glow:"rgba(148,163,184,0.18)", glowStrong:"rgba(148,163,184,0.35)", bg:"rgba(71,85,105,0.18)", tabBg:"rgba(15,20,30,0.92)", label:"Wolf" },
 };
 
 const MILESTONES = [
@@ -24,10 +25,23 @@ const MILESTONES = [
   { pct:75,  label:"75% TO GOAL",   emoji:"🏁" },
 ];
 
+const BULK_MILESTONES = [
+  { lbs:5,   label:"5 LBS GAINED",  emoji:"💪" },
+  { lbs:10,  label:"10 LBS GAINED", emoji:"🔥" },
+  { lbs:15,  label:"15 LBS GAINED", emoji:"⚡" },
+  { lbs:20,  label:"20 LBS GAINED", emoji:"🏆" },
+  { lbs:25,  label:"25 LBS GAINED", emoji:"🚀" },
+  { lbs:30,  label:"30 LBS GAINED", emoji:"👑" },
+  { pct:25,  label:"25% TO GOAL",   emoji:"🎯" },
+  { pct:50,  label:"HALFWAY THERE", emoji:"⚡" },
+  { pct:75,  label:"75% TO GOAL",   emoji:"🏁" },
+];
+
 const HAS_SETUP = localStorage.getItem("tracker_setup_complete") === "true";
 const START_WEIGHT = Number(localStorage.getItem("tracker_start_weight")) || 225;
 const START_DATE = localStorage.getItem("tracker_start_date") || "2026-05-26";
 const TARGET_WEIGHT = Number(localStorage.getItem("tracker_target_weight")) || 200;
+const IS_BULK = TARGET_WEIGHT > START_WEIGHT;
 
 const RETA_PHASES = [
   { weeks:"1-4",   phase:"Initiation",    expected:"0-1%",  desc:"Body adapting. Appetite suppression begins. GI side effects most likely." },
@@ -43,23 +57,42 @@ const PEPTIDE_LIBRARY = {
     { name:"Semaglutide", desc:"GLP-1 agonist. Appetite suppression and blood sugar control.", typicalDose:"0.25-2mg", unit:"mg", frequency:"Weekly", cycle:"Ongoing" },
     { name:"Tirzepatide", desc:"Dual GLP-1/GIP agonist. Strong weight loss with muscle preservation.", typicalDose:"2.5-15mg", unit:"mg", frequency:"Weekly", cycle:"Ongoing" },
     { name:"Liraglutide", desc:"GLP-1 agonist. Daily dosing. Good appetite control.", typicalDose:"0.6-3mg", unit:"mg", frequency:"Daily", cycle:"Ongoing" },
+    { name:"Oxyntomodulin", desc:"Dual GLP-1/glucagon agonist. Reduces appetite and increases energy expenditure.", typicalDose:"100-400mcg", unit:"mcg", frequency:"3x/day", cycle:"8-12 weeks" },
+    { name:"Cagrilintide", desc:"Long-acting amylin analogue. Reduces food intake and body weight.", typicalDose:"0.16-2.4mg", unit:"mg", frequency:"Weekly", cycle:"Ongoing" },
   ],
   "GH Secretagogues": [
     { name:"CJC-1295 / Ipamorelin", desc:"GHRH + GHRP stack. Boosts GH pulse, improves sleep and recovery.", typicalDose:"100-300mcg", unit:"mcg", frequency:"Pre-sleep daily", cycle:"8-12 weeks" },
-    { name:"CJC-1295", desc:"GHRH analogue. Extends GH release. Often stacked with Ipamorelin.", typicalDose:"1-2mg", unit:"mg", frequency:"2x/week", cycle:"8-12 weeks" },
+    { name:"CJC-1295 with DAC", desc:"GHRH analogue with Drug Affinity Complex. Extended half-life of 6-8 days. Sustained GH elevation.", typicalDose:"1-2mg", unit:"mg", frequency:"2x/week", cycle:"8-12 weeks" },
+    { name:"CJC-1295 No DAC", desc:"Mod GRF 1-29. Short-acting GHRH analogue. Preserves natural pulsatile GH release. Stack with GHRP.", typicalDose:"100-300mcg", unit:"mcg", frequency:"3x/day", cycle:"8-12 weeks" },
     { name:"Ipamorelin", desc:"Selective GHRP. Clean GH pulse with minimal cortisol/prolactin.", typicalDose:"100-300mcg", unit:"mcg", frequency:"Daily", cycle:"8-12 weeks" },
+    { name:"Hexarelin", desc:"Potent GHRP. Strong GH release. Also cardioprotective properties.", typicalDose:"100-200mcg", unit:"mcg", frequency:"2-3x/day", cycle:"4-8 weeks" },
     { name:"GHRP-2", desc:"Strong GH release. Increases appetite - useful for recomposition.", typicalDose:"100-300mcg", unit:"mcg", frequency:"3x/day", cycle:"4-12 weeks" },
     { name:"GHRP-6", desc:"Potent hunger stimulus with GH release. Better for muscle gaining.", typicalDose:"100-300mcg", unit:"mcg", frequency:"3x/day", cycle:"4-12 weeks" },
     { name:"MK-677 (Ibutamoren)", desc:"Oral GH secretagogue. 24hr GH elevation. Water retention common.", typicalDose:"10-25mg", unit:"mg", frequency:"Daily", cycle:"Ongoing" },
     { name:"Sermorelin", desc:"GHRH analogue. Gentler GH stimulus. Good for anti-aging.", typicalDose:"200-500mcg", unit:"mcg", frequency:"Daily", cycle:"3-6 months" },
     { name:"Tesamorelin", desc:"GHRH analogue. FDA-approved for visceral fat reduction.", typicalDose:"1-2mg", unit:"mg", frequency:"Daily", cycle:"6-12 months" },
   ],
+  "IGF / Growth Factors": [
+    { name:"IGF-1 LR3", desc:"Long-acting IGF-1 analogue. Promotes muscle growth, fat loss, and nutrient partitioning. More potent than standard IGF-1.", typicalDose:"20-100mcg", unit:"mcg", frequency:"Daily", cycle:"4-6 weeks" },
+    { name:"IGF-1 DES", desc:"Short-acting IGF-1 fragment. Local muscle growth when injected intramuscularly. Fast acting.", typicalDose:"20-50mcg", unit:"mcg", frequency:"Pre-workout", cycle:"4-6 weeks" },
+    { name:"MGF (Mechano Growth Factor)", desc:"IGF-1 splice variant. Stimulates satellite cells for local muscle repair and growth.", typicalDose:"100-200mcg", unit:"mcg", frequency:"Post-workout", cycle:"4-8 weeks" },
+    { name:"PEG-MGF", desc:"PEGylated MGF. Extended half-life version. Systemic muscle growth stimulus.", typicalDose:"200-400mcg", unit:"mcg", frequency:"2x/week", cycle:"4-8 weeks" },
+  ],
+  "Fat Loss": [
+    { name:"AOD-9604", desc:"HGH fragment. Fat burning without GH side effects.", typicalDose:"250-500mcg", unit:"mcg", frequency:"Daily", cycle:"8-12 weeks" },
+    { name:"Fragment 176-191", desc:"Fat-burning HGH fragment. Lipolysis without IGF-1 elevation.", typicalDose:"250-500mcg", unit:"mcg", frequency:"Daily", cycle:"8-12 weeks" },
+    { name:"5-Amino-1MQ", desc:"NNMT inhibitor. Activates dormant fat cells, improves metabolic rate and muscle mass.", typicalDose:"50-100mg", unit:"mg", frequency:"Daily", cycle:"8-12 weeks" },
+    { name:"Adipotide (FTPP)", desc:"Targets and destroys blood vessels feeding fat cells. Aggressive fat loss. Use with caution.", typicalDose:"0.5-1mg", unit:"mg", frequency:"Daily", cycle:"4-6 weeks" },
+  ],
   "Tissue Repair": [
     { name:"BPC-157", desc:"Body Protection Compound. Heals gut, tendons, ligaments. Helps GI side effects from GLP-1.", typicalDose:"250-500mcg", unit:"mcg", frequency:"Daily or BID", cycle:"4-12 weeks" },
     { name:"TB-500 (Thymosin Beta-4)", desc:"Systemic tissue repair. Reduces inflammation, accelerates healing.", typicalDose:"2-5mg", unit:"mg", frequency:"2x/week loading", cycle:"4-6 weeks" },
+    { name:"TB-4 Fragment", desc:"Ac-SDKP fragment of Thymosin Beta-4. Anti-inflammatory, cardiac and kidney protection.", typicalDose:"1-2mg", unit:"mg", frequency:"Daily", cycle:"4-8 weeks" },
     { name:"BPC-157 + TB-500", desc:"Combined stack for maximum healing. Synergistic local + systemic.", typicalDose:"250mcg / 2mg", unit:"mcg", frequency:"Daily", cycle:"4-8 weeks" },
+    { name:"Pentadeca Arginate (PDA)", desc:"BPC-157 derivative. Enhanced tissue repair, gut healing, and anti-inflammatory. More stable than BPC-157.", typicalDose:"250-500mcg", unit:"mcg", frequency:"Daily", cycle:"4-12 weeks" },
     { name:"KPV", desc:"Anti-inflammatory tripeptide. Gut healing, skin conditions, IBD.", typicalDose:"500mcg-1mg", unit:"mg", frequency:"Daily", cycle:"4-8 weeks" },
     { name:"GHK-Cu", desc:"Copper peptide. Skin regeneration, collagen synthesis, anti-aging.", typicalDose:"1-2mg", unit:"mg", frequency:"Daily", cycle:"8-12 weeks" },
+    { name:"LL-37", desc:"Antimicrobial peptide. Immune modulation, wound healing, anti-biofilm. Broad spectrum antimicrobial.", typicalDose:"100-500mcg", unit:"mcg", frequency:"Daily", cycle:"4-8 weeks" },
     { name:"Thymosin Alpha-1", desc:"Immune modulator. Used in cancer/viral protocols.", typicalDose:"1.6mg", unit:"mg", frequency:"2x/week", cycle:"6-12 months" },
   ],
   "Mitochondrial / Longevity": [
@@ -67,6 +100,8 @@ const PEPTIDE_LIBRARY = {
     { name:"Humanin", desc:"Mitochondria-derived. Neuroprotective, anti-aging, cardioprotective.", typicalDose:"2-4mg", unit:"mg", frequency:"Weekly", cycle:"8-12 weeks" },
     { name:"SS-31 (Elamipretide)", desc:"Targets mitochondrial inner membrane. Reduces oxidative stress.", typicalDose:"1-4mg", unit:"mg", frequency:"Daily", cycle:"4-8 weeks" },
     { name:"Epitalon", desc:"Telomere lengthening peptide. Anti-aging, sleep quality, immune function.", typicalDose:"5-10mg", unit:"mg", frequency:"Daily x 10-20d", cycle:"1-2 cycles/year" },
+    { name:"Foxo4-DRI", desc:"Senolytic peptide. Targets and eliminates senescent cells. Anti-aging at cellular level.", typicalDose:"1-2mg", unit:"mg", frequency:"3x/week", cycle:"2-4 weeks" },
+    { name:"Thymulin", desc:"Thymus-derived peptide. Immune regulation, anti-inflammatory, thyroid support.", typicalDose:"10-50mcg", unit:"mcg", frequency:"Daily", cycle:"4-8 weeks" },
     { name:"Selank", desc:"Anxiolytic and nootropic. Modulates GABA and BDNF.", typicalDose:"250-500mcg", unit:"mcg", frequency:"Daily", cycle:"2-4 weeks" },
     { name:"Semax", desc:"ACTH analogue. Cognitive enhancer, neuroprotective, BDNF upregulation.", typicalDose:"200-600mcg", unit:"mcg", frequency:"Daily", cycle:"2-4 weeks" },
   ],
@@ -74,12 +109,13 @@ const PEPTIDE_LIBRARY = {
     { name:"Dihexa", desc:"Extremely potent nootropic. BDNF-like activity. Long duration of action.", typicalDose:"10-20mg", unit:"mg", frequency:"Weekly", cycle:"4-8 weeks" },
     { name:"NA-NAP (NAP)", desc:"Neuroprotective. ADNP-derived. Cognitive support, anti-inflammatory.", typicalDose:"50-200mcg", unit:"mcg", frequency:"Daily", cycle:"4-8 weeks" },
     { name:"Pinealon", desc:"Retinal/brain peptide. Sleep, anti-aging, neuroprotection.", typicalDose:"1-3mg", unit:"mg", frequency:"Daily x 10d", cycle:"2 cycles/year" },
+    { name:"DSIP (Delta Sleep Inducing Peptide)", desc:"Promotes deep slow-wave sleep. Reduces stress hormones. Improves sleep quality and recovery.", typicalDose:"100-300mcg", unit:"mcg", frequency:"Pre-sleep", cycle:"2-4 weeks" },
   ],
   "Hormonal / Sexual Health": [
     { name:"PT-141 (Bremelanotide)", desc:"Melanocortin agonist. Libido enhancement for men and women.", typicalDose:"1-2mg", unit:"mg", frequency:"As needed", cycle:"As needed" },
     { name:"Kisspeptin-10", desc:"GnRH stimulator. Boosts LH/FSH and testosterone naturally.", typicalDose:"100-1000mcg", unit:"mcg", frequency:"Daily", cycle:"4-8 weeks" },
-    { name:"AOD-9604", desc:"HGH fragment. Fat burning without GH side effects.", typicalDose:"250-500mcg", unit:"mcg", frequency:"Daily", cycle:"8-12 weeks" },
-    { name:"Fragment 176-191", desc:"Fat-burning HGH fragment. Lipolysis without IGF-1 elevation.", typicalDose:"250-500mcg", unit:"mcg", frequency:"Daily", cycle:"8-12 weeks" },
+    { name:"Gonadorelin", desc:"GnRH analogue. Stimulates LH and FSH. Used to maintain natural testosterone production during TRT.", typicalDose:"100mcg", unit:"mcg", frequency:"2x/week", cycle:"Ongoing with TRT" },
+    { name:"Melanotan II", desc:"Melanocortin agonist. Tanning, libido, appetite suppression. Potent and long-lasting.", typicalDose:"0.5-1mg", unit:"mg", frequency:"As needed", cycle:"As needed" },
   ],
   "Cardiovascular / Other": [
     { name:"Angiotensin 1-7", desc:"Cardioprotective. Vasodilation, anti-fibrotic, blood pressure support.", typicalDose:"1-2mg", unit:"mg", frequency:"Daily", cycle:"4-8 weeks" },
@@ -109,7 +145,10 @@ function todayISO() { const d=new Date(); return `${d.getFullYear()}-${String(d.
 function daysBetween(a,b) { return Math.max(0,Math.floor((new Date(b)-new Date(a))/86400000)); }
 function weeksBetween(a,b) { return Math.max(1,daysBetween(a,b)/7); }
 function getWeekNumber(a,b) { return Math.floor(daysBetween(a,b)/7)+1; }
-function pctLost(w) { return (((START_WEIGHT-w)/START_WEIGHT)*100).toFixed(1); }
+function pctProgress(w) {
+  if(IS_BULK) return (((w-START_WEIGHT)/(TARGET_WEIGHT-START_WEIGHT))*100).toFixed(1);
+  return (((START_WEIGHT-w)/START_WEIGHT)*100).toFixed(1);
+}
 function uid() { return Date.now()+Math.floor(Math.random()*10000); }
 
 const JUNK_FOODS=["pizza","burger","cheeseburger","hamburger","whopper","big mac","quarter pounder","mcdonald","mcdonalds","wendy","wendys","taco bell","kfc","popeyes","chick-fil-a","chickfila","five guys","shake shack","in-n-out","innout","sonic","dairy queen","dq blizzard","jack in the box","carl's jr","carls jr","hardees","white castle","waffle house","dominos","papa john","little caesar","pizza hut","calzone","stromboli","hot dog","corn dog","bratwurst","sausage biscuit","mcmuffin","egg mcmuffin","breakfast burrito","french fries","fries","onion rings","mozzarella sticks","fried chicken","chicken nuggets","nuggets","chicken strips","chicken tenders","fried fish","fish and chips","funnel cake","fried oreos","fried twinkies","chips","doritos","cheetos","lays","pringles","fritos","funyuns","crackers","goldfish crackers","cheez its","ritz crackers","popcorn chicken","nachos","queso","tater tots","hash browns","waffle fries","curly fries","cheese fries","loaded fries","chili cheese fries","cookie","cookies","oreo","oreos","chips ahoy","nutter butter","girl scout cookies","donut","donuts","doughnut","krispy kreme","dunkin","munchkins","pastry","croissant","danish","cinnamon roll","cinnabon","pop tart","toaster strudel","cake","birthday cake","chocolate cake","cheesecake","cupcake","muffin","brownie","brownie sundae","ice cream","gelato","sorbet","frozen yogurt","froyo","milkshake","shake","sundae","banana split","hot fudge","whipped cream","candy","m&ms","skittles","starburst","gummy bears","gummy worms","sour patch","swedish fish","nerds","twix","snickers","kit kat","reese","peanut butter cup","butterfinger","milky way","3 musketeers","almond joy","mounds","hershey","cadbury","toblerone","ferrero rocher","nutella","cotton candy","caramel corn","kettle corn","chocolate bar","candy bar","lollipop","jolly rancher","airheads","laffy taffy","marshmallow","peeps","twinkies","ding dongs","ho hos","little debbie","hostess","swiss rolls","oatmeal cream pie","soda","cola","pepsi","coca cola","coke","sprite","fanta","mountain dew","dr pepper","root beer","ginger ale","cream soda","orange soda","grape soda","energy drink","red bull","monster","rockstar","bang energy","full throttle","nos energy","5 hour energy","slurpee","icee","slushie","juice box","kool aid","sweet tea","lemonade","punch","sports drink","gatorade","powerade","vitamin water","alcohol","beer","lager","ale","ipa","stout","porter","hard seltzer","white claw","truly","bud light","budweiser","coors","miller lite","corona","modelo","heineken","stella","guinness","wine","red wine","white wine","rose","champagne","prosecco","sangria","mimosa","hard cider","spiked","vodka","tequila","whiskey","bourbon","rum","gin","margarita","mojito","daiquiri","pina colada","long island","cosmopolitan","bloody mary","hard lemonade","mikes hard","twisted tea","four loko","mac and cheese","velveeta","kraft dinner","ramen","instant noodles","cup noodles","top ramen","spam","bologna","hot pocket","lean pocket","totinos","pizza roll","bagel bite","lunchable","tv dinner","frozen pizza","frozen burrito","microwave burrito","frozen meal","hungry man","marie callender","stouffers","banquet meal","fried rice","lo mein","chow mein","egg roll","spring roll","crab rangoon","general tso","orange chicken","sweet and sour","fried wonton","pad see ew","drunken noodles","waffle","pancake","french toast","syrup","maple syrup","powdered sugar","whipped butter","biscuits and gravy","fried egg sandwich","bacon sandwich","sausage sandwich","philly cheesesteak","cheesesteak","sub","hoagie","meatball sub","italian sub","club sandwich","blt","grilled cheese","quesadilla","loaded quesadilla","nachos supreme","loaded nachos","chipotle bowl","mission burrito","smash burger","animal style","double double","triple triple","loaded burger","bacon burger","bbq burger","mushroom swiss","patty melt","fried bologna","pulled pork sandwich","bbq sandwich","chicken sandwich","popcorn shrimp","coconut shrimp","fried shrimp","lobster roll","clam chowder bread bowl","deep dish","stuffed crust","extra cheese","double pepperoni","meat lovers","supreme pizza","hawaiian pizza","buffalo wings","wings","boneless wings","lemon pepper wings","garlic parmesan wings","teriyaki wings","bbq wings","dry rub wings","ranch dressing","blue cheese dressing","thousand island","caesar dressing","honey mustard","special sauce"];
@@ -119,7 +158,7 @@ function isJunkFood(foodName){
   return JUNK_FOODS.some(j=>lower.includes(j));
 }
 
-function getMotivationMessage(type,mode,userName,data={}){
+function getMotivationMessage(type,mode,userName,data={},isBulk=false){
   const name=userName?` ${userName}`:"";
   if(mode==="none"){
     if(type==="weight_saved")return"Weight saved ✓";
@@ -128,9 +167,9 @@ function getMotivationMessage(type,mode,userName,data={}){
     return"Saved ✓";
   }
   if(mode==="uplifting"){
-    if(type==="weight_down")return`⬇️ Down ${data.diff} lbs. Keep it up!`;
-    if(type==="weight_up_small")return`Slight uptick. Could be water weight. Stay consistent!`;
-    if(type==="weight_up_big")return`Up ${data.diff} lbs. Happens to everyone. Reset and push forward 💪`;
+    if(type==="weight_down")return isBulk?`Down ${data.diff} lbs${name}. Adjust your intake. Keep pushing.`:`⬇️ Down ${data.diff} lbs. Keep it up!`;
+    if(type==="weight_up_small")return isBulk?`Up ${data.diff} lbs${name}. Moving in the right direction.`:`Slight uptick. Could be water weight. Stay consistent!`;
+    if(type==="weight_up_big")return isBulk?`Up ${data.diff} lbs${name}. That's what we want. Keep building.`:`Up ${data.diff} lbs. Happens to everyone. Reset and push forward 💪`;
     if(type==="weight_same")return`Weight saved ✓`;
     if(type==="workout_saved")return`Crushed it! 💪 Great work today.`;
     if(type==="food_logged")return`Food logged ✓`;
@@ -138,9 +177,9 @@ function getMotivationMessage(type,mode,userName,data={}){
     return"Saved ✓";
   }
   if(mode==="drill"){
-    if(type==="weight_down")return`⬇️ Down ${data.diff} lbs${name}. Good. Keep going.`;
-    if(type==="weight_up_small")return`Up ${data.diff} lbs. Could be water. Stay on protocol.`;
-    if(type==="weight_up_big")return`Up ${data.diff} lbs${name}. What happened? Get back on track. Now.`;
+    if(type==="weight_down")return isBulk?`Down ${data.diff} lbs${name}. That's the wrong direction. Eat more.`:`⬇️ Down ${data.diff} lbs${name}. Good. Keep going.`;
+    if(type==="weight_up_small")return isBulk?`Up ${data.diff} lbs${name}. Small but moving. Keep eating.`:`Up ${data.diff} lbs. Could be water. Stay on protocol.`;
+    if(type==="weight_up_big")return isBulk?`Up ${data.diff} lbs${name}. Now that's a gain. Keep building.`:`Up ${data.diff} lbs${name}. What happened? Get back on track. Now.`;
     if(type==="weight_same")return`Weight saved ✓`;
     if(type==="workout_saved")return`Good${name}. Show up again tomorrow. No excuses.`;
     if(type==="food_logged")return`Food logged ✓`;
@@ -171,6 +210,28 @@ function getMotivationMessage(type,mode,userName,data={}){
     }
     return"Saved ✓";
   }
+}
+
+function getWeeklyRecapMessage(lostThisWeek,workoutCount,avgCals,avgProtein,streak,isBulk){
+  if(isBulk){
+    if(lostThisWeek===null)return"Log your weight and food this week to see your recap.";
+    const gained=-lostThisWeek;
+    if(gained>=2)return"🔥 Solid bulk week. The scale is moving in the right direction.";
+    if(gained>=0.5)return"💪 Gaining steadily. Stay consistent with your intake.";
+    if(gained>=0)return"⚡ Minimal gain this week. Push the calories a bit more.";
+    return"The scale went down this week. Time to eat more. Bulk is a commitment.";
+  }
+  if(lostThisWeek===null)return"Log your weight and food this week to see your recap.";
+  if(lostThisWeek>=2&&workoutCount>=3)return"🔥 Incredible week. Lost weight AND trained hard. That's the formula.";
+  if(lostThisWeek>=2)return"🔥 Incredible week. Keep that momentum.";
+  if(lostThisWeek>=1&&workoutCount>=3)return"💪 Solid all around. Weight down, workouts in. Stay the course.";
+  if(lostThisWeek>=1)return"💪 Solid progress. Stay the course.";
+  if(lostThisWeek>0)return"⚡ Every bit counts. Keep going.";
+  if(lostThisWeek===0)return"Held the line this week. Now push forward.";
+  if(lostThisWeek<0&&lostThisWeek>-2)return"Scale went up a little. Don't spiral. Reset and go.";
+  if(lostThisWeek<=-2)return"Tough week on the scale. The comeback starts right now.";
+  if(workoutCount>=4)return"You trained hard this week. The scale will catch up.";
+  return"New week. Clean slate. Let's go.";
 }
 
 function usePersistedState(key,seed) {
@@ -349,6 +410,8 @@ export default function App() {
   const [workouts,setWorkouts]=usePersistedState("mr_workouts",[]);
   const [mySupplements,setMySupplements]=usePersistedState("my_supplements_v2",[]);
   const [takenToday,setTakenToday]=usePersistedState("supp_taken_"+todayISO(),[]);
+  const [notes,setNotes]=usePersistedState("axion_notes",[]);
+  const [waterLog,setWaterLog]=usePersistedState("axion_water",[]);
   const [apiKey,setApiKey]=useApiKey();
   const [themeName,setThemeName]=usePersistedState("axion_theme","green");
   const [motivationMode,setMotivationMode]=usePersistedState("axion_motivation_mode","uplifting");
@@ -357,18 +420,18 @@ export default function App() {
 
   const [tab,setTab]=useState("dashboard");
   const [saved,setSaved]=useState("");
-   const [junkAlert,setJunkAlert]=useState(null);
-  const [weightAlert,setWeightAlert]=useState(null);
-  const [upliftAlert,setUpliftAlert]=useState(null);
-  const [pinAlert,setPinAlert]=useState(null);
   const [showSettings,setShowSettings]=useState(false);
   const [tempKey,setTempKey]=useState("");
   const [milestone,setMilestone]=useState(null);
   const [confirm,setConfirm]=useState(null);
   const [suppReminder,setSuppReminder]=useState(false);
   const [weeklyRecap,setWeeklyRecap]=useState(null);
-  const [setupForm,setSetupForm]=useState({name:"",heightFeet:"",heightInches:"",startWeight:"",targetWeight:"",startDate:todayISO(),activityLevel:"moderate",agreed:false});
+  const [junkAlert,setJunkAlert]=useState(null);
+  const [weightAlert,setWeightAlert]=useState(null);
+  const [upliftAlert,setUpliftAlert]=useState(null);
+  const [pinAlert,setPinAlert]=useState(null);
 
+  const [setupForm,setSetupForm]=useState({name:"",heightFeet:"",heightInches:"",startWeight:"",targetWeight:"",startDate:todayISO(),activityLevel:"moderate",agreed:false});
   const [weightForm,setWeightForm]=useState({date:todayISO(),weight:"",type:"Morning",note:""});
   const [expandedWeightDay,setExpandedWeightDay]=useState(null);
 
@@ -416,13 +479,19 @@ export default function App() {
   const [doseNoteText,setDoseNoteText]=useState("");
   const [editingGoal,setEditingGoal]=useState(false);
 
+  const [noteText,setNoteText]=useState("");
+  const [noteDate,setNoteDate]=useState(todayISO());
+  const [expandedNoteDay,setExpandedNoteDay]=useState(null);
+
   const sortedWeights=useMemo(()=>(weights||[]).slice().sort((a,b)=>new Date(a.date)-new Date(b.date)),[weights]);
   const latestWeight=sortedWeights[sortedWeights.length-1]||{id:0,date:todayISO(),weight:START_WEIGHT||0};
   const lowestWeight=sortedWeights.length?Math.min(...sortedWeights.map(w=>+w.weight)):START_WEIGHT;
-  const totalLost=START_WEIGHT-+latestWeight.weight;
-  const remainingToGoal=+latestWeight.weight-TARGET_WEIGHT;
-  const avgPerWeek=totalLost/weeksBetween(START_DATE,latestWeight.date);
-  const progressPct=Math.max(0,Math.min(100,(totalLost/(START_WEIGHT-TARGET_WEIGHT))*100));
+  const highestWeight=sortedWeights.length?Math.max(...sortedWeights.map(w=>+w.weight)):START_WEIGHT;
+
+  const totalChange=IS_BULK?(+latestWeight.weight-START_WEIGHT):(START_WEIGHT-+latestWeight.weight);
+  const remainingToGoal=IS_BULK?(TARGET_WEIGHT-+latestWeight.weight):(+latestWeight.weight-TARGET_WEIGHT);
+  const avgPerWeek=totalChange/weeksBetween(START_DATE,latestWeight.date);
+  const progressPct=Math.max(0,Math.min(100,IS_BULK?((+latestWeight.weight-START_WEIGHT)/(TARGET_WEIGHT-START_WEIGHT))*100:((START_WEIGHT-+latestWeight.weight)/(START_WEIGHT-TARGET_WEIGHT))*100));
   const currentWeek=getWeekNumber(START_DATE,todayISO());
   const activePhase=RETA_PHASES.find(p=>{const [s,e]=p.weeks.split("-").map(Number);return currentWeek>=s&&currentWeek<=e;})||RETA_PHASES[0];
 
@@ -434,7 +503,9 @@ export default function App() {
   const todayMinutes=todayWorkouts.reduce((s,w)=>s+(w.minutes||0),0);
   const calorieTarget=Number(localStorage.getItem("tracker_calorie_target"))||null;
 
-  const projectedWeeksToGoal=avgPerWeek>0?Math.ceil(Math.max(0,Number(latestWeight.weight)-TARGET_WEIGHT)/avgPerWeek):999;
+  const todayWater=(waterLog||[]).filter(w=>w.date===today).reduce((s,w)=>s+(w.oz||0),0);
+
+  const projectedWeeksToGoal=avgPerWeek>0?Math.ceil(Math.max(0,remainingToGoal)/avgPerWeek):999;
   const projectedGoalDate=new Date();projectedGoalDate.setDate(projectedGoalDate.getDate()+projectedWeeksToGoal*7);
 
   const weekStart=new Date();weekStart.setDate(weekStart.getDate()-weekStart.getDay());weekStart.setHours(0,0,0,0);
@@ -470,9 +541,10 @@ export default function App() {
   },[weights,foods,workouts,peptideLogs]);
 
   useEffect(()=>{
-    if(totalLost<=0)return;
-    const earned=MILESTONES.filter(m=>{
-      if(m.lbs)return totalLost>=m.lbs;
+    if(totalChange<=0)return;
+    const milestoneList=IS_BULK?BULK_MILESTONES:MILESTONES;
+    const earned=milestoneList.filter(m=>{
+      if(m.lbs)return totalChange>=m.lbs;
       if(m.pct)return progressPct>=m.pct;
       return false;
     });
@@ -485,7 +557,7 @@ export default function App() {
       localStorage.setItem(key,JSON.stringify(newSeen));
       setTimeout(()=>setMilestone(null),4000);
     }
-  },[totalLost,progressPct]);
+  },[totalChange,progressPct]);
 
   useEffect(()=>{
     if(mySupplements.length===0)return;
@@ -500,12 +572,15 @@ export default function App() {
   },[mySupplements,takenToday]);
 
   useEffect(()=>{
-    const day=new Date().getDay();
-    if(day!==0)return;
-    const key="axion_weekly_recap_"+todayISO();
-    if(localStorage.getItem(key))return;
-    const ws=new Date();ws.setDate(ws.getDate()-7);ws.setHours(0,0,0,0);
-    const we=new Date();we.setHours(23,59,59,999);
+    const now=new Date();
+    const day=now.getDay();
+    const sunday=new Date(now);
+    sunday.setDate(now.getDate()-day);
+    sunday.setHours(0,0,0,0);
+    const sundayKey="axion_weekly_recap_"+sunday.toISOString().slice(0,10);
+    if(localStorage.getItem(sundayKey))return;
+    const ws=new Date(sunday);ws.setDate(ws.getDate()-7);ws.setHours(0,0,0,0);
+    const we=new Date(sunday);we.setHours(23,59,59,999);
     const weekWeights=(weights||[]).filter(w=>new Date(w.date)>=ws&&new Date(w.date)<=we);
     const weekFoods=(foods||[]).filter(f=>new Date(f.date)>=ws&&new Date(f.date)<=we);
     const weekWorkouts=(workouts||[]).filter(w=>new Date(w.date)>=ws&&new Date(w.date)<=we);
@@ -515,9 +590,9 @@ export default function App() {
     const avgCals=weekFoods.length>0?Math.round(weekFoods.reduce((s,f)=>s+(f.calories||0),0)/Math.max(1,new Set(weekFoods.map(f=>f.date)).size)):null;
     const avgProtein=weekFoods.length>0?Math.round(weekFoods.reduce((s,f)=>s+(f.protein||0),0)/Math.max(1,new Set(weekFoods.map(f=>f.date)).size)):null;
     const totalMins=weekWorkouts.reduce((s,w)=>s+(w.minutes||0),0);
-    localStorage.setItem(key,"shown");
-    setWeeklyRecap({lostThisWeek,avgCals,avgProtein,totalMins,workoutCount:weekWorkouts.length,streak});
+    setWeeklyRecap({lostThisWeek,avgCals,avgProtein,totalMins,workoutCount:weekWorkouts.length,streak,sundayKey,isBulk:IS_BULK});
   },[weights,foods,workouts,streak]);
+
   useEffect(()=>{
     const todayDay=["Sun","Mon","Tue","Wed","Thu","Fri","Sat"][new Date().getDay()];
     const duePeptides=(peptideStack||[]).filter(p=>p.status==="active"&&(p.pinDays||[]).includes(todayDay));
@@ -532,7 +607,6 @@ export default function App() {
       return;
     }
     if(hour>=20&&!localStorage.getItem(eveningKey)){
-      const loggedToday=duePeptides.filter(p=>(peptideLogs[p.id]||[]).some(l=>l.date===todayISO()));
       const unlogged=duePeptides.filter(p=>!(peptideLogs[p.id]||[]).some(l=>l.date===todayISO()));
       if(unlogged.length===0)return;
       localStorage.setItem(eveningKey,"shown");
@@ -563,64 +637,100 @@ export default function App() {
     }
     setWeights([...(weights||[]),{...weightForm,id:uid(),weight:curr}]);
     setWeightForm({date:todayISO(),weight:"",type:"Morning",note:""});
-    if(motivationMode==="drill"&&msgType==="weight_up_big"){
-      const gainRoasts=[
-        `Up ${Math.abs(diff)} lbs${userName?" "+userName:""}. What happened? We need to talk.`,
-        `${Math.abs(diff)} lbs up. That's not water weight. That's a decision.`,
-        `The scale doesn't lie${userName?" "+userName:""}. ${Math.abs(diff)} lbs. What did you eat?`,
-        `Up ${Math.abs(diff)} lbs. I'm not yelling. But I'm thinking about it.`,
-        `${Math.abs(diff)} lbs${userName?" "+userName:""}. After all that work. Come on.`,
-        `That's ${Math.abs(diff)} lbs in the wrong direction. Reset. Now.`,
-        `Up ${Math.abs(diff)} lbs. The protocol exists for a reason. Use it.`,
-        `${Math.abs(diff)} lbs up${userName?" "+userName:""}. I saw what you logged this week.`,
-        `That's a ${Math.abs(diff)} lb gain. Not acceptable. Get back on track.`,
-        `Up ${Math.abs(diff)} lbs. We don't panic. But we do better tomorrow.`,
-      ];
-      setWeightAlert({msg:gainRoasts[Math.floor(Math.random()*gainRoasts.length)],type:"gain"});
-    } else if(motivationMode==="drill"&&msgType==="weight_down"){
-      const lossRoasts=[
-        `Down ${Math.abs(diff)} lbs${userName?" "+userName:""}. Good. Don't get comfortable.`,
-        `${Math.abs(diff)} lbs gone. That's the job. Keep going.`,
-        `Down ${Math.abs(diff)} lbs. Noted. Now do it again.`,
-        `${Math.abs(diff)} lbs down${userName?" "+userName:""}. Respect. Don't slow down now.`,
-        `That's ${Math.abs(diff)} lbs lost. Good. You're not done yet.`,
-        `Down ${Math.abs(diff)} lbs. The work is paying off. Stay locked in.`,
-        `${Math.abs(diff)} lbs lighter${userName?" "+userName:""}. That's what discipline looks like.`,
-        `Down ${Math.abs(diff)} lbs. Good. The goal doesn't care about your feelings.`,
-        `${Math.abs(diff)} lbs gone${userName?" "+userName:""}. Keep that energy.`,
-        `Down ${Math.abs(diff)} lbs. Now push harder.`,
-      ];
-      setWeightAlert({msg:lossRoasts[Math.floor(Math.random()*lossRoasts.length)],type:"loss"});
-} else if(motivationMode==="uplifting"&&msgType==="weight_down"){
-      const upMessages=[
-        `⬇️ Down ${Math.abs(diff)} lbs${userName?" "+userName:""}. You're doing it. Keep going.`,
-        `${Math.abs(diff)} lbs gone${userName?" "+userName:""}. That's real progress. Be proud.`,
-        `Down ${Math.abs(diff)} lbs. Every single pound counts. Keep showing up.`,
-        `${Math.abs(diff)} lbs lighter${userName?" "+userName:""}. The work is working.`,
-        `Down ${Math.abs(diff)} lbs. That's not luck. That's discipline.`,
-        `${Math.abs(diff)} lbs down${userName?" "+userName:""}. You earned that. Don't stop now.`,
-        `Look at that. Down ${Math.abs(diff)} lbs. You should be proud of yourself.`,
-        `${Math.abs(diff)} lbs gone. The goal is getting closer${userName?" "+userName:""}. Stay the course.`,
-        `Down ${Math.abs(diff)} lbs${userName?" "+userName:""}. This is what consistency looks like.`,
-        `${Math.abs(diff)} lbs lighter. You're proving something to yourself right now.`,
-      ];
-      setUpliftAlert(upMessages[Math.floor(Math.random()*upMessages.length)]);
-    } else if(motivationMode==="uplifting"&&msgType==="weight_up_big"){
-      const upGainMessages=[
-        `Up ${Math.abs(diff)} lbs${userName?" "+userName:""}. That's okay. One day doesn't define the journey.`,
-        `${Math.abs(diff)} lbs up. Bodies fluctuate. You're still in this. Reset and go.`,
-        `Up ${Math.abs(diff)} lbs${userName?" "+userName:""}. Don't spiral. Just get back on protocol tomorrow.`,
-        `${Math.abs(diff)} lbs up. Happens to everyone. What matters is what you do next.`,
-        `Up ${Math.abs(diff)} lbs${userName?" "+userName:""}. Zoom out. The trend is still yours to control.`,
-        `${Math.abs(diff)} lbs up. Could be water, could be stress. Stay consistent and trust the process.`,
-        `Up ${Math.abs(diff)} lbs${userName?" "+userName:""}. One number doesn't erase all your progress.`,
-        `${Math.abs(diff)} lbs up. Don't let this shake you. You've got this.`,
-        `Up ${Math.abs(diff)} lbs${userName?" "+userName:""}. Breathe. Reset. Tomorrow is a new day.`,
-        `${Math.abs(diff)} lbs up. The comeback is always stronger than the setback.`,
-      ];
-      setUpliftAlert(upGainMessages[Math.floor(Math.random()*upGainMessages.length)]);
+    if(motivationMode==="drill"){
+      const isBadGain=IS_BULK?(msgType==="weight_down"):(msgType==="weight_up_big");
+      const isGoodMove=IS_BULK?(msgType==="weight_up_big"):(msgType==="weight_down");
+      if(isBadGain){
+        const gainRoasts=IS_BULK?[
+          `Down ${Math.abs(diff)} lbs${userName?" "+userName:""}. That's the wrong direction. Eat more.`,
+          `${Math.abs(diff)} lbs down${userName?" "+userName:""}. You're supposed to be building. Adjust your intake.`,
+          `Lost ${Math.abs(diff)} lbs${userName?" "+userName:""}. Bulk means eating enough. Are you?`,
+          `Down ${Math.abs(diff)} lbs. The scale is going the wrong way${userName?" "+userName:""}. Fix it.`,
+          `${Math.abs(diff)} lbs down. That's not a bulk${userName?" "+userName:""}. That's a cut. Eat more.`,
+        ]:[
+          `Up ${Math.abs(diff)} lbs${userName?" "+userName:""}. What happened? We need to talk.`,
+          `${Math.abs(diff)} lbs up. That's not water weight. That's a decision.`,
+          `The scale doesn't lie${userName?" "+userName:""}. ${Math.abs(diff)} lbs. What did you eat?`,
+          `Up ${Math.abs(diff)} lbs. I'm not yelling. But I'm thinking about it.`,
+          `${Math.abs(diff)} lbs${userName?" "+userName:""}. After all that work. Come on.`,
+          `That's ${Math.abs(diff)} lbs in the wrong direction. Reset. Now.`,
+          `Up ${Math.abs(diff)} lbs. The protocol exists for a reason. Use it.`,
+          `${Math.abs(diff)} lbs up${userName?" "+userName:""}. I saw what you logged this week.`,
+          `That's a ${Math.abs(diff)} lb gain. Not acceptable. Get back on track.`,
+          `Up ${Math.abs(diff)} lbs. We don't panic. But we do better tomorrow.`,
+        ];
+        setWeightAlert({msg:gainRoasts[Math.floor(Math.random()*gainRoasts.length)],type:"bad"});
+      } else if(isGoodMove){
+        const lossRoasts=IS_BULK?[
+          `Up ${Math.abs(diff)} lbs${userName?" "+userName:""}. Now that's a gain. Keep building.`,
+          `${Math.abs(diff)} lbs up${userName?" "+userName:""}. The work is paying off. Stay consistent.`,
+          `Gained ${Math.abs(diff)} lbs${userName?" "+userName:""}. That's what the protocol is for. Keep eating.`,
+          `Up ${Math.abs(diff)} lbs. Good${userName?" "+userName:""}. Now do it again next week.`,
+          `${Math.abs(diff)} lbs gained${userName?" "+userName:""}. Noted. Keep the surplus going.`,
+        ]:[
+          `Down ${Math.abs(diff)} lbs${userName?" "+userName:""}. Good. Don't get comfortable.`,
+          `${Math.abs(diff)} lbs gone. That's the job. Keep going.`,
+          `Down ${Math.abs(diff)} lbs. Noted. Now do it again.`,
+          `${Math.abs(diff)} lbs down${userName?" "+userName:""}. Respect. Don't slow down now.`,
+          `That's ${Math.abs(diff)} lbs lost. Good. You're not done yet.`,
+          `Down ${Math.abs(diff)} lbs. The work is paying off. Stay locked in.`,
+          `${Math.abs(diff)} lbs lighter${userName?" "+userName:""}. That's what discipline looks like.`,
+          `Down ${Math.abs(diff)} lbs. Good. The goal doesn't care about your feelings.`,
+          `${Math.abs(diff)} lbs gone${userName?" "+userName:""}. Keep that energy.`,
+          `Down ${Math.abs(diff)} lbs. Now push harder.`,
+        ];
+        setWeightAlert({msg:lossRoasts[Math.floor(Math.random()*lossRoasts.length)],type:"good"});
+      } else {
+        flash(getMotivationMessage(msgType,motivationMode,userName,{diff:Math.abs(diff||0)},IS_BULK));
+      }
+    } else if(motivationMode==="uplifting"){
+      const isGoodMove=IS_BULK?(msgType==="weight_up_big"||msgType==="weight_up_small"):(msgType==="weight_down");
+      const isBadMove=IS_BULK?(msgType==="weight_down"):(msgType==="weight_up_big");
+      if(isGoodMove){
+        const upMessages=IS_BULK?[
+          `⬆️ Up ${Math.abs(diff)} lbs${userName?" "+userName:""}. The bulk is working. Keep it going.`,
+          `${Math.abs(diff)} lbs gained${userName?" "+userName:""}. That's real progress. Be proud.`,
+          `Up ${Math.abs(diff)} lbs. Every pound counts when you're building.`,
+          `${Math.abs(diff)} lbs heavier${userName?" "+userName:""}. The work is working.`,
+          `Up ${Math.abs(diff)} lbs. That's not luck. That's consistency.`,
+        ]:[
+          `⬇️ Down ${Math.abs(diff)} lbs${userName?" "+userName:""}. You're doing it. Keep going.`,
+          `${Math.abs(diff)} lbs gone${userName?" "+userName:""}. That's real progress. Be proud.`,
+          `Down ${Math.abs(diff)} lbs. Every single pound counts. Keep showing up.`,
+          `${Math.abs(diff)} lbs lighter${userName?" "+userName:""}. The work is working.`,
+          `Down ${Math.abs(diff)} lbs. That's not luck. That's discipline.`,
+          `${Math.abs(diff)} lbs down${userName?" "+userName:""}. You earned that. Don't stop now.`,
+          `Look at that. Down ${Math.abs(diff)} lbs. You should be proud of yourself.`,
+          `${Math.abs(diff)} lbs gone. The goal is getting closer${userName?" "+userName:""}. Stay the course.`,
+          `Down ${Math.abs(diff)} lbs${userName?" "+userName:""}. This is what consistency looks like.`,
+          `${Math.abs(diff)} lbs lighter. You're proving something to yourself right now.`,
+        ];
+        setUpliftAlert(upMessages[Math.floor(Math.random()*upMessages.length)]);
+      } else if(isBadMove){
+        const upGainMessages=IS_BULK?[
+          `Down ${Math.abs(diff)} lbs${userName?" "+userName:""}. That's okay. Adjust your intake and keep going.`,
+          `${Math.abs(diff)} lbs down. Bodies fluctuate. Push the calories a bit more.`,
+          `Down ${Math.abs(diff)} lbs${userName?" "+userName:""}. Don't spiral. Eat a bit more this week.`,
+          `${Math.abs(diff)} lbs down. Happens during a bulk. Stay consistent and trust the process.`,
+          `Down ${Math.abs(diff)} lbs${userName?" "+userName:""}. Zoom out. The trend is still yours to control.`,
+        ]:[
+          `Up ${Math.abs(diff)} lbs${userName?" "+userName:""}. That's okay. One day doesn't define the journey.`,
+          `${Math.abs(diff)} lbs up. Bodies fluctuate. You're still in this. Reset and go.`,
+          `Up ${Math.abs(diff)} lbs${userName?" "+userName:""}. Don't spiral. Just get back on protocol tomorrow.`,
+          `${Math.abs(diff)} lbs up. Happens to everyone. What matters is what you do next.`,
+          `Up ${Math.abs(diff)} lbs${userName?" "+userName:""}. Zoom out. The trend is still yours to control.`,
+          `${Math.abs(diff)} lbs up. Could be water, could be stress. Stay consistent and trust the process.`,
+          `Up ${Math.abs(diff)} lbs${userName?" "+userName:""}. One number doesn't erase all your progress.`,
+          `${Math.abs(diff)} lbs up. Don't let this shake you. You've got this.`,
+          `Up ${Math.abs(diff)} lbs${userName?" "+userName:""}. Breathe. Reset. Tomorrow is a new day.`,
+          `${Math.abs(diff)} lbs up. The comeback is always stronger than the setback.`,
+        ];
+        setUpliftAlert(upGainMessages[Math.floor(Math.random()*upGainMessages.length)]);
+      } else {
+        flash(getMotivationMessage(msgType,motivationMode,userName,{diff:Math.abs(diff||0)},IS_BULK));
+      }
     } else {
-      flash(getMotivationMessage(msgType,motivationMode,userName,{diff:Math.abs(diff||0)}));
+      flash(getMotivationMessage(msgType,motivationMode,userName,{diff:Math.abs(diff||0)},IS_BULK));
     }
   }
 
@@ -656,8 +766,20 @@ export default function App() {
       const w={id:uid(),date:workoutForm.date||todayISO(),type:String(workoutForm.type||""),minutes:+(workoutForm.minutes||0),calories:+(workoutForm.calories||0),intensity:String(workoutForm.intensity||""),note:String(workoutForm.note||""),runType:String(workoutForm.runType||""),miles:String(workoutForm.miles||""),runTime:String(workoutForm.runTime||"")};
       setWorkouts(prev=>[...(prev||[]),w]);
       setWorkoutForm({date:todayISO(),type:"",minutes:"",note:"",calories:"",intensity:"",runType:"",miles:"",runTime:""});
-      flash(getMotivationMessage("workout_saved",motivationMode,userName));
+      flash(getMotivationMessage("workout_saved",motivationMode,userName,{},IS_BULK));
     }catch(e){console.error("Workout error:",e);}
+  }
+
+  function addNote(){
+    if(!noteText.trim())return;
+    setNotes(prev=>[...(prev||[]),{id:uid(),date:noteDate,text:noteText.trim(),created:new Date().toISOString()}]);
+    setNoteText("");
+    flash("Note saved ✓");
+  }
+
+  function addWater(oz){
+    setWaterLog(prev=>[...(prev||[]),{id:uid(),date:todayISO(),oz}]);
+    flash(`+${oz}oz logged ✓`);
   }
 
   function toggleTaken(id){setTakenToday(prev=>prev.includes(id)?prev.filter(x=>x!==id):[...prev,id]);}
@@ -672,8 +794,8 @@ export default function App() {
 
   function addPeptideToStack(){
     if(!pendingPep)return;
-    setPeptideStack(prev=>[...prev,{id:uid(),name:pendingPep.name,category:pendingPep.category,desc:pendingPep.desc,dose:pepForm.dose||"—",unit:pepForm.unit||pendingPep.unit||"mg",frequency:pepForm.frequency||pendingPep.frequency||"",cycle:pepForm.cycle||pendingPep.cycle||"",notes:pepForm.notes,status:pepForm.status,dateAdded:todayISO()}]);
-    setPepView("stack");setPendingPep(null);setPepForm({dose:"",unit:"mg",frequency:"",cycle:"",notes:"",status:"active"});
+    setPeptideStack(prev=>[...prev,{id:uid(),name:pendingPep.name,category:pendingPep.category,desc:pendingPep.desc,dose:pepForm.dose||"—",unit:pepForm.unit||pendingPep.unit||"mg",frequency:pepForm.frequency||pendingPep.frequency||"",cycle:pepForm.cycle||pendingPep.cycle||"",notes:pepForm.notes,status:pepForm.status,pinDays:pepForm.pinDays||[],dateAdded:todayISO()}]);
+    setPepView("stack");setPendingPep(null);setPepForm({dose:"",unit:"mg",frequency:"",cycle:"",notes:"",status:"active",pinDays:[]});
     flash("Peptide added ✓");
   }
   function savePepEdit(){setPeptideStack(prev=>prev.map(p=>p.id===editingPep.id?{...p,dose:pepForm.dose||"—",unit:pepForm.unit,frequency:pepForm.frequency,cycle:pepForm.cycle,notes:pepForm.notes,status:pepForm.status,pinDays:pepForm.pinDays||[]}:p));setEditingPep(null);setPepView("stack");}
@@ -687,15 +809,16 @@ export default function App() {
     const activeStack=(peptideStack||[]).filter(p=>p.status==="active").map(p=>`${p.name} ${p.dose}${p.unit} ${p.frequency}`).join(", ");
     const recentFoods=(foods||[]).slice(-5).map(f=>`${f.item} (${f.calories}cal/${f.protein}p)`).join(", ");
     const recentWorkouts=(workouts||[]).slice(-5).map(w=>`${w.type} ${w.minutes}min${w.intensity?" "+w.intensity:""}`).join(", ");
+    const goalType=IS_BULK?"bulking (gaining muscle mass)":"cutting (losing fat while preserving muscle)";
     try{
-      const data=await callClaude(apiKey,{messages:[{role:"user",content:`Clinical health analyst. Peptide stack: ${activeStack||"none"}. Weight: ${START_WEIGHT}->${latestWeight.weight}lbs (${totalLost.toFixed(1)}lbs lost, ${pctLost(latestWeight.weight)}%). Week ${currentWeek}, ${activePhase.phase} phase. Avg loss: ${avgPerWeek.toFixed(2)} lbs/wk. Streak: ${streak} days. Food: ${recentFoods||"none"}. Training: ${recentWorkouts||"none"}. Write 3-4 sentence personalized breakdown. Clinical but motivating. Reference specific numbers.`}]});
+      const data=await callClaude(apiKey,{messages:[{role:"user",content:`Clinical health analyst. Goal: ${goalType}. Peptide stack: ${activeStack||"none"}. Weight: ${START_WEIGHT}->${latestWeight.weight}lbs (${totalChange.toFixed(1)}lbs ${IS_BULK?"gained":"lost"}, ${pctProgress(latestWeight.weight)}%). Week ${currentWeek}. Avg ${IS_BULK?"gain":"loss"}: ${avgPerWeek.toFixed(2)} lbs/wk. Streak: ${streak} days. Food: ${recentFoods||"none"}. Training: ${recentWorkouts||"none"}. Write 3-4 sentence personalized breakdown. Clinical but motivating. Reference specific numbers. Tailor advice to their ${IS_BULK?"bulk":"cut"} goal.`}]});
       setAiInsight(data.content?.map(b=>b.text||"").join("")||"Unable to generate insight.");
     }catch(e){setAiInsight("Insight unavailable: "+e.message);}
     setInsightLoading(false);
   }
 
-  const TABS=["dashboard","weight","doses","peptides","food","workouts","supplements","calculator"];
-  const ICONS={dashboard:Zap,weight:Scale,doses:Syringe,peptides:Dna,food:Utensils,workouts:Dumbbell,supplements:Pill,calculator:Calculator};
+  const TABS=["dashboard","weight","doses","peptides","food","workouts","supplements","notes","calculator"];
+  const ICONS={dashboard:Zap,weight:Scale,doses:Syringe,peptides:Dna,food:Utensils,workouts:Dumbbell,supplements:Pill,notes:BookOpen,calculator:Calculator};
 
   const DS={
     page:{minHeight:"100vh",background:`radial-gradient(circle at top,${theme.bg} 0%,#020403 24%,#000000 72%)`,color:"#f8fafc",padding:"42px 12px 48px",fontFamily:"Inter,Arial,sans-serif",maxWidth:430,margin:"0 auto"},
@@ -703,7 +826,7 @@ export default function App() {
     card:{background:"linear-gradient(145deg,rgba(0,0,0,0.98),rgba(2,8,5,0.98))",border:`1px solid ${theme.border}`,borderRadius:22,padding:18,boxShadow:`0 0 22px ${theme.glow}`},
     btn:{gridColumn:"2",background:`linear-gradient(135deg,${theme.primaryDark},${theme.primary})`,color:"#020617",border:"none",borderRadius:12,padding:"12px 16px",cursor:"pointer",fontWeight:900,fontSize:14,fontFamily:"monospace",letterSpacing:1,marginTop:4,boxShadow:`0 0 22px ${theme.glowStrong}`},
     input:{background:"#000000",border:`1px solid ${theme.border}`,color:"#f8fafc",borderRadius:12,padding:"11px 13px",fontSize:14,fontFamily:"Inter,Arial,sans-serif",width:"100%",boxSizing:"border-box",outline:"none"},
-    activeTab:{flex:"1 1 80px",display:"flex",flexDirection:"column",alignItems:"center",gap:8,padding:"17px 8px",background:`linear-gradient(145deg,rgba(0,0,0,1),${theme.tabBg})`,border:`1px solid ${theme.primary}`,borderRadius:20,cursor:"pointer",color:theme.primary,fontFamily:"monospace",boxShadow:`0 0 24px ${theme.glowStrong}`,transform:"translateY(-2px)",transition:"all 0.18s ease"},
+    activeTab:{flex:"1 1 60px",display:"flex",flexDirection:"column",alignItems:"center",gap:6,padding:"14px 4px",background:`linear-gradient(145deg,rgba(0,0,0,1),${theme.tabBg})`,border:`1px solid ${theme.primary}`,borderRadius:18,cursor:"pointer",color:theme.primary,fontFamily:"monospace",boxShadow:`0 0 24px ${theme.glowStrong}`,transform:"translateY(-2px)",transition:"all 0.18s ease"},
     pillActive:{background:"#1e3a5f",border:`1px solid ${theme.primary}`,color:theme.primary,borderRadius:20,padding:"5px 12px",cursor:"pointer",fontSize:12,fontFamily:"monospace"},
     goalBarFill:{height:"100%",background:`linear-gradient(90deg,${theme.primaryDark},${theme.primary})`,borderRadius:999},
     goalCircle:{width:110,height:110,borderRadius:"50%",border:"2px solid #1e293b",background:"radial-gradient(circle,#020617 45%,#0f172a 100%)",display:"flex",flexDirection:"column",alignItems:"center",justifyContent:"center",justifySelf:"center",boxShadow:`0 0 0 6px ${theme.glow},inset 0 0 24px ${theme.glow}`},
@@ -758,13 +881,13 @@ export default function App() {
             <label style={formLabel}>Start Date</label><input style={DS.input} type="date" value={setupForm.startDate} onChange={e=>setSetupForm({...setupForm,startDate:e.target.value})}/>
             <label style={formLabel}>Activity</label>
             <select style={DS.input} value={setupForm.activityLevel} onChange={e=>setSetupForm({...setupForm,activityLevel:e.target.value})}><option value="sedentary">Sedentary</option><option value="light">Light 1-3x/wk</option><option value="moderate">Moderate 3-5x/wk</option><option value="active">Active 6-7x/wk</option><option value="very_active">Very active</option></select>
-            {estimatedCalories>0&&<div style={{gridColumn:"1/-1",marginTop:8,padding:14,borderRadius:16,border:`1px solid ${theme.primary}`,background:"rgba(20,83,45,0.18)",color:theme.primary,fontSize:14,fontFamily:"monospace"}}>Estimated target: {estimatedCalories} cal/day for ~1 lb/week loss.</div>}
+            {estimatedCalories>0&&<div style={{gridColumn:"1/-1",marginTop:8,padding:14,borderRadius:16,border:`1px solid ${theme.primary}`,background:"rgba(20,83,45,0.18)",color:theme.primary,fontSize:14,fontFamily:"monospace"}}>Estimated target: {estimatedCalories} cal/day for ~1 lb/week {TARGET_WEIGHT<START_WEIGHT?"loss":"gain"}.</div>}
             <div style={{gridColumn:"1/-1",marginTop:8}}>
               <div style={{fontSize:11,color:"#64748b",fontFamily:"monospace",textTransform:"uppercase",letterSpacing:1,marginBottom:10}}>Choose your theme</div>
-              <div style={{display:"flex",gap:8}}>
+              <div style={{display:"flex",gap:6,flexWrap:"wrap"}}>
                 {Object.entries(THEMES).map(([k,t])=>(
-                  <button key={k} onClick={()=>setThemeName(k)} style={{flex:1,padding:"12px 4px",borderRadius:12,border:`2px solid ${themeName===k?t.primary:"#1e293b"}`,background:themeName===k?t.primary+"22":"#020617",cursor:"pointer",color:t.primary,fontSize:10,fontFamily:"monospace",fontWeight:700,transition:"all 0.15s"}}>
-                    <div style={{width:20,height:20,borderRadius:"50%",background:t.primary,margin:"0 auto 6px",boxShadow:themeName===k?`0 0 10px ${t.primary}`:"none"}}/>{t.label}
+                  <button key={k} onClick={()=>setThemeName(k)} style={{flex:"1 1 60px",padding:"10px 4px",borderRadius:12,border:`2px solid ${themeName===k?t.primary:"#1e293b"}`,background:themeName===k?t.primary+"22":"#020617",cursor:"pointer",color:t.primary,fontSize:10,fontFamily:"monospace",fontWeight:700,transition:"all 0.15s"}}>
+                    <div style={{width:18,height:18,borderRadius:"50%",background:t.primary,margin:"0 auto 5px",boxShadow:themeName===k?`0 0 10px ${t.primary}`:"none"}}/>{t.label}
                   </button>
                 ))}
               </div>
@@ -811,6 +934,8 @@ export default function App() {
           </div>
         </div>
       )}
+
+      {/* PIN ALERT */}
       {pinAlert&&(
         <div style={{position:"fixed",inset:0,background:"rgba(0,0,0,0.92)",display:"flex",alignItems:"center",justifyContent:"center",zIndex:600,padding:24}}>
           <div style={{background:"#0f172a",border:"2px solid #60a5fa",borderRadius:20,padding:32,maxWidth:340,width:"100%",textAlign:"center",boxShadow:"0 0 60px rgba(96,165,250,0.4)"}}>
@@ -823,6 +948,19 @@ export default function App() {
           </div>
         </div>
       )}
+
+      {/* WEIGHT ALERT */}
+      {weightAlert&&(
+        <div style={{position:"fixed",inset:0,background:"rgba(0,0,0,0.92)",display:"flex",alignItems:"center",justifyContent:"center",zIndex:600,padding:24}}>
+          <div style={{background:"#0f172a",border:`2px solid ${weightAlert.type==="good"?"#4ade80":"#ef4444"}`,borderRadius:20,padding:32,maxWidth:340,width:"100%",textAlign:"center",boxShadow:`0 0 60px ${weightAlert.type==="good"?"rgba(74,222,128,0.4)":"rgba(239,68,68,0.4)"}`}}>
+            <div style={{fontSize:48,marginBottom:8}}>{weightAlert.type==="good"?"💪💪💪":"❗❗❗"}</div>
+            <div style={{fontSize:13,color:weightAlert.type==="good"?"#4ade80":"#ef4444",fontFamily:"monospace",fontWeight:700,marginBottom:20,lineHeight:1.8}}>{weightAlert.msg}</div>
+            <button style={{background:weightAlert.type==="good"?"#14532d":"#450a0a",border:`2px solid ${weightAlert.type==="good"?"#4ade80":"#ef4444"}`,color:weightAlert.type==="good"?"#4ade80":"#ef4444",borderRadius:12,padding:"12px 28px",cursor:"pointer",fontFamily:"monospace",fontWeight:900,fontSize:16}} onClick={()=>setWeightAlert(null)}>✕</button>
+          </div>
+        </div>
+      )}
+
+      {/* UPLIFT ALERT */}
       {upliftAlert&&(
         <div style={{position:"fixed",inset:0,background:"rgba(0,0,0,0.92)",display:"flex",alignItems:"center",justifyContent:"center",zIndex:600,padding:24}}>
           <div style={{background:"#0f172a",border:"2px solid #60a5fa",borderRadius:20,padding:32,maxWidth:340,width:"100%",textAlign:"center",boxShadow:"0 0 60px rgba(96,165,250,0.4)"}}>
@@ -832,15 +970,8 @@ export default function App() {
           </div>
         </div>
       )}
-      {weightAlert&&(
-        <div style={{position:"fixed",inset:0,background:"rgba(0,0,0,0.92)",display:"flex",alignItems:"center",justifyContent:"center",zIndex:600,padding:24}}>
-          <div style={{background:"#0f172a",border:`2px solid ${weightAlert.type==="gain"?"#ef4444":"#4ade80"}`,borderRadius:20,padding:32,maxWidth:340,width:"100%",textAlign:"center",boxShadow:`0 0 60px ${weightAlert.type==="gain"?"rgba(239,68,68,0.4)":"rgba(74,222,128,0.4)"}`}}>
-            <div style={{fontSize:48,marginBottom:8}}>{weightAlert.type==="gain"?"❗❗❗":"💪💪💪"}</div>
-            <div style={{fontSize:13,color:weightAlert.type==="gain"?"#ef4444":"#4ade80",fontFamily:"monospace",fontWeight:700,marginBottom:20,lineHeight:1.8}}>{weightAlert.msg}</div>
-            <button style={{background:weightAlert.type==="gain"?"#450a0a":"#14532d",border:`2px solid ${weightAlert.type==="gain"?"#ef4444":"#4ade80"}`,color:weightAlert.type==="gain"?"#ef4444":"#4ade80",borderRadius:12,padding:"12px 28px",cursor:"pointer",fontFamily:"monospace",fontWeight:900,fontSize:16}} onClick={()=>setWeightAlert(null)}>✕</button>
-          </div>
-        </div>
-      )}
+
+      {/* JUNK ALERT */}
       {junkAlert&&(
         <div style={{position:"fixed",inset:0,background:"rgba(0,0,0,0.92)",display:"flex",alignItems:"center",justifyContent:"center",zIndex:600,padding:24}}>
           <div style={{background:"#0f172a",border:"2px solid #ef4444",borderRadius:20,padding:32,maxWidth:340,width:"100%",textAlign:"center",boxShadow:"0 0 60px rgba(239,68,68,0.4)"}}>
@@ -882,7 +1013,7 @@ export default function App() {
             </div>
             <div style={{display:"grid",gridTemplateColumns:"1fr 1fr",gap:10,marginBottom:20}}>
               {[
-                ["⚖️ Lost This Week",weeklyRecap.lostThisWeek!==null?`${weeklyRecap.lostThisWeek>0?"-":"+"}${Math.abs(weeklyRecap.lostThisWeek)} lbs`:"No data"],
+                [IS_BULK?"⚖️ Gained":"⚖️ Lost",weeklyRecap.lostThisWeek!==null?(IS_BULK?`+${Math.abs(weeklyRecap.lostThisWeek)} lbs`:`${weeklyRecap.lostThisWeek>0?"-":"+"}${Math.abs(weeklyRecap.lostThisWeek)} lbs`):"No data"],
                 ["🔥 Streak",`${weeklyRecap.streak} days`],
                 ["💪 Workouts",`${weeklyRecap.workoutCount} sessions`],
                 ["⏱️ Training",`${weeklyRecap.totalMins} min`],
@@ -895,14 +1026,12 @@ export default function App() {
                 </div>
               ))}
             </div>
-            {weeklyRecap.lostThisWeek!==null&&weeklyRecap.lostThisWeek>0&&(
-              <div style={{background:`linear-gradient(145deg,#020617,${theme.primary}11)`,border:`1px solid ${theme.primary}44`,borderRadius:12,padding:14,marginBottom:16,textAlign:"center"}}>
-                <div style={{fontSize:13,color:theme.primary,fontFamily:"monospace",fontWeight:700}}>
-                  {weeklyRecap.lostThisWeek>=2?"🔥 Incredible week. Keep that momentum.":weeklyRecap.lostThisWeek>=1?"💪 Solid progress. Stay the course.":"⚡ Every bit counts. Keep going."}
-                </div>
+            <div style={{background:`linear-gradient(145deg,#020617,${theme.primary}11)`,border:`1px solid ${theme.primary}44`,borderRadius:12,padding:14,marginBottom:16,textAlign:"center"}}>
+              <div style={{fontSize:13,color:theme.primary,fontFamily:"monospace",fontWeight:700,lineHeight:1.6}}>
+                {getWeeklyRecapMessage(weeklyRecap.lostThisWeek,weeklyRecap.workoutCount,weeklyRecap.avgCals,weeklyRecap.avgProtein,weeklyRecap.streak,weeklyRecap.isBulk)}
               </div>
-            )}
-            <button style={{width:"100%",background:`linear-gradient(135deg,${theme.primaryDark},${theme.primary})`,border:"none",color:"#020617",borderRadius:12,padding:"14px",cursor:"pointer",fontFamily:"monospace",fontWeight:900,fontSize:14,letterSpacing:1}} onClick={()=>setWeeklyRecap(null)}>LET'S CRUSH THIS WEEK</button>
+            </div>
+            <button style={{width:"100%",background:`linear-gradient(135deg,${theme.primaryDark},${theme.primary})`,border:"none",color:"#020617",borderRadius:12,padding:"14px",cursor:"pointer",fontFamily:"monospace",fontWeight:900,fontSize:14,letterSpacing:1}} onClick={()=>{if(weeklyRecap?.sundayKey)localStorage.setItem(weeklyRecap.sundayKey,"shown");setWeeklyRecap(null);}}>LET'S CRUSH THIS WEEK</button>
           </div>
         </div>
       )}
@@ -913,7 +1042,7 @@ export default function App() {
           <div style={{background:`linear-gradient(145deg,#020617,${theme.primary}22)`,border:`2px solid ${theme.primary}`,borderRadius:24,padding:32,textAlign:"center",maxWidth:320,boxShadow:`0 0 60px ${theme.glowStrong}`}}>
             <div style={{fontSize:64,lineHeight:1,marginBottom:16}}>{milestone.emoji}</div>
             <div style={{fontSize:28,fontWeight:900,color:theme.primary,fontFamily:"monospace",letterSpacing:2,marginBottom:8}}>{milestone.label}</div>
-            <div style={{fontSize:14,color:"#94a3b8",fontFamily:"monospace",marginBottom:24}}>Keep going. You're doing it.</div>
+            <div style={{fontSize:14,color:"#94a3b8",fontFamily:"monospace",marginBottom:24}}>{IS_BULK?"Keep building. You're doing it.":"Keep going. You're doing it."}</div>
             <button onClick={()=>setMilestone(null)} style={{background:theme.primary,color:"#020617",border:"none",borderRadius:12,padding:"12px 28px",fontWeight:900,fontSize:14,fontFamily:"monospace",cursor:"pointer"}}>LET'S GO</button>
           </div>
         </div>
@@ -929,7 +1058,7 @@ export default function App() {
         </button>
       </div>
 
-     {saved&&(
+      {saved&&(
         <div style={{position:"fixed",top:"50%",left:"50%",transform:"translate(-50%,-50%)",background:"#0f172a",color:theme.primary,border:`2px solid ${theme.primary}`,borderRadius:16,padding:"24px 32px",fontSize:15,fontFamily:"monospace",fontWeight:700,zIndex:600,whiteSpace:"nowrap",textAlign:"center",boxShadow:`0 0 60px ${theme.glowStrong}`,maxWidth:"80vw",wordBreak:"break-word"}}>
           {saved}
         </div>
@@ -940,9 +1069,9 @@ export default function App() {
           <div style={{background:"#0f172a",border:`1px solid ${theme.border}`,borderRadius:14,padding:20,maxWidth:480,width:"100%",maxHeight:"90vh",overflowY:"auto"}} onClick={e=>e.stopPropagation()}>
             <h2 style={{margin:"0 0 16px",fontSize:15,fontWeight:700,color:"#94a3b8",fontFamily:"monospace"}}>⚙️ Settings</h2>
             <div style={{fontSize:12,color:"#94a3b8",marginBottom:8}}><b style={{color:theme.primary}}>Theme Color</b></div>
-            <div style={{display:"flex",gap:8,marginBottom:20}}>
+            <div style={{display:"flex",gap:6,flexWrap:"wrap",marginBottom:20}}>
               {Object.entries(THEMES).map(([k,t])=>(
-                <button key={k} onClick={()=>setThemeName(k)} style={{flex:1,padding:"10px 4px",borderRadius:10,border:`2px solid ${themeName===k?t.primary:"#1e293b"}`,background:themeName===k?t.primary+"22":"#020617",cursor:"pointer",color:t.primary,fontSize:10,fontFamily:"monospace",fontWeight:700}}>
+                <button key={k} onClick={()=>setThemeName(k)} style={{flex:"1 1 60px",padding:"10px 4px",borderRadius:10,border:`2px solid ${themeName===k?t.primary:"#1e293b"}`,background:themeName===k?t.primary+"22":"#020617",cursor:"pointer",color:t.primary,fontSize:10,fontFamily:"monospace",fontWeight:700}}>
                   <div style={{width:16,height:16,borderRadius:"50%",background:t.primary,margin:"0 auto 4px"}}/>{t.label}
                 </button>
               ))}
@@ -967,8 +1096,8 @@ export default function App() {
               </div>
               <div style={{fontSize:11,color:"#475569",fontFamily:"monospace",lineHeight:1.6,marginBottom:4}}>
                 {motivationMode==="none"&&"Strictly Data. No commentary, no fluff. Just your numbers."}
-                {motivationMode==="uplifting"&&"Driven. Encouraging and consistent. Built for the long game."}
-                {motivationMode==="drill"&&"Beast Mode. Tough love. Calls out bad choices and negavtive weight gain."}
+                {motivationMode==="uplifting"&&(IS_BULK?"Driven. Encouraging and consistent. Built for the long build.":"Driven. Encouraging and consistent. Built for the long game.")}
+                {motivationMode==="drill"&&(IS_BULK?"Beast Mode. Calls out bad eating and wrong direction weight changes. No excuses on the bulk.":"Beast Mode. Tough love. Calls out bad choices and weight gains over 2 lbs.")}
               </div>
             </div>
             <div style={{marginTop:16,paddingTop:16,borderTop:"1px solid #1e293b"}}>
@@ -985,7 +1114,7 @@ export default function App() {
               <div style={{fontSize:12,color:"#94a3b8",marginBottom:8}}><b style={{color:theme.primary}}>Export Your Data</b></div>
               <div style={{fontSize:11,color:"#64748b",fontFamily:"monospace",marginBottom:10}}>Downloads all your AXION data as a JSON file.</div>
               <button style={{...DS.btn,gridColumn:"unset",width:"100%",background:"#0f172a",border:`1px solid ${theme.primary}`,color:theme.primary}} onClick={()=>{
-                const data={exportDate:new Date().toISOString(),profile:{name:localStorage.getItem("tracker_name"),startWeight:localStorage.getItem("tracker_start_weight"),targetWeight:localStorage.getItem("tracker_target_weight"),startDate:localStorage.getItem("tracker_start_date"),height:`${localStorage.getItem("tracker_height_feet")}ft ${localStorage.getItem("tracker_height_inches")}in`,activityLevel:localStorage.getItem("tracker_activity_level"),calorieTarget:localStorage.getItem("tracker_calorie_target")},weights,foods,workouts,peptideStack,peptideLogs,supplements:mySupplements};
+                const data={exportDate:new Date().toISOString(),profile:{name:localStorage.getItem("tracker_name"),startWeight:localStorage.getItem("tracker_start_weight"),targetWeight:localStorage.getItem("tracker_target_weight"),startDate:localStorage.getItem("tracker_start_date"),height:`${localStorage.getItem("tracker_height_feet")}ft ${localStorage.getItem("tracker_height_inches")}in`,activityLevel:localStorage.getItem("tracker_activity_level"),calorieTarget:localStorage.getItem("tracker_calorie_target"),mode:IS_BULK?"bulk":"cut"},weights,foods,workouts,peptideStack,peptideLogs,supplements:mySupplements,notes,waterLog};
                 const blob=new Blob([JSON.stringify(data,null,2)],{type:"application/json"});
                 const url=URL.createObjectURL(blob);
                 const a=document.createElement("a");a.href=url;a.download=`axion-export-${new Date().toISOString().slice(0,10)}.json`;a.click();URL.revokeObjectURL(url);
@@ -1026,11 +1155,11 @@ export default function App() {
       </div>
 
       {/* TABS */}
-      <nav style={{display:"flex",gap:6,marginBottom:16,flexWrap:"wrap"}}>
+      <nav style={{display:"flex",gap:5,marginBottom:16,flexWrap:"wrap"}}>
         {TABS.map(t=>{const Icon=ICONS[t];return(
-          <button key={t} onClick={()=>setTab(t)} style={tab===t?DS.activeTab:{flex:"1 1 80px",display:"flex",flexDirection:"column",alignItems:"center",gap:8,padding:"17px 8px",background:"linear-gradient(145deg,#000000,#020806)",border:`1px solid ${theme.border}`,borderRadius:20,cursor:"pointer",color:theme.primary+"99",fontFamily:"monospace",transition:"all 0.18s ease"}}>
-            <Icon size={28} strokeWidth={1.8} color={tab===t?theme.primary:theme.primary+"99"}/>
-            <span style={{fontSize:11,textTransform:"capitalize"}}>{t}</span>
+          <button key={t} onClick={()=>setTab(t)} style={tab===t?DS.activeTab:{flex:"1 1 50px",display:"flex",flexDirection:"column",alignItems:"center",gap:6,padding:"14px 4px",background:"linear-gradient(145deg,#000000,#020806)",border:`1px solid ${theme.border}`,borderRadius:18,cursor:"pointer",color:theme.primary+"99",fontFamily:"monospace",transition:"all 0.18s ease"}}>
+            <Icon size={24} strokeWidth={1.8} color={tab===t?theme.primary:theme.primary+"99"}/>
+            <span style={{fontSize:10,textTransform:"capitalize"}}>{t}</span>
           </button>
         );})}
       </nav>
@@ -1043,14 +1172,47 @@ export default function App() {
             <div style={{fontSize:13,color:"#94a3b8",lineHeight:1.7}}>Start by logging your weight in the <b style={{color:"#f8fafc"}}>Weight</b> tab, then add your peptide stack in <b style={{color:"#f8fafc"}}>Peptides</b>. Log food daily to keep your streak alive.</div>
           </div>
         )}
+        {IS_BULK&&(
+          <div style={{...DS.panel,borderLeft:`4px solid ${theme.primary}`,marginBottom:14,background:`linear-gradient(145deg,rgba(0,0,0,0.98),${theme.primary}08)`}}>
+            <div style={{fontSize:12,fontWeight:700,color:theme.primary,fontFamily:"monospace",letterSpacing:1}}>💪 BULK MODE</div>
+            <div style={{fontSize:12,color:"#64748b",fontFamily:"monospace",marginTop:4}}>Goal: gain {Math.abs(TARGET_WEIGHT-START_WEIGHT)} lbs · {START_WEIGHT} → {TARGET_WEIGHT} lbs</div>
+          </div>
+        )}
         <div style={{display:"grid",gridTemplateColumns:"repeat(auto-fit,minmax(140px,1fr))",gap:10,marginBottom:14}}>
-          {[["Current",sortedWeights.length?`${latestWeight.weight}`:"--","lbs"],["Lowest",sortedWeights.length?`${lowestWeight}`:"--","lbs"],["Lost",totalLost>0?`${totalLost.toFixed(1)}`:"0.0","lbs"],["% BW",totalLost>0?`${pctLost(latestWeight.weight)}`:"0.0","%"],["Avg/wk",avgPerWeek>0?`${avgPerWeek.toFixed(2)}`:"--","lbs"],[`To ${TARGET_WEIGHT}`,remainingToGoal>0?`${remainingToGoal.toFixed(1)}`:"0.0","lbs"],["Protein",todayProtein>0?`${todayProtein}`:"--","g"],["Calories",todayCals>0?`${todayCals}`:"--","kcal"]].map(([l,v,u])=>(
+          {[
+            ["Current",sortedWeights.length?`${latestWeight.weight}`:"--","lbs"],
+            [IS_BULK?"Highest":"Lowest",sortedWeights.length?IS_BULK?`${highestWeight}`:`${lowestWeight}`:"--","lbs"],
+            [IS_BULK?"Gained":"Lost",totalChange>0?`${totalChange.toFixed(1)}`:"0.0","lbs"],
+            ["% Progress",totalChange>0?`${progressPct.toFixed(1)}`:"0.0","%"],
+            ["Avg/wk",avgPerWeek>0?`${avgPerWeek.toFixed(2)}`:"--","lbs"],
+            [`To ${TARGET_WEIGHT}`,remainingToGoal>0?`${remainingToGoal.toFixed(1)}`:"0.0","lbs"],
+            ["Protein",todayProtein>0?`${todayProtein}`:"--","g"],
+            ["Calories",todayCals>0?`${todayCals}`:"--","kcal"],
+          ].map(([l,v,u])=>(
             <div key={l} style={DS.card}>
               <div style={{fontSize:10,color:"#475569",textTransform:"uppercase",letterSpacing:1.5,fontFamily:"monospace",marginBottom:4}}>{l}</div>
               <div style={{fontSize:22,fontWeight:900,lineHeight:1,color:v==="--"?"#334155":theme.primary}}>{v}<span style={{fontSize:13,fontWeight:400,color:v==="--"?"#334155":undefined}}> {u}</span></div>
             </div>
           ))}
         </div>
+
+        {todayWater>0&&(
+          <div style={{...DS.panel,marginBottom:14}}>
+            <div style={{display:"flex",alignItems:"center",gap:12}}>
+              <Droplets size={28} color={theme.primary}/>
+              <div>
+                <div style={{fontSize:24,fontWeight:900,color:theme.primary,fontFamily:"monospace"}}>{todayWater} oz</div>
+                <div style={{fontSize:11,color:"#94a3b8",fontFamily:"monospace",letterSpacing:1}}>WATER TODAY</div>
+              </div>
+              <div style={{marginLeft:"auto",display:"flex",gap:8}}>
+                {[8,16].map(oz=>(
+                  <button key={oz} onClick={()=>addWater(oz)} style={{background:`${theme.primary}22`,border:`1px solid ${theme.primary}`,color:theme.primary,borderRadius:8,padding:"6px 10px",cursor:"pointer",fontFamily:"monospace",fontSize:12,fontWeight:700}}>+{oz}oz</button>
+                ))}
+              </div>
+            </div>
+          </div>
+        )}
+
         <div style={DS.panel}>
           <div style={{display:"flex",alignItems:"center",gap:16}}>
             <Flame size={36} color={streak>0?theme.primary:"#334155"}/>
@@ -1110,10 +1272,10 @@ export default function App() {
         </div>
         {sortedWeights.length>1?<div style={DS.panel}><h2 style={{margin:"0 0 14px",fontSize:15,fontWeight:700,color:"#94a3b8",fontFamily:"monospace"}}>Weight Trend</h2><WeightLineChart weights={sortedWeights} color={theme.primary}/></div>:<div style={{...DS.panel,textAlign:"center",color:"#334155",fontFamily:"monospace",fontSize:13}}>Log at least 2 weight entries to see your trend chart.</div>}
         <div style={{background:"#0f172a",border:"1px solid #854d0e",borderLeft:"4px solid #f59e0b",borderRadius:10,padding:14,color:"#94a3b8",fontSize:13,display:"flex",gap:10,alignItems:"flex-start",marginBottom:14}}>
-          <span style={{fontSize:18}}>⚠️</span><span>If energy tanks, digestion stalls, or workouts fall apart — hydrate, hit protein, add carbs, sleep, keep dose changes disciplined.</span>
+          <span style={{fontSize:18}}>⚠️</span><span>{IS_BULK?"If energy tanks, progress stalls, or strength drops — check your calories, sleep, protein intake, and recovery. Adjust before changing your peptide protocol.":"If energy tanks, digestion stalls, or workouts fall apart — hydrate, hit protein, add carbs, sleep, keep dose changes disciplined."}</span>
         </div>
       </>}
-      {/* WEIGHT */}
+      {/* WEIGHT TAB */}
       {tab==="weight"&&(
         <div style={DS.panel}>
           <h2 style={{margin:"0 0 14px",fontSize:15,fontWeight:700,color:"#94a3b8",fontFamily:"monospace"}}>Weight Log</h2>
@@ -1223,7 +1385,7 @@ export default function App() {
         </div>
       )}
 
-      {/* DOSES */}
+      {/* DOSES TAB */}
       {tab==="doses"&&(
         <div>
           {(peptideStack||[]).length===0&&(<div style={{...DS.panel,textAlign:"center",color:"#475569",fontFamily:"monospace",fontSize:13}}>No peptides in your stack yet.<br/>Add peptides in the 🧬 Peptides tab first.</div>)}
@@ -1242,6 +1404,7 @@ export default function App() {
                       <span style={{color:"#64748b",fontSize:12,fontFamily:"monospace"}}>{pep.unit} · {pep.frequency}</span>
                       <span style={{color:"#475569",fontSize:11,fontFamily:"monospace"}}>Total: {total.toFixed(3)}{pep.unit} · {logs.length} doses</span>
                     </div>
+                    {(pep.pinDays||[]).length>0&&<div style={{marginTop:6,display:"flex",gap:4,flexWrap:"wrap"}}>{(pep.pinDays||[]).map(d=><span key={d} style={{fontSize:10,fontFamily:"monospace",background:theme.primary+"22",color:theme.primary,borderRadius:4,padding:"2px 6px"}}>{d}</span>)}</div>}
                   </div>
                   <button onClick={()=>setDoseTab(isActive?null:pep.id)} style={{background:isActive?"#1e293b":"#1e3a5f",color:isActive?"#94a3b8":"#60a5fa",border:`1px solid ${isActive?"#334155":"#60a5fa"}`,borderRadius:10,padding:"6px 14px",cursor:"pointer",fontFamily:"monospace",fontSize:11,fontWeight:700,flexShrink:0,marginLeft:8}}>{isActive?"Close":"+ Log Dose"}</button>
                 </div>
@@ -1285,7 +1448,7 @@ export default function App() {
           })}
         </div>
       )}
-      {/* PEPTIDES */}
+      {/* PEPTIDES TAB */}
       {tab==="peptides"&&(
         <div style={DS.panel}>
           <h2 style={{margin:"0 0 14px",fontSize:15,fontWeight:700,color:"#94a3b8",fontFamily:"monospace"}}>🧬 Peptides</h2>
@@ -1313,6 +1476,7 @@ export default function App() {
                       </div>
                       <div style={{fontSize:11,color:"#64748b",fontFamily:"monospace",marginTop:4}}>{p.dose}{p.unit} · {p.frequency}{p.cycle?` · ${p.cycle}`:""}</div>
                       <div style={{fontSize:11,color:"#475569",fontFamily:"monospace",marginTop:2}}>Total: {total.toFixed(3)}{p.unit} · {logs.length} doses</div>
+                      {(p.pinDays||[]).length>0&&<div style={{marginTop:6,display:"flex",gap:4,flexWrap:"wrap"}}>{(p.pinDays||[]).map(d=><span key={d} style={{fontSize:10,fontFamily:"monospace",background:theme.primary+"22",color:theme.primary,borderRadius:4,padding:"2px 6px"}}>{d}</span>)}</div>}
                       {p.notes&&<div style={{fontSize:11,color:"#94a3b8",marginTop:4,fontStyle:"italic"}}>{p.notes}</div>}
                     </div>
                     <div style={{display:"flex",gap:6,flexShrink:0}}>
@@ -1364,7 +1528,7 @@ export default function App() {
                   {pepSearchResults.length===0&&<div style={{color:"#475569",fontSize:13,fontFamily:"monospace"}}>No results for "{pepSearch}"</div>}
                   {pepSearchResults.map(pep=>{
                     const cat=Object.entries(PEPTIDE_LIBRARY).find(([,v])=>v.some(p=>p.name===pep.name))?.[0];
-                    return(<button key={pep.name} onClick={()=>{setPendingPep({...pep,category:cat});setPepForm({dose:"",unit:pep.unit||"mg",frequency:pep.frequency||"",cycle:pep.cycle||"",notes:"",status:"active"});setPepView("add");}} style={{background:"#020617",border:`1px solid ${theme.primary}33`,borderRadius:12,padding:"12px 14px",color:"#e2e8f0",textAlign:"left",cursor:"pointer"}}><div style={{fontWeight:700,fontSize:14}}>{pep.name}</div><div style={{fontSize:11,color:"#64748b",fontFamily:"monospace",marginTop:2}}>{pep.typicalDose} · {pep.frequency}</div><div style={{fontSize:11,color:"#94a3b8",marginTop:4,lineHeight:1.5}}>{pep.desc}</div></button>);
+                    return(<button key={pep.name} onClick={()=>{setPendingPep({...pep,category:cat});setPepForm({dose:"",unit:pep.unit||"mg",frequency:pep.frequency||"",cycle:pep.cycle||"",notes:"",status:"active",pinDays:[]});setPepView("add");}} style={{background:"#020617",border:`1px solid ${theme.primary}33`,borderRadius:12,padding:"12px 14px",color:"#e2e8f0",textAlign:"left",cursor:"pointer"}}><div style={{fontWeight:700,fontSize:14}}>{pep.name}</div><div style={{fontSize:11,color:"#64748b",fontFamily:"monospace",marginTop:2}}>{pep.typicalDose} · {pep.frequency}</div><div style={{fontSize:11,color:"#94a3b8",marginTop:4,lineHeight:1.5}}>{pep.desc}</div></button>);
                   })}
                 </div>
               ):(
@@ -1378,7 +1542,7 @@ export default function App() {
             <>
               <button style={{...DS.btn,gridColumn:"unset",background:"#020617",border:"1px solid #334155",color:"#94a3b8",marginBottom:12}} onClick={()=>setPepView("cats")}>← Back</button>
               <div style={{display:"flex",flexDirection:"column",gap:8}}>
-                {PEPTIDE_LIBRARY[pepActiveCat].map(pep=>(<button key={pep.name} onClick={()=>{setPendingPep({...pep,category:pepActiveCat});setPepForm({dose:"",unit:pep.unit||"mg",frequency:pep.frequency||"",cycle:pep.cycle||"",notes:"",status:"active"});setPepView("add");}} style={{background:"#020617",border:`1px solid ${theme.primary}33`,borderRadius:12,padding:"12px 14px",color:"#e2e8f0",textAlign:"left",cursor:"pointer"}}><div style={{fontWeight:700,fontSize:14}}>{pep.name}</div><div style={{fontSize:11,color:"#64748b",fontFamily:"monospace",marginTop:2}}>{pep.typicalDose} · {pep.frequency}</div><div style={{fontSize:11,color:"#94a3b8",marginTop:4,lineHeight:1.5}}>{pep.desc}</div></button>))}
+                {PEPTIDE_LIBRARY[pepActiveCat].map(pep=>(<button key={pep.name} onClick={()=>{setPendingPep({...pep,category:pepActiveCat});setPepForm({dose:"",unit:pep.unit||"mg",frequency:pep.frequency||"",cycle:pep.cycle||"",notes:"",status:"active",pinDays:[]});setPepView("add");}} style={{background:"#020617",border:`1px solid ${theme.primary}33`,borderRadius:12,padding:"12px 14px",color:"#e2e8f0",textAlign:"left",cursor:"pointer"}}><div style={{fontWeight:700,fontSize:14}}>{pep.name}</div><div style={{fontSize:11,color:"#64748b",fontFamily:"monospace",marginTop:2}}>{pep.typicalDose} · {pep.frequency}</div><div style={{fontSize:11,color:"#94a3b8",marginTop:4,lineHeight:1.5}}>{pep.desc}</div></button>))}
               </div>
             </>
           )}
@@ -1415,7 +1579,7 @@ export default function App() {
           )}
         </div>
       )}
-      {/* FOOD */}
+      {/* FOOD TAB */}
       {tab==="food"&&(
         <div>
           <div style={DS.panel}>
@@ -1457,6 +1621,19 @@ export default function App() {
                 </div>
               );
             })()}
+            <div style={{marginTop:14,paddingTop:14,borderTop:`1px solid ${theme.border}`}}>
+              <div style={{display:"flex",justifyContent:"space-between",alignItems:"center",marginBottom:10}}>
+                <div style={{display:"flex",alignItems:"center",gap:8}}>
+                  <Droplets size={18} color={theme.primary}/>
+                  <span style={{fontSize:12,color:"#94a3b8",fontFamily:"monospace",fontWeight:700}}>WATER · {todayWater} oz</span>
+                </div>
+                <div style={{display:"flex",gap:6}}>
+                  {[8,16,32].map(oz=>(
+                    <button key={oz} onClick={()=>addWater(oz)} style={{background:`${theme.primary}22`,border:`1px solid ${theme.primary}44`,color:theme.primary,borderRadius:8,padding:"4px 8px",cursor:"pointer",fontFamily:"monospace",fontSize:11,fontWeight:700}}>+{oz}</button>
+                  ))}
+                </div>
+              </div>
+            </div>
           </div>
 
           <div style={DS.panel}>
@@ -1518,8 +1695,7 @@ export default function App() {
                     {item:"Oatmeal (40g dry)",calories:150,protein:5,carbs:27,fat:2.5,fiber:4},
                     {item:"Ground Beef 80/20 (100g)",calories:254,protein:17,carbs:0,fat:20,fiber:0},
                   ].map(food=>(
-                    <button key={food.item} onClick={()=>{setFoods(prev=>[...(prev||[]),{id:uid(),date:foodDate,meal:selectedMeal,...food}]);const msg2=getMotivationMessage(isJunkFood(food.item)?"junk_food":"food_logged",motivationMode,userName,{food:food.item});
-                    if(motivationMode==="drill"&&isJunkFood(food.item))setJunkAlert(msg2);else flash(msg2);}} style={{display:"flex",justifyContent:"space-between",alignItems:"center",background:"#020617",border:`1px solid ${theme.border}`,borderRadius:12,padding:"10px 14px",cursor:"pointer",textAlign:"left"}}>
+                    <button key={food.item} onClick={()=>{setFoods(prev=>[...(prev||[]),{id:uid(),date:foodDate,meal:selectedMeal,...food}]);const msg2=getMotivationMessage(isJunkFood(food.item)?"junk_food":"food_logged",motivationMode,userName,{food:food.item},IS_BULK);if(motivationMode==="drill"&&isJunkFood(food.item))setJunkAlert(msg2);else flash(msg2);}} style={{display:"flex",justifyContent:"space-between",alignItems:"center",background:"#020617",border:`1px solid ${theme.border}`,borderRadius:12,padding:"10px 14px",cursor:"pointer",textAlign:"left"}}>
                       <div><div style={{fontWeight:700,color:"#f8fafc",fontSize:13}}>{food.item}</div><div style={{fontSize:11,color:"#64748b",fontFamily:"monospace"}}>{food.calories}cal · {food.protein}g pro · {food.carbs}g carb · {food.fat}g fat</div></div>
                       <div style={{fontSize:20,color:theme.primary}}>+</div>
                     </button>
@@ -1576,7 +1752,8 @@ export default function App() {
                     const n=calcNutrition(foodSearchResults.per_100g,wg);
                     setFoods(prev=>[...(prev||[]),{id:uid(),date:foodDate,meal:selectedMeal,item:foodSearchResults.food+(foodSearchResults.brand?` (${foodSearchResults.brand})`:""),weight_g:wg,...n}]);
                     const foodName=foodSearchResults.food+(foodSearchResults.brand?` (${foodSearchResults.brand})`:"");
-                    const msg1=getMotivationMessage(isJunkFood(foodName)?"junk_food":"food_logged",motivationMode,userName,{food:foodSearchResults.food});
+                    setFoodQuery("");setFoodSearchResults(null);setServingWeight("");
+                    const msg1=getMotivationMessage(isJunkFood(foodName)?"junk_food":"food_logged",motivationMode,userName,{food:foodSearchResults.food},IS_BULK);
                     if(motivationMode==="drill"&&isJunkFood(foodName))setJunkAlert(msg1);else flash(msg1);
                   }} disabled={!servingWeight||parseFloat(servingWeight)<=0}>+ Log This Food</button>
                   {foodSearchResults.notes&&<div style={{fontSize:11,color:"#64748b",fontFamily:"monospace",marginTop:8,fontStyle:"italic"}}>💬 {foodSearchResults.notes}</div>}
@@ -1616,7 +1793,7 @@ export default function App() {
                   setFoods(prev=>[...(prev||[]),{id:uid(),date:foodDate,meal:selectedMeal,item:manualFood.item,weight_g:null,calories:+(manualFood.calories||0),protein:+(manualFood.protein||0),carbs:+(manualFood.carbs||0),fat:+(manualFood.fat||0),fiber:+(manualFood.fiber||0)}]);
                   const item=manualFood.item;
                   setManualFood({item:"",calories:"",protein:"",carbs:"",fat:"",fiber:""});
-             const msg3=getMotivationMessage(isJunkFood(item)?"junk_food":"food_logged",motivationMode,userName,{food:item});
+                  const msg3=getMotivationMessage(isJunkFood(item)?"junk_food":"food_logged",motivationMode,userName,{food:item},IS_BULK);
                   if(motivationMode==="drill"&&isJunkFood(item))setJunkAlert(msg3);else flash(msg3);
                 }}>+ Log Food</button>
               </div>
@@ -1682,7 +1859,7 @@ export default function App() {
           </div>
         </div>
       )}
-      {/* WORKOUTS */}
+      {/* WORKOUTS TAB */}
       {tab==="workouts"&&(
         <div>
           <div style={{display:"grid",gridTemplateColumns:"repeat(3,1fr)",gap:10,marginBottom:14}}>
@@ -1824,7 +2001,7 @@ export default function App() {
           </div>
         </div>
       )}
-      {/* SUPPLEMENTS */}
+      {/* SUPPLEMENTS TAB */}
       {tab==="supplements"&&(
         <div style={DS.panel}>
           <h2 style={{margin:"0 0 14px",fontSize:15,fontWeight:700,color:"#94a3b8",fontFamily:"monospace"}}>💊 Supplements</h2>
@@ -1908,14 +2085,4 @@ export default function App() {
               <button style={{...DS.btn,gridColumn:"unset",background:"#020617",border:"1px solid #334155",color:"#94a3b8",marginBottom:12}} onClick={()=>setSuppView("cats")}>← Back</button>
               <div style={{fontSize:13,fontWeight:700,color:"#94a3b8",fontFamily:"monospace",marginBottom:10}}>{suppActiveCat.replace(/([A-Z])/g," $1").trim()}</div>
               <div style={{display:"flex",flexDirection:"column",gap:8}}>
-                {SUPPLEMENT_LIBRARY[suppActiveCat].map(item=>(<button key={item} onClick={()=>{setPendingSupp({name:item,category:suppActiveCat});setSuppForm({dose:"",unit:"mg",schedule:"Daily",time:"Morning"});setSuppView("add");}} style={{background:"#020617",border:`1px solid ${theme.primary}33`,borderRadius:12,padding:"11px 14px",color:"#e2e8f0",fontWeight:700,textAlign:"left",cursor:"pointer"}}>{item}</button>))}
-              </div>
-            </>
-          )}
-        </div>
-      )}
-
-      {tab==="calculator"&&<PeptideCalculator theme={theme} DS={DS}/>}
-    </div>
-  );
-}
+                {SUPPLEMENT_LIBRARY[suppActiveCat].
