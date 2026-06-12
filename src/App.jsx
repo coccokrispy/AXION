@@ -959,16 +959,16 @@ export default function App() {
             <div style={{marginTop:16,paddingTop:16,borderTop:"1px solid #1e293b"}}>
               <div style={{fontSize:12,color:"#94a3b8",marginBottom:8}}><b style={{color:theme.primary}}>Motivation Mode</b></div>
               <div style={{display:"grid",gridTemplateColumns:"1fr 1fr 1fr",gap:8,marginBottom:12}}>
-                {[["none","🔇","None"],["uplifting","🦁","Driven"],["drill","🐉","Beast Mode"]].map(([mode,icon,label])=>(
+                {[["none","📊","Strictly Data"],["uplifting","🦁","Driven"],["drill","🐉","Beast Mode"]].map(([mode,icon,label])=>(
                   <button key={mode} onClick={()=>setMotivationMode(mode)} style={{padding:"12px 8px",borderRadius:12,border:`2px solid ${motivationMode===mode?theme.primary:"#1e293b"}`,background:motivationMode===mode?theme.primary+"22":"#020617",cursor:"pointer",color:motivationMode===mode?theme.primary:"#64748b",fontFamily:"monospace",fontSize:11,fontWeight:700,textAlign:"center"}}>
                     <div style={{fontSize:20,marginBottom:4}}>{icon}</div>{label}
                   </button>
                 ))}
               </div>
               <div style={{fontSize:11,color:"#475569",fontFamily:"monospace",lineHeight:1.6,marginBottom:4}}>
-                {motivationMode==="none"&&"Silent mode. No commentary, just data."}
-                {motivationMode==="uplifting"&&"Positive and encouraging. Celebrates every win."}
-                {motivationMode==="drill"&&"Tough love. Calls out bad choices and weight gains over 2 lbs."}
+                {motivationMode==="none"&&"Strictly Data. No commentary, no fluff. Just your numbers."}
+                {motivationMode==="uplifting"&&"Driven. Encouraging and consistent. Built for the long game."}
+                {motivationMode==="drill"&&"Beast Mode. Tough love. Calls out bad choices and negavtive weight gain."}
               </div>
             </div>
             <div style={{marginTop:16,paddingTop:16,borderTop:"1px solid #1e293b"}}>
