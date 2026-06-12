@@ -1069,9 +1069,9 @@ export default function App() {
           <div style={{background:"#0f172a",border:`1px solid ${theme.border}`,borderRadius:14,padding:20,maxWidth:480,width:"100%",maxHeight:"90vh",overflowY:"auto"}} onClick={e=>e.stopPropagation()}>
             <h2 style={{margin:"0 0 16px",fontSize:15,fontWeight:700,color:"#94a3b8",fontFamily:"monospace"}}>⚙️ Settings</h2>
             <div style={{fontSize:12,color:"#94a3b8",marginBottom:8}}><b style={{color:theme.primary}}>Theme Color</b></div>
-            <div style={{display:"flex",gap:6,flexWrap:"wrap",marginBottom:20}}>
+            <div style={{display:"grid",gridTemplateColumns:"1fr 1fr 1fr",gap:8,marginBottom:20}}>
               {Object.entries(THEMES).map(([k,t])=>(
-                <button key={k} onClick={()=>setThemeName(k)} style={{flex:"1 1 60px",padding:"10px 4px",borderRadius:10,border:`2px solid ${themeName===k?t.primary:"#1e293b"}`,background:themeName===k?t.primary+"22":"#020617",cursor:"pointer",color:t.primary,fontSize:10,fontFamily:"monospace",fontWeight:700}}>
+                <button key={k} onClick={()=>setThemeName(k)} style={{padding:"10px 4px",borderRadius:10,border:`2px solid ${themeName===k?t.primary:"#1e293b"}`,background:themeName===k?t.primary+"22":"#020617",cursor:"pointer",color:t.primary,fontSize:10,fontFamily:"monospace",fontWeight:700,textAlign:"center"}}>
                   <div style={{width:16,height:16,borderRadius:"50%",background:t.primary,margin:"0 auto 4px"}}/>{t.label}
                 </button>
               ))}
