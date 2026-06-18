@@ -92,7 +92,7 @@ const PEPTIDE_LIBRARY = {
     { name:"Pentadeca Arginate (PDA)", desc:"BPC-157 derivative. Enhanced tissue repair, gut healing, and anti-inflammatory. More stable than BPC-157.", typicalDose:"250-500mcg", unit:"mcg", frequency:"Daily", cycle:"4-12 weeks" },
     { name:"KPV", desc:"Anti-inflammatory tripeptide. Gut healing, skin conditions, IBD.", typicalDose:"500mcg-1mg", unit:"mg", frequency:"Daily", cycle:"4-8 weeks" },
     { name:"GHK-Cu", desc:"Copper peptide. Skin regeneration, collagen synthesis, anti-aging.", typicalDose:"1-2mg", unit:"mg", frequency:"Daily", cycle:"8-12 weeks" },
-    { name:"LL-37", desc:"Antimicrobial peptide. Immune modulation, wound healing, anti-biofilm. Broad spectrum antimicrobial.", typicalDose:"100-500mcg", unit:"mcg", frequency:"Daily", cycle:"4-8 weeks" },
+    { name:"LL-37", desc:"Antimicrobial peptide. Immune modulation, wound healing, anti-biofilm.", typicalDose:"100-500mcg", unit:"mcg", frequency:"Daily", cycle:"4-8 weeks" },
     { name:"Thymosin Alpha-1", desc:"Immune modulator. Used in cancer/viral protocols.", typicalDose:"1.6mg", unit:"mg", frequency:"2x/week", cycle:"6-12 months" },
   ],
   "Mitochondrial / Longevity": [
@@ -138,6 +138,7 @@ const SUPPLEMENT_LIBRARY = {
   Herbs:["Ashwagandha","Rhodiola","Ginseng","Holy Basil","Ginkgo Biloba","Elderberry","Echinacea"],
   Other:["MCT Oil","CBD","Custom"],
 };
+
 const ALL_SUPPLEMENTS = Object.values(SUPPLEMENT_LIBRARY).flat();
 const ALL_PEPTIDES = Object.values(PEPTIDE_LIBRARY).flat();
 
@@ -153,8 +154,11 @@ function uid() { return Date.now()+Math.floor(Math.random()*10000); }
 
 const JUNK_FOODS=["pizza","burger","cheeseburger","hamburger","whopper","big mac","quarter pounder","mcdonald","mcdonalds","wendy","wendys","taco bell","kfc","popeyes","chick-fil-a","chickfila","five guys","shake shack","in-n-out","innout","sonic","dairy queen","dq blizzard","jack in the box","carl's jr","carls jr","hardees","white castle","waffle house","dominos","papa john","little caesar","pizza hut","calzone","stromboli","hot dog","corn dog","bratwurst","sausage biscuit","mcmuffin","egg mcmuffin","breakfast burrito","french fries","fries","onion rings","mozzarella sticks","fried chicken","chicken nuggets","nuggets","chicken strips","chicken tenders","fried fish","fish and chips","funnel cake","fried oreos","fried twinkies","chips","doritos","cheetos","lays","pringles","fritos","funyuns","crackers","goldfish crackers","cheez its","ritz crackers","popcorn chicken","nachos","queso","tater tots","hash browns","waffle fries","curly fries","cheese fries","loaded fries","chili cheese fries","cookie","cookies","oreo","oreos","chips ahoy","nutter butter","girl scout cookies","donut","donuts","doughnut","krispy kreme","dunkin","munchkins","pastry","croissant","danish","cinnamon roll","cinnabon","pop tart","toaster strudel","cake","birthday cake","chocolate cake","cheesecake","cupcake","muffin","brownie","brownie sundae","ice cream","gelato","sorbet","frozen yogurt","froyo","milkshake","shake","sundae","banana split","hot fudge","whipped cream","candy","m&ms","skittles","starburst","gummy bears","gummy worms","sour patch","swedish fish","nerds","twix","snickers","kit kat","reese","peanut butter cup","butterfinger","milky way","3 musketeers","almond joy","mounds","hershey","cadbury","toblerone","ferrero rocher","nutella","cotton candy","caramel corn","kettle corn","chocolate bar","candy bar","lollipop","jolly rancher","airheads","laffy taffy","marshmallow","peeps","twinkies","ding dongs","ho hos","little debbie","hostess","swiss rolls","oatmeal cream pie","soda","cola","pepsi","coca cola","coke","sprite","fanta","mountain dew","dr pepper","root beer","ginger ale","cream soda","orange soda","grape soda","energy drink","red bull","monster","rockstar","bang energy","full throttle","nos energy","5 hour energy","slurpee","icee","slushie","juice box","kool aid","sweet tea","lemonade","punch","sports drink","gatorade","powerade","vitamin water","alcohol","beer","lager","ale","ipa","stout","porter","hard seltzer","white claw","truly","bud light","budweiser","coors","miller lite","corona","modelo","heineken","stella","guinness","wine","red wine","white wine","rose","champagne","prosecco","sangria","mimosa","hard cider","spiked","vodka","tequila","whiskey","bourbon","rum","gin","margarita","mojito","daiquiri","pina colada","long island","cosmopolitan","bloody mary","hard lemonade","mikes hard","twisted tea","four loko","mac and cheese","velveeta","kraft dinner","ramen","instant noodles","cup noodles","top ramen","spam","bologna","hot pocket","lean pocket","totinos","pizza roll","bagel bite","lunchable","tv dinner","frozen pizza","frozen burrito","microwave burrito","frozen meal","hungry man","marie callender","stouffers","banquet meal","fried rice","lo mein","chow mein","egg roll","spring roll","crab rangoon","general tso","orange chicken","sweet and sour","fried wonton","pad see ew","drunken noodles","waffle","pancake","french toast","syrup","maple syrup","powdered sugar","whipped butter","biscuits and gravy","fried egg sandwich","bacon sandwich","sausage sandwich","philly cheesesteak","cheesesteak","sub","hoagie","meatball sub","italian sub","club sandwich","blt","grilled cheese","quesadilla","loaded quesadilla","nachos supreme","loaded nachos","chipotle bowl","mission burrito","smash burger","animal style","double double","triple triple","loaded burger","bacon burger","bbq burger","mushroom swiss","patty melt","fried bologna","pulled pork sandwich","bbq sandwich","chicken sandwich","popcorn shrimp","coconut shrimp","fried shrimp","lobster roll","clam chowder bread bowl","deep dish","stuffed crust","extra cheese","double pepperoni","meat lovers","supreme pizza","hawaiian pizza","buffalo wings","wings","boneless wings","lemon pepper wings","garlic parmesan wings","teriyaki wings","bbq wings","dry rub wings","ranch dressing","blue cheese dressing","thousand island","caesar dressing","honey mustard","special sauce"];
 
+const SAFE_FOODS=["ground turkey","ground chicken","turkey breast","chicken breast","egg white","cottage cheese","greek yogurt","protein powder","protein shake","brown rice","sweet potato","broccoli","salmon","tuna","tilapia","oatmeal","almonds","avocado","ground beef","white rice","black beans","lentils","quinoa","edamame","tofu","tempeh"];
+
 function isJunkFood(foodName){
   const lower=foodName.toLowerCase();
+  if(SAFE_FOODS.some(s=>lower.includes(s)))return false;
   return JUNK_FOODS.some(j=>lower.includes(j));
 }
 
@@ -430,6 +434,8 @@ export default function App() {
   const [weightAlert,setWeightAlert]=useState(null);
   const [upliftAlert,setUpliftAlert]=useState(null);
   const [pinAlert,setPinAlert]=useState(null);
+  const [suppTimeReminder,setSuppTimeReminder]=useState(null);
+  const [pepTimeReminder,setPepTimeReminder]=useState(null);
 
   const [setupForm,setSetupForm]=useState({name:"",heightFeet:"",heightInches:"",startWeight:"",targetWeight:"",startDate:todayISO(),activityLevel:"moderate",agreed:false});
   const [weightForm,setWeightForm]=useState({date:todayISO(),weight:"",type:"Morning",note:""});
@@ -463,14 +469,14 @@ export default function App() {
   const [suppActiveCat,setSuppActiveCat]=useState(null);
   const [pendingSupp,setPendingSupp]=useState(null);
   const [editingSupp,setEditingSupp]=useState(null);
-  const [suppForm,setSuppForm]=useState({dose:"",unit:"mg",schedule:"Daily",time:"Morning"});
+  const [suppForm,setSuppForm]=useState({dose:"",unit:"mg",schedule:"Daily",time:"Morning",reminderEnabled:false,reminderTime:"08:00"});
   const [suppSearch,setSuppSearch]=useState("");
 
   const [pepView,setPepView]=useState("stack");
   const [pepActiveCat,setPepActiveCat]=useState(null);
   const [pendingPep,setPendingPep]=useState(null);
   const [editingPep,setEditingPep]=useState(null);
-  const [pepForm,setPepForm]=useState({dose:"",unit:"mg",frequency:"",cycle:"",notes:"",status:"active",pinDays:[]});
+  const [pepForm,setPepForm]=useState({dose:"",unit:"mg",frequency:"",cycle:"",notes:"",status:"active",pinDays:[],reminderEnabled:false,reminderTime:"08:00"});
   const [pepSearch,setPepSearch]=useState("");
 
   const [doseTab,setDoseTab]=useState(null);
@@ -487,7 +493,6 @@ export default function App() {
   const latestWeight=sortedWeights[sortedWeights.length-1]||{id:0,date:todayISO(),weight:START_WEIGHT||0};
   const lowestWeight=sortedWeights.length?Math.min(...sortedWeights.map(w=>+w.weight)):START_WEIGHT;
   const highestWeight=sortedWeights.length?Math.max(...sortedWeights.map(w=>+w.weight)):START_WEIGHT;
-
   const totalChange=IS_BULK?(+latestWeight.weight-START_WEIGHT):(START_WEIGHT-+latestWeight.weight);
   const remainingToGoal=IS_BULK?(TARGET_WEIGHT-+latestWeight.weight):(+latestWeight.weight-TARGET_WEIGHT);
   const avgPerWeek=totalChange/weeksBetween(START_DATE,latestWeight.date);
@@ -502,7 +507,6 @@ export default function App() {
   const todayWorkouts=(workouts||[]).filter(w=>w.date===today);
   const todayMinutes=todayWorkouts.reduce((s,w)=>s+(w.minutes||0),0);
   const calorieTarget=Number(localStorage.getItem("tracker_calorie_target"))||null;
-
   const todayWater=(waterLog||[]).filter(w=>w.date===today).reduce((s,w)=>s+(w.oz||0),0);
 
   const projectedWeeksToGoal=avgPerWeek>0?Math.ceil(Math.max(0,remainingToGoal)/avgPerWeek):999;
@@ -579,6 +583,7 @@ export default function App() {
     sunday.setHours(0,0,0,0);
     const sundayKey="axion_weekly_recap_"+sunday.toISOString().slice(0,10);
     if(localStorage.getItem(sundayKey))return;
+    if(day>3)return;
     const ws=new Date(sunday);ws.setDate(ws.getDate()-7);ws.setHours(0,0,0,0);
     const we=new Date(sunday);we.setHours(23,59,59,999);
     const weekWeights=(weights||[]).filter(w=>new Date(w.date)>=ws&&new Date(w.date)<=we);
@@ -614,6 +619,43 @@ export default function App() {
       setPinAlert({type:"evening",msg:`⏰ Still waiting — You haven't logged your dose of ${unloggedNames} yet today.`});
     }
   },[peptideStack,peptideLogs]);
+
+  useEffect(()=>{
+    const now=new Date();
+    const currentTime=`${String(now.getHours()).padStart(2,'0')}:${String(now.getMinutes()).padStart(2,'0')}`;
+    const todayStr=todayISO();
+    const suppsDue=(mySupplements||[]).filter(s=>{
+      if(!s.reminderEnabled||!s.reminderTime)return false;
+      if(takenToday.includes(s.id))return false;
+      if(currentTime<s.reminderTime)return false;
+      const snoozeKey=`axion_snooze_supp_${s.id}_${todayStr}`;
+      const snoozedUntil=localStorage.getItem(snoozeKey);
+      if(snoozedUntil&&new Date()<new Date(snoozedUntil))return false;
+      const firedKey=`axion_suppreminder_${s.id}_${todayStr}`;
+      if(localStorage.getItem(firedKey))return false;
+      return true;
+    });
+    if(suppsDue.length>0){
+      suppsDue.forEach(s=>localStorage.setItem(`axion_suppreminder_${s.id}_${todayStr}`,"shown"));
+      setSuppTimeReminder(suppsDue);
+    }
+    const pepsDue=(peptideStack||[]).filter(p=>{
+      if(!p.reminderEnabled||!p.reminderTime)return false;
+      if(p.status!=="active")return false;
+      if((peptideLogs[p.id]||[]).some(l=>l.date===todayStr))return false;
+      if(currentTime<p.reminderTime)return false;
+      const snoozeKey=`axion_snooze_pep_${p.id}_${todayStr}`;
+      const snoozedUntil=localStorage.getItem(snoozeKey);
+      if(snoozedUntil&&new Date()<new Date(snoozedUntil))return false;
+      const firedKey=`axion_pepreminder_${p.id}_${todayStr}`;
+      if(localStorage.getItem(firedKey))return false;
+      return true;
+    });
+    if(pepsDue.length>0){
+      pepsDue.forEach(p=>localStorage.setItem(`axion_pepreminder_${p.id}_${todayStr}`,"shown"));
+      setPepTimeReminder(pepsDue);
+    }
+  },[mySupplements,peptideStack,peptideLogs,takenToday]);
 
   const suppSearchResults=useMemo(()=>{if(!suppSearch.trim())return[];const q=suppSearch.toLowerCase();return ALL_SUPPLEMENTS.filter(s=>s.toLowerCase().includes(q)).slice(0,20);},[suppSearch]);
   const pepSearchResults=useMemo(()=>{if(!pepSearch.trim())return[];const q=pepSearch.toLowerCase();return ALL_PEPTIDES.filter(p=>p.name.toLowerCase().includes(q)||p.desc.toLowerCase().includes(q)).slice(0,10);},[pepSearch]);
@@ -786,19 +828,19 @@ export default function App() {
 
   function addSupplement(){
     if(!pendingSupp)return;
-    setMySupplements(prev=>[...prev,{id:uid(),name:pendingSupp.name,category:pendingSupp.category,dose:suppForm.dose||"—",unit:suppForm.dose?suppForm.unit:"",schedule:suppForm.schedule,time:suppForm.time}]);
-    setSuppView("my");setPendingSupp(null);setSuppForm({dose:"",unit:"mg",schedule:"Daily",time:"Morning"});
+    setMySupplements(prev=>[...prev,{id:uid(),name:pendingSupp.name,category:pendingSupp.category,dose:suppForm.dose||"—",unit:suppForm.dose?suppForm.unit:"",schedule:suppForm.schedule,time:suppForm.time,reminderEnabled:suppForm.reminderEnabled||false,reminderTime:suppForm.reminderTime||"08:00"}]);
+    setSuppView("my");setPendingSupp(null);setSuppForm({dose:"",unit:"mg",schedule:"Daily",time:"Morning",reminderEnabled:false,reminderTime:"08:00"});
   }
-  function saveSuppEdit(){setMySupplements(prev=>prev.map(s=>s.id===editingSupp.id?{...s,dose:suppForm.dose||"—",unit:suppForm.dose?suppForm.unit:"",schedule:suppForm.schedule,time:suppForm.time}:s));setEditingSupp(null);setSuppView("my");}
+  function saveSuppEdit(){setMySupplements(prev=>prev.map(s=>s.id===editingSupp.id?{...s,dose:suppForm.dose||"—",unit:suppForm.dose?suppForm.unit:"",schedule:suppForm.schedule,time:suppForm.time,reminderEnabled:suppForm.reminderEnabled||false,reminderTime:suppForm.reminderTime||"08:00"}:s));setEditingSupp(null);setSuppView("my");}
   function deleteSupp(id){setMySupplements(prev=>prev.filter(s=>s.id!==id));setTakenToday(prev=>prev.filter(x=>x!==id));setEditingSupp(null);setSuppView("my");}
 
   function addPeptideToStack(){
     if(!pendingPep)return;
-    setPeptideStack(prev=>[...prev,{id:uid(),name:pendingPep.name,category:pendingPep.category,desc:pendingPep.desc,dose:pepForm.dose||"—",unit:pepForm.unit||pendingPep.unit||"mg",frequency:pepForm.frequency||pendingPep.frequency||"",cycle:pepForm.cycle||pendingPep.cycle||"",notes:pepForm.notes,status:pepForm.status,pinDays:pepForm.pinDays||[],dateAdded:todayISO()}]);
-    setPepView("stack");setPendingPep(null);setPepForm({dose:"",unit:"mg",frequency:"",cycle:"",notes:"",status:"active",pinDays:[]});
+    setPeptideStack(prev=>[...prev,{id:uid(),name:pendingPep.name,category:pendingPep.category,desc:pendingPep.desc,dose:pepForm.dose||"—",unit:pepForm.unit||pendingPep.unit||"mg",frequency:pepForm.frequency||pendingPep.frequency||"",cycle:pepForm.cycle||pendingPep.cycle||"",notes:pepForm.notes,status:pepForm.status,pinDays:pepForm.pinDays||[],reminderEnabled:pepForm.reminderEnabled||false,reminderTime:pepForm.reminderTime||"08:00",dateAdded:todayISO()}]);
+    setPepView("stack");setPendingPep(null);setPepForm({dose:"",unit:"mg",frequency:"",cycle:"",notes:"",status:"active",pinDays:[],reminderEnabled:false,reminderTime:"08:00"});
     flash("Peptide added ✓");
   }
-  function savePepEdit(){setPeptideStack(prev=>prev.map(p=>p.id===editingPep.id?{...p,dose:pepForm.dose||"—",unit:pepForm.unit,frequency:pepForm.frequency,cycle:pepForm.cycle,notes:pepForm.notes,status:pepForm.status,pinDays:pepForm.pinDays||[]}:p));setEditingPep(null);setPepView("stack");}
+  function savePepEdit(){setPeptideStack(prev=>prev.map(p=>p.id===editingPep.id?{...p,dose:pepForm.dose||"—",unit:pepForm.unit,frequency:pepForm.frequency,cycle:pepForm.cycle,notes:pepForm.notes,status:pepForm.status,pinDays:pepForm.pinDays||[],reminderEnabled:pepForm.reminderEnabled||false,reminderTime:pepForm.reminderTime||"08:00"}:p));setEditingPep(null);setPepView("stack");}
   function deletePep(id){setPeptideStack(prev=>prev.filter(p=>p.id!==id));setPeptideLogs(prev=>{const n={...prev};delete n[id];return n;});setEditingPep(null);setPepView("stack");}
   function logPeptideDose(peptideId){if(!doseForm.dose)return;setPeptideLogs(prev=>({...prev,[peptideId]:[...(prev[peptideId]||[]),{id:uid(),date:doseForm.date,dose:+doseForm.dose,note:doseForm.note}]}));setDoseForm({date:todayISO(),dose:"",note:""});flash("Dose logged ✓");}
   function removePeptideDose(peptideId,entryId){setPeptideLogs(prev=>({...prev,[peptideId]:(prev[peptideId]||[]).filter(e=>e.id!==entryId)}));}
@@ -837,6 +879,14 @@ export default function App() {
   const formLabel={fontSize:11,color:"#64748b",fontFamily:"monospace",textTransform:"uppercase",letterSpacing:1,textAlign:"right"};
   const deleteBtn={background:"transparent",color:"#ef4444",border:"1px solid #450a0a",borderRadius:6,cursor:"pointer",padding:"3px 8px",fontSize:11};
   const VALID_CODES=["AXION-7K2M","AXION-9P4R","AXION-3X8W","AXION-6N1Q","AXION-5T7B","AXION-2H9F","AXION-8V4J","AXION-1L6D","AXION-4C3Y","AXION-0E5Z"];
+
+  const alertModal=(content,borderColor,glowColor)=>(
+    <div style={{position:"fixed",inset:0,background:"rgba(0,0,0,0.92)",display:"flex",alignItems:"center",justifyContent:"center",zIndex:600,padding:24}}>
+      <div style={{background:"#0f172a",border:`2px solid ${borderColor}`,borderRadius:20,padding:32,maxWidth:320,width:"100%",textAlign:"center",boxShadow:`0 0 60px ${glowColor}`,wordBreak:"break-word"}}>
+        {content}
+      </div>
+    </div>
+  );
   if(!accessGranted){
     return(
       <div style={DS.page}>
@@ -884,9 +934,9 @@ export default function App() {
             {estimatedCalories>0&&<div style={{gridColumn:"1/-1",marginTop:8,padding:14,borderRadius:16,border:`1px solid ${theme.primary}`,background:"rgba(20,83,45,0.18)",color:theme.primary,fontSize:14,fontFamily:"monospace"}}>Estimated target: {estimatedCalories} cal/day for ~1 lb/week {TARGET_WEIGHT<START_WEIGHT?"loss":"gain"}.</div>}
             <div style={{gridColumn:"1/-1",marginTop:8}}>
               <div style={{fontSize:11,color:"#64748b",fontFamily:"monospace",textTransform:"uppercase",letterSpacing:1,marginBottom:10}}>Choose your theme</div>
-              <div style={{display:"flex",gap:6,flexWrap:"wrap"}}>
+              <div style={{display:"grid",gridTemplateColumns:"1fr 1fr 1fr",gap:8}}>
                 {Object.entries(THEMES).map(([k,t])=>(
-                  <button key={k} onClick={()=>setThemeName(k)} style={{flex:"1 1 60px",padding:"10px 4px",borderRadius:12,border:`2px solid ${themeName===k?t.primary:"#1e293b"}`,background:themeName===k?t.primary+"22":"#020617",cursor:"pointer",color:t.primary,fontSize:10,fontFamily:"monospace",fontWeight:700,transition:"all 0.15s"}}>
+                  <button key={k} onClick={()=>setThemeName(k)} style={{padding:"10px 4px",borderRadius:12,border:`2px solid ${themeName===k?t.primary:"#1e293b"}`,background:themeName===k?t.primary+"22":"#020617",cursor:"pointer",color:t.primary,fontSize:10,fontFamily:"monospace",fontWeight:700,textAlign:"center",transition:"all 0.15s"}}>
                     <div style={{width:18,height:18,borderRadius:"50%",background:t.primary,margin:"0 auto 5px",boxShadow:themeName===k?`0 0 10px ${t.primary}`:"none"}}/>{t.label}
                   </button>
                 ))}
@@ -923,7 +973,7 @@ export default function App() {
       {/* CONFIRM MODAL */}
       {confirm&&(
         <div style={{position:"fixed",inset:0,background:"rgba(0,0,0,0.88)",display:"flex",alignItems:"center",justifyContent:"center",zIndex:500,padding:24}}>
-          <div style={{background:"#0f172a",border:"1px solid #ef444466",borderRadius:18,padding:28,maxWidth:320,width:"100%",textAlign:"center",boxShadow:"0 0 40px rgba(239,68,68,0.2)"}}>
+          <div style={{background:"#0f172a",border:"1px solid #ef444466",borderRadius:18,padding:28,maxWidth:320,width:"100%",textAlign:"center",boxShadow:"0 0 40px rgba(239,68,68,0.2)",wordBreak:"break-word"}}>
             <div style={{fontSize:32,marginBottom:12}}>🗑️</div>
             <div style={{fontWeight:700,color:"#f8fafc",fontSize:15,marginBottom:8,fontFamily:"monospace"}}>Delete this?</div>
             <div style={{fontSize:12,color:"#94a3b8",fontFamily:"monospace",marginBottom:24,lineHeight:1.7,padding:"0 8px"}}>{confirm.label}<br/><span style={{color:"#475569",fontSize:11}}>This can't be undone.</span></div>
@@ -938,9 +988,9 @@ export default function App() {
       {/* PIN ALERT */}
       {pinAlert&&(
         <div style={{position:"fixed",inset:0,background:"rgba(0,0,0,0.92)",display:"flex",alignItems:"center",justifyContent:"center",zIndex:600,padding:24}}>
-          <div style={{background:"#0f172a",border:"2px solid #60a5fa",borderRadius:20,padding:32,maxWidth:340,width:"100%",textAlign:"center",boxShadow:"0 0 60px rgba(96,165,250,0.4)"}}>
-            <div style={{fontSize:48,marginBottom:8}}>{pinAlert.type==="morning"?"📌":"⏰"}</div>
-            <div style={{fontSize:13,color:"#60a5fa",fontFamily:"monospace",fontWeight:700,marginBottom:20,lineHeight:1.8}}>{pinAlert.msg}</div>
+          <div style={{background:"#0f172a",border:"2px solid #60a5fa",borderRadius:20,padding:32,maxWidth:320,width:"100%",textAlign:"center",boxShadow:"0 0 60px rgba(96,165,250,0.4)",wordBreak:"break-word"}}>
+            <div style={{fontSize:48,marginBottom:12}}>{pinAlert.type==="morning"?"📌":"⏰"}</div>
+            <div style={{fontSize:15,color:"#60a5fa",fontFamily:"monospace",fontWeight:700,marginBottom:20,lineHeight:1.8}}>{pinAlert.msg}</div>
             <div style={{display:"flex",gap:10,justifyContent:"center"}}>
               <button style={{background:"#1e293b",border:"2px solid #60a5fa",color:"#60a5fa",borderRadius:12,padding:"12px 20px",cursor:"pointer",fontFamily:"monospace",fontWeight:900,fontSize:14}} onClick={()=>setPinAlert(null)}>✕</button>
               <button style={{background:"linear-gradient(135deg,#1d4ed8,#60a5fa)",border:"none",color:"#020617",borderRadius:12,padding:"12px 20px",cursor:"pointer",fontFamily:"monospace",fontWeight:900,fontSize:14}} onClick={()=>{setPinAlert(null);setTab("doses");}}>Log Dose</button>
@@ -952,10 +1002,10 @@ export default function App() {
       {/* WEIGHT ALERT */}
       {weightAlert&&(
         <div style={{position:"fixed",inset:0,background:"rgba(0,0,0,0.92)",display:"flex",alignItems:"center",justifyContent:"center",zIndex:600,padding:24}}>
-          <div style={{background:"#0f172a",border:`2px solid ${weightAlert.type==="good"?"#4ade80":"#ef4444"}`,borderRadius:20,padding:32,maxWidth:340,width:"100%",textAlign:"center",boxShadow:`0 0 60px ${weightAlert.type==="good"?"rgba(74,222,128,0.4)":"rgba(239,68,68,0.4)"}`}}>
-            <div style={{fontSize:48,marginBottom:8}}>{weightAlert.type==="good"?"💪💪💪":"❗❗❗"}</div>
-            <div style={{fontSize:13,color:weightAlert.type==="good"?"#4ade80":"#ef4444",fontFamily:"monospace",fontWeight:700,marginBottom:20,lineHeight:1.8}}>{weightAlert.msg}</div>
-            <button style={{background:weightAlert.type==="good"?"#14532d":"#450a0a",border:`2px solid ${weightAlert.type==="good"?"#4ade80":"#ef4444"}`,color:weightAlert.type==="good"?"#4ade80":"#ef4444",borderRadius:12,padding:"12px 28px",cursor:"pointer",fontFamily:"monospace",fontWeight:900,fontSize:16}} onClick={()=>setWeightAlert(null)}>✕</button>
+          <div style={{background:"#0f172a",border:`2px solid ${weightAlert.type==="good"?"#4ade80":"#ef4444"}`,borderRadius:20,padding:32,maxWidth:320,width:"100%",textAlign:"center",boxShadow:`0 0 60px ${weightAlert.type==="good"?"rgba(74,222,128,0.4)":"rgba(239,68,68,0.4)"}`,wordBreak:"break-word"}}>
+            <div style={{fontSize:48,marginBottom:12}}>{weightAlert.type==="good"?"💪💪💪":"❗❗❗"}</div>
+            <div style={{fontSize:16,color:weightAlert.type==="good"?"#4ade80":"#ef4444",fontFamily:"monospace",fontWeight:700,marginBottom:24,lineHeight:1.8,whiteSpace:"normal"}}>{weightAlert.msg}</div>
+            <button style={{background:weightAlert.type==="good"?"#14532d":"#450a0a",border:`2px solid ${weightAlert.type==="good"?"#4ade80":"#ef4444"}`,color:weightAlert.type==="good"?"#4ade80":"#ef4444",borderRadius:12,padding:"14px 32px",cursor:"pointer",fontFamily:"monospace",fontWeight:900,fontSize:16}} onClick={()=>setWeightAlert(null)}>✕</button>
           </div>
         </div>
       )}
@@ -963,10 +1013,10 @@ export default function App() {
       {/* UPLIFT ALERT */}
       {upliftAlert&&(
         <div style={{position:"fixed",inset:0,background:"rgba(0,0,0,0.92)",display:"flex",alignItems:"center",justifyContent:"center",zIndex:600,padding:24}}>
-          <div style={{background:"#0f172a",border:"2px solid #60a5fa",borderRadius:20,padding:32,maxWidth:340,width:"100%",textAlign:"center",boxShadow:"0 0 60px rgba(96,165,250,0.4)"}}>
-            <div style={{fontSize:48,marginBottom:8}}>💙💙💙</div>
-            <div style={{fontSize:13,color:"#60a5fa",fontFamily:"monospace",fontWeight:700,marginBottom:20,lineHeight:1.8}}>{upliftAlert}</div>
-            <button style={{background:"#1e3a5f",border:"2px solid #60a5fa",color:"#60a5fa",borderRadius:12,padding:"12px 28px",cursor:"pointer",fontFamily:"monospace",fontWeight:900,fontSize:16}} onClick={()=>setUpliftAlert(null)}>✕</button>
+          <div style={{background:"#0f172a",border:"2px solid #60a5fa",borderRadius:20,padding:32,maxWidth:320,width:"100%",textAlign:"center",boxShadow:"0 0 60px rgba(96,165,250,0.4)",wordBreak:"break-word"}}>
+            <div style={{fontSize:48,marginBottom:12}}>💙💙💙</div>
+            <div style={{fontSize:16,color:"#60a5fa",fontFamily:"monospace",fontWeight:700,marginBottom:24,lineHeight:1.8,whiteSpace:"normal"}}>{upliftAlert}</div>
+            <button style={{background:"#1e3a5f",border:"2px solid #60a5fa",color:"#60a5fa",borderRadius:12,padding:"14px 32px",cursor:"pointer",fontFamily:"monospace",fontWeight:900,fontSize:16}} onClick={()=>setUpliftAlert(null)}>✕</button>
           </div>
         </div>
       )}
@@ -974,29 +1024,83 @@ export default function App() {
       {/* JUNK ALERT */}
       {junkAlert&&(
         <div style={{position:"fixed",inset:0,background:"rgba(0,0,0,0.92)",display:"flex",alignItems:"center",justifyContent:"center",zIndex:600,padding:24}}>
-          <div style={{background:"#0f172a",border:"2px solid #ef4444",borderRadius:20,padding:32,maxWidth:340,width:"100%",textAlign:"center",boxShadow:"0 0 60px rgba(239,68,68,0.4)"}}>
-            <div style={{fontSize:48,marginBottom:8}}>❗❗❗</div>
-            <div style={{fontSize:13,color:"#ef4444",fontFamily:"monospace",fontWeight:700,marginBottom:20,lineHeight:1.8}}>{junkAlert}</div>
-            <button style={{background:"#450a0a",border:"2px solid #ef4444",color:"#ef4444",borderRadius:12,padding:"12px 28px",cursor:"pointer",fontFamily:"monospace",fontWeight:900,fontSize:16}} onClick={()=>setJunkAlert(null)}>✕</button>
+          <div style={{background:"#0f172a",border:"2px solid #ef4444",borderRadius:20,padding:32,maxWidth:320,width:"100%",textAlign:"center",boxShadow:"0 0 60px rgba(239,68,68,0.4)",wordBreak:"break-word"}}>
+            <div style={{fontSize:48,marginBottom:12}}>❗❗❗</div>
+            <div style={{fontSize:16,color:"#ef4444",fontFamily:"monospace",fontWeight:700,marginBottom:24,lineHeight:1.8,whiteSpace:"normal"}}>{junkAlert}</div>
+            <button style={{background:"#450a0a",border:"2px solid #ef4444",color:"#ef4444",borderRadius:12,padding:"14px 32px",cursor:"pointer",fontFamily:"monospace",fontWeight:900,fontSize:16}} onClick={()=>setJunkAlert(null)}>✕</button>
           </div>
         </div>
       )}
 
-      {/* SUPPLEMENT REMINDER */}
+      {/* SUPPLEMENT REMINDER (8PM) */}
       {suppReminder&&(
         <div style={{position:"fixed",inset:0,background:"rgba(0,0,0,0.88)",display:"flex",alignItems:"center",justifyContent:"center",zIndex:500,padding:24}}>
-          <div style={{background:"#0f172a",border:`1px solid ${theme.primary}66`,borderRadius:18,padding:28,maxWidth:320,width:"100%",textAlign:"center",boxShadow:`0 0 40px ${theme.glow}`}}>
-            <div style={{fontSize:32,marginBottom:12}}>💊</div>
-            <div style={{fontWeight:700,color:"#f8fafc",fontSize:15,marginBottom:8,fontFamily:"monospace"}}>Supplement Check</div>
-            <div style={{fontSize:13,color:"#94a3b8",fontFamily:"monospace",marginBottom:8,lineHeight:1.7}}>
+          <div style={{background:"#0f172a",border:`2px solid ${theme.primary}`,borderRadius:20,padding:32,maxWidth:320,width:"100%",textAlign:"center",boxShadow:`0 0 60px ${theme.glowStrong}`,wordBreak:"break-word"}}>
+            <div style={{fontSize:40,marginBottom:12}}>💊</div>
+            <div style={{fontWeight:900,color:"#f8fafc",fontSize:16,fontFamily:"monospace",letterSpacing:1,marginBottom:10}}>SUPPLEMENT CHECK</div>
+            <div style={{fontSize:15,color:"#94a3b8",fontFamily:"monospace",marginBottom:8,lineHeight:1.8}}>
               {motivationMode==="drill"?`${userName?userName+", you":""} forgot your supplements again. Not acceptable.`:motivationMode==="none"?"You have untaken supplements today.":"Hey! Don't forget your supplements tonight 💊"}
             </div>
-            <div style={{fontSize:12,color:"#475569",fontFamily:"monospace",marginBottom:24}}>
+            <div style={{fontSize:13,color:"#475569",fontFamily:"monospace",marginBottom:24}}>
               {takenToday.filter(id=>mySupplements.find(s=>s.id===id)).length} of {mySupplements.length} taken
             </div>
             <div style={{display:"flex",gap:10}}>
-              <button style={{flex:1,background:"#1e293b",border:"1px solid #334155",color:"#94a3b8",borderRadius:10,padding:"12px",cursor:"pointer",fontFamily:"monospace",fontWeight:700,fontSize:13}} onClick={()=>setSuppReminder(false)}>Dismiss</button>
-              <button style={{flex:1,background:`linear-gradient(135deg,${theme.primaryDark},${theme.primary})`,border:"none",color:"#020617",borderRadius:10,padding:"12px",cursor:"pointer",fontFamily:"monospace",fontWeight:700,fontSize:13}} onClick={()=>{setSuppReminder(false);setTab("supplements");}}>Go Log Them</button>
+              <button style={{flex:1,background:"#1e293b",border:"1px solid #334155",color:"#94a3b8",borderRadius:10,padding:"13px",cursor:"pointer",fontFamily:"monospace",fontWeight:700,fontSize:13}} onClick={()=>setSuppReminder(false)}>Dismiss</button>
+              <button style={{flex:1,background:`linear-gradient(135deg,${theme.primaryDark},${theme.primary})`,border:"none",color:"#020617",borderRadius:10,padding:"13px",cursor:"pointer",fontFamily:"monospace",fontWeight:900,fontSize:13}} onClick={()=>{setSuppReminder(false);setTab("supplements");}}>Go Log Them</button>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* SUPPLEMENT TIME REMINDER */}
+      {suppTimeReminder&&(
+        <div style={{position:"fixed",inset:0,background:"rgba(0,0,0,0.92)",display:"flex",alignItems:"center",justifyContent:"center",zIndex:600,padding:24}}>
+          <div style={{background:"#0f172a",border:`2px solid ${theme.primary}`,borderRadius:20,padding:32,width:"100%",maxWidth:320,textAlign:"center",boxShadow:`0 0 60px ${theme.glowStrong}`,wordBreak:"break-word"}}>
+            <div style={{fontSize:40,marginBottom:12}}>💊</div>
+            <div style={{fontWeight:900,color:"#f8fafc",fontSize:16,fontFamily:"monospace",letterSpacing:1,marginBottom:14}}>TIME TO TAKE YOUR SUPPLEMENTS</div>
+            <div style={{marginBottom:16}}>
+              {suppTimeReminder.map(s=>(
+                <div key={s.id} style={{background:"#020617",border:`1px solid ${theme.border}`,borderRadius:10,padding:"8px 14px",marginBottom:6,fontWeight:700,color:theme.primary,fontFamily:"monospace",fontSize:14}}>
+                  {s.name}
+                </div>
+              ))}
+            </div>
+            <div style={{fontSize:13,color:"#475569",fontFamily:"monospace",marginBottom:20,lineHeight:1.6}}>You haven't taken {suppTimeReminder.length===1?"this":"these"} yet today.</div>
+            <div style={{display:"flex",flexDirection:"column",gap:10}}>
+              <button style={{width:"100%",background:`linear-gradient(135deg,${theme.primaryDark},${theme.primary})`,border:"none",color:"#020617",borderRadius:12,padding:"14px",cursor:"pointer",fontFamily:"monospace",fontWeight:900,fontSize:14,letterSpacing:1}} onClick={()=>{setSuppTimeReminder(null);setTab("supplements");}}>GO TO SUPPLEMENTS</button>
+              <button style={{width:"100%",background:"#1e293b",border:`1px solid ${theme.border}`,color:"#94a3b8",borderRadius:12,padding:"14px",cursor:"pointer",fontFamily:"monospace",fontWeight:700,fontSize:13}} onClick={()=>{
+                const snoozeUntil=new Date(Date.now()+30*60*1000).toISOString();
+                suppTimeReminder.forEach(s=>localStorage.setItem(`axion_snooze_supp_${s.id}_${todayISO()}`,snoozeUntil));
+                setSuppTimeReminder(null);
+              }}>⏱ Snooze 30 Minutes</button>
+              <button style={{width:"100%",background:"transparent",border:"none",color:"#475569",cursor:"pointer",fontFamily:"monospace",fontSize:12,padding:"6px"}} onClick={()=>setSuppTimeReminder(null)}>Dismiss</button>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* PEPTIDE TIME REMINDER */}
+      {pepTimeReminder&&(
+        <div style={{position:"fixed",inset:0,background:"rgba(0,0,0,0.92)",display:"flex",alignItems:"center",justifyContent:"center",zIndex:600,padding:24}}>
+          <div style={{background:"#0f172a",border:`2px solid ${theme.primary}`,borderRadius:20,padding:32,width:"100%",maxWidth:320,textAlign:"center",boxShadow:`0 0 60px ${theme.glowStrong}`,wordBreak:"break-word"}}>
+            <div style={{fontSize:40,marginBottom:12}}>🧬</div>
+            <div style={{fontWeight:900,color:"#f8fafc",fontSize:16,fontFamily:"monospace",letterSpacing:1,marginBottom:14}}>TIME TO LOG YOUR DOSE</div>
+            <div style={{marginBottom:16}}>
+              {pepTimeReminder.map(p=>(
+                <div key={p.id} style={{background:"#020617",border:`1px solid ${theme.border}`,borderRadius:10,padding:"8px 14px",marginBottom:6,fontWeight:700,color:theme.primary,fontFamily:"monospace",fontSize:14}}>
+                  {p.name}
+                </div>
+              ))}
+            </div>
+            <div style={{fontSize:13,color:"#475569",fontFamily:"monospace",marginBottom:20,lineHeight:1.6}}>You haven't logged {pepTimeReminder.length===1?"this dose":"these doses"} yet today.</div>
+            <div style={{display:"flex",flexDirection:"column",gap:10}}>
+              <button style={{width:"100%",background:`linear-gradient(135deg,${theme.primaryDark},${theme.primary})`,border:"none",color:"#020617",borderRadius:12,padding:"14px",cursor:"pointer",fontFamily:"monospace",fontWeight:900,fontSize:14,letterSpacing:1}} onClick={()=>{setPepTimeReminder(null);setTab("doses");}}>GO TO DOSES</button>
+              <button style={{width:"100%",background:"#1e293b",border:`1px solid ${theme.border}`,color:"#94a3b8",borderRadius:12,padding:"14px",cursor:"pointer",fontFamily:"monospace",fontWeight:700,fontSize:13}} onClick={()=>{
+                const snoozeUntil=new Date(Date.now()+30*60*1000).toISOString();
+                pepTimeReminder.forEach(p=>localStorage.setItem(`axion_snooze_pep_${p.id}_${todayISO()}`,snoozeUntil));
+                setPepTimeReminder(null);
+              }}>⏱ Snooze 30 Minutes</button>
+              <button style={{width:"100%",background:"transparent",border:"none",color:"#475569",cursor:"pointer",fontFamily:"monospace",fontSize:12,padding:"6px"}} onClick={()=>setPepTimeReminder(null)}>Dismiss</button>
             </div>
           </div>
         </div>
@@ -1005,7 +1109,7 @@ export default function App() {
       {/* WEEKLY RECAP */}
       {weeklyRecap&&(
         <div style={{position:"fixed",inset:0,background:"rgba(0,0,0,0.92)",display:"flex",alignItems:"center",justifyContent:"center",zIndex:500,padding:24}}>
-          <div style={{background:"#0f172a",border:`1px solid ${theme.primary}66`,borderRadius:20,padding:28,maxWidth:340,width:"100%",boxShadow:`0 0 60px ${theme.glow}`}}>
+          <div style={{background:"#0f172a",border:`2px solid ${theme.primary}`,borderRadius:20,padding:28,maxWidth:340,width:"100%",boxShadow:`0 0 60px ${theme.glow}`,wordBreak:"break-word"}}>
             <div style={{textAlign:"center",marginBottom:20}}>
               <div style={{fontSize:36,marginBottom:8}}>📊</div>
               <div style={{fontWeight:900,color:"#f8fafc",fontSize:18,fontFamily:"monospace",letterSpacing:1}}>WEEKLY RECAP</div>
@@ -1027,7 +1131,7 @@ export default function App() {
               ))}
             </div>
             <div style={{background:`linear-gradient(145deg,#020617,${theme.primary}11)`,border:`1px solid ${theme.primary}44`,borderRadius:12,padding:14,marginBottom:16,textAlign:"center"}}>
-              <div style={{fontSize:13,color:theme.primary,fontFamily:"monospace",fontWeight:700,lineHeight:1.6}}>
+              <div style={{fontSize:14,color:theme.primary,fontFamily:"monospace",fontWeight:700,lineHeight:1.7}}>
                 {getWeeklyRecapMessage(weeklyRecap.lostThisWeek,weeklyRecap.workoutCount,weeklyRecap.avgCals,weeklyRecap.avgProtein,weeklyRecap.streak,weeklyRecap.isBulk)}
               </div>
             </div>
@@ -1039,7 +1143,7 @@ export default function App() {
       {/* MILESTONE MODAL */}
       {milestone&&(
         <div style={{position:"fixed",top:0,left:0,right:0,bottom:0,background:"rgba(0,0,0,0.85)",display:"flex",alignItems:"center",justifyContent:"center",zIndex:300,padding:24}}>
-          <div style={{background:`linear-gradient(145deg,#020617,${theme.primary}22)`,border:`2px solid ${theme.primary}`,borderRadius:24,padding:32,textAlign:"center",maxWidth:320,boxShadow:`0 0 60px ${theme.glowStrong}`}}>
+          <div style={{background:`linear-gradient(145deg,#020617,${theme.primary}22)`,border:`2px solid ${theme.primary}`,borderRadius:24,padding:32,textAlign:"center",maxWidth:320,width:"100%",boxShadow:`0 0 60px ${theme.glowStrong}`,wordBreak:"break-word"}}>
             <div style={{fontSize:64,lineHeight:1,marginBottom:16}}>{milestone.emoji}</div>
             <div style={{fontSize:28,fontWeight:900,color:theme.primary,fontFamily:"monospace",letterSpacing:2,marginBottom:8}}>{milestone.label}</div>
             <div style={{fontSize:14,color:"#94a3b8",fontFamily:"monospace",marginBottom:24}}>{IS_BULK?"Keep building. You're doing it.":"Keep going. You're doing it."}</div>
@@ -1059,7 +1163,7 @@ export default function App() {
       </div>
 
       {saved&&(
-        <div style={{position:"fixed",top:"50%",left:"50%",transform:"translate(-50%,-50%)",background:"#0f172a",color:theme.primary,border:`2px solid ${theme.primary}`,borderRadius:16,padding:"24px 32px",fontSize:15,fontFamily:"monospace",fontWeight:700,zIndex:600,whiteSpace:"nowrap",textAlign:"center",boxShadow:`0 0 60px ${theme.glowStrong}`,maxWidth:"80vw",wordBreak:"break-word"}}>
+        <div style={{position:"fixed",top:"50%",left:"50%",transform:"translate(-50%,-50%)",background:"#0f172a",color:theme.primary,border:`2px solid ${theme.primary}`,borderRadius:16,padding:"20px 28px",fontSize:15,fontFamily:"monospace",fontWeight:700,zIndex:600,textAlign:"center",boxShadow:`0 0 60px ${theme.glowStrong}`,maxWidth:"80vw",wordBreak:"break-word",lineHeight:1.6}}>
           {saved}
         </div>
       )}
@@ -1154,7 +1258,7 @@ export default function App() {
         </div>
       </div>
 
-      {/* TABS */}
+      {/* TABS - ROW 1 */}
       <nav style={{display:"grid",gridTemplateColumns:"1fr 1fr 1fr 1fr 1fr",gap:5,marginBottom:5}}>
         {["dashboard","weight","food","peptides","supplements"].map(t=>{const Icon=ICONS[t];return(
           <button key={t} onClick={()=>setTab(t)} style={tab===t?{...DS.activeTab,flex:"unset"}:{display:"flex",flexDirection:"column",alignItems:"center",gap:6,padding:"14px 4px",background:"linear-gradient(145deg,#000000,#020806)",border:`1px solid ${theme.border}`,borderRadius:18,cursor:"pointer",color:theme.primary+"99",fontFamily:"monospace",transition:"all 0.18s ease"}}>
@@ -1163,6 +1267,7 @@ export default function App() {
           </button>
         );})}
       </nav>
+      {/* TABS - ROW 2 */}
       <nav style={{display:"grid",gridTemplateColumns:"1fr 1fr 1fr 1fr",gap:5,marginBottom:16}}>
         {["workouts","notes","doses","calculator"].map(t=>{const Icon=ICONS[t];return(
           <button key={t} onClick={()=>setTab(t)} style={tab===t?{...DS.activeTab,flex:"unset"}:{display:"flex",flexDirection:"column",alignItems:"center",gap:6,padding:"14px 4px",background:"linear-gradient(145deg,#000000,#020806)",border:`1px solid ${theme.border}`,borderRadius:18,cursor:"pointer",color:theme.primary+"99",fontFamily:"monospace",transition:"all 0.18s ease"}}>
@@ -1203,7 +1308,6 @@ export default function App() {
             </div>
           ))}
         </div>
-
         {todayWater>0&&(
           <div style={{...DS.panel,marginBottom:14}}>
             <div style={{display:"flex",alignItems:"center",gap:12}}>
@@ -1220,7 +1324,6 @@ export default function App() {
             </div>
           </div>
         )}
-
         <div style={DS.panel}>
           <div style={{display:"flex",alignItems:"center",gap:16}}>
             <Flame size={36} color={streak>0?theme.primary:"#334155"}/>
@@ -1488,7 +1591,7 @@ export default function App() {
                       {p.notes&&<div style={{fontSize:11,color:"#94a3b8",marginTop:4,fontStyle:"italic"}}>{p.notes}</div>}
                     </div>
                     <div style={{display:"flex",gap:6,flexShrink:0}}>
-                      <button onClick={()=>{setEditingPep(p);setPepForm({dose:p.dose==="—"?"":p.dose,unit:p.unit,frequency:p.frequency,cycle:p.cycle,notes:p.notes||"",status:p.status,pinDays:p.pinDays||[]});setPepView("edit");}} style={{background:"#0f172a",border:"1px solid #1e293b",color:"#60a5fa",cursor:"pointer",borderRadius:6,padding:"4px 8px",fontSize:11}}>Edit</button>
+                      <button onClick={()=>{setEditingPep(p);setPepForm({dose:p.dose==="—"?"":p.dose,unit:p.unit,frequency:p.frequency,cycle:p.cycle,notes:p.notes||"",status:p.status,pinDays:p.pinDays||[],reminderEnabled:p.reminderEnabled||false,reminderTime:p.reminderTime||"08:00"});setPepView("edit");}} style={{background:"#0f172a",border:"1px solid #1e293b",color:"#60a5fa",cursor:"pointer",borderRadius:6,padding:"4px 8px",fontSize:11}}>Edit</button>
                       <button onClick={()=>setConfirm({label:`Remove ${p.name} from your stack?`,onConfirm:()=>deletePep(p.id)})} style={{background:"transparent",border:"1px solid #450a0a",color:"#ef4444",cursor:"pointer",borderRadius:6,padding:"4px 8px",fontSize:11}}>✕</button>
                     </div>
                   </div>
@@ -1512,12 +1615,15 @@ export default function App() {
                 <div style={{display:"flex",gap:6,flexWrap:"wrap"}}>
                   {["Mon","Tue","Wed","Thu","Fri","Sat","Sun"].map(day=>{
                     const selected=(pepForm.pinDays||[]).includes(day);
-                    return(
-                      <button key={day} type="button" onClick={()=>setPepForm(f=>({...f,pinDays:selected?(f.pinDays||[]).filter(d=>d!==day):[...(f.pinDays||[]),day]}))} style={{padding:"6px 10px",borderRadius:8,cursor:"pointer",fontFamily:"monospace",fontSize:11,fontWeight:700,border:`1px solid ${selected?theme.primary:"#334155"}`,background:selected?theme.primary+"22":"#020617",color:selected?theme.primary:"#64748b"}}>
-                        {day}
-                      </button>
-                    );
+                    return(<button key={day} type="button" onClick={()=>setPepForm(f=>({...f,pinDays:selected?(f.pinDays||[]).filter(d=>d!==day):[...(f.pinDays||[]),day]}))} style={{padding:"6px 10px",borderRadius:8,cursor:"pointer",fontFamily:"monospace",fontSize:11,fontWeight:700,border:`1px solid ${selected?theme.primary:"#334155"}`,background:selected?theme.primary+"22":"#020617",color:selected?theme.primary:"#64748b"}}>{day}</button>);
                   })}
+                </div>
+                <label style={formLabel}>Reminder</label>
+                <div style={{display:"flex",alignItems:"center",gap:10}}>
+                  <button type="button" onClick={()=>setPepForm(f=>({...f,reminderEnabled:!f.reminderEnabled}))} style={{width:44,height:24,borderRadius:999,border:"none",cursor:"pointer",background:pepForm.reminderEnabled?theme.primary:"#334155",position:"relative",transition:"all 0.2s",flexShrink:0}}>
+                    <div style={{width:18,height:18,borderRadius:"50%",background:"white",position:"absolute",top:3,left:pepForm.reminderEnabled?23:3,transition:"all 0.2s"}}/>
+                  </button>
+                  {pepForm.reminderEnabled&&<input type="time" value={pepForm.reminderTime||"08:00"} onChange={e=>setPepForm(f=>({...f,reminderTime:e.target.value}))} style={{...DS.input,width:"auto",flex:1}}/>}
                 </div>
               </div>
               <div style={{display:"flex",gap:8,marginTop:8}}>
@@ -1536,7 +1642,7 @@ export default function App() {
                   {pepSearchResults.length===0&&<div style={{color:"#475569",fontSize:13,fontFamily:"monospace"}}>No results for "{pepSearch}"</div>}
                   {pepSearchResults.map(pep=>{
                     const cat=Object.entries(PEPTIDE_LIBRARY).find(([,v])=>v.some(p=>p.name===pep.name))?.[0];
-                    return(<button key={pep.name} onClick={()=>{setPendingPep({...pep,category:cat});setPepForm({dose:"",unit:pep.unit||"mg",frequency:pep.frequency||"",cycle:pep.cycle||"",notes:"",status:"active",pinDays:[]});setPepView("add");}} style={{background:"#020617",border:`1px solid ${theme.primary}33`,borderRadius:12,padding:"12px 14px",color:"#e2e8f0",textAlign:"left",cursor:"pointer"}}><div style={{fontWeight:700,fontSize:14}}>{pep.name}</div><div style={{fontSize:11,color:"#64748b",fontFamily:"monospace",marginTop:2}}>{pep.typicalDose} · {pep.frequency}</div><div style={{fontSize:11,color:"#94a3b8",marginTop:4,lineHeight:1.5}}>{pep.desc}</div></button>);
+                    return(<button key={pep.name} onClick={()=>{setPendingPep({...pep,category:cat});setPepForm({dose:"",unit:pep.unit||"mg",frequency:pep.frequency||"",cycle:pep.cycle||"",notes:"",status:"active",pinDays:[],reminderEnabled:false,reminderTime:"08:00"});setPepView("add");}} style={{background:"#020617",border:`1px solid ${theme.primary}33`,borderRadius:12,padding:"12px 14px",color:"#e2e8f0",textAlign:"left",cursor:"pointer"}}><div style={{fontWeight:700,fontSize:14}}>{pep.name}</div><div style={{fontSize:11,color:"#64748b",fontFamily:"monospace",marginTop:2}}>{pep.typicalDose} · {pep.frequency}</div><div style={{fontSize:11,color:"#94a3b8",marginTop:4,lineHeight:1.5}}>{pep.desc}</div></button>);
                   })}
                 </div>
               ):(
@@ -1550,7 +1656,7 @@ export default function App() {
             <>
               <button style={{...DS.btn,gridColumn:"unset",background:"#020617",border:"1px solid #334155",color:"#94a3b8",marginBottom:12}} onClick={()=>setPepView("cats")}>← Back</button>
               <div style={{display:"flex",flexDirection:"column",gap:8}}>
-                {PEPTIDE_LIBRARY[pepActiveCat].map(pep=>(<button key={pep.name} onClick={()=>{setPendingPep({...pep,category:pepActiveCat});setPepForm({dose:"",unit:pep.unit||"mg",frequency:pep.frequency||"",cycle:pep.cycle||"",notes:"",status:"active",pinDays:[]});setPepView("add");}} style={{background:"#020617",border:`1px solid ${theme.primary}33`,borderRadius:12,padding:"12px 14px",color:"#e2e8f0",textAlign:"left",cursor:"pointer"}}><div style={{fontWeight:700,fontSize:14}}>{pep.name}</div><div style={{fontSize:11,color:"#64748b",fontFamily:"monospace",marginTop:2}}>{pep.typicalDose} · {pep.frequency}</div><div style={{fontSize:11,color:"#94a3b8",marginTop:4,lineHeight:1.5}}>{pep.desc}</div></button>))}
+                {PEPTIDE_LIBRARY[pepActiveCat].map(pep=>(<button key={pep.name} onClick={()=>{setPendingPep({...pep,category:pepActiveCat});setPepForm({dose:"",unit:pep.unit||"mg",frequency:pep.frequency||"",cycle:pep.cycle||"",notes:"",status:"active",pinDays:[],reminderEnabled:false,reminderTime:"08:00"});setPepView("add");}} style={{background:"#020617",border:`1px solid ${theme.primary}33`,borderRadius:12,padding:"12px 14px",color:"#e2e8f0",textAlign:"left",cursor:"pointer"}}><div style={{fontWeight:700,fontSize:14}}>{pep.name}</div><div style={{fontSize:11,color:"#64748b",fontFamily:"monospace",marginTop:2}}>{pep.typicalDose} · {pep.frequency}</div><div style={{fontSize:11,color:"#94a3b8",marginTop:4,lineHeight:1.5}}>{pep.desc}</div></button>))}
               </div>
             </>
           )}
@@ -1571,12 +1677,15 @@ export default function App() {
                 <div style={{display:"flex",gap:6,flexWrap:"wrap"}}>
                   {["Mon","Tue","Wed","Thu","Fri","Sat","Sun"].map(day=>{
                     const selected=(pepForm.pinDays||[]).includes(day);
-                    return(
-                      <button key={day} type="button" onClick={()=>setPepForm(f=>({...f,pinDays:selected?(f.pinDays||[]).filter(d=>d!==day):[...(f.pinDays||[]),day]}))} style={{padding:"6px 10px",borderRadius:8,cursor:"pointer",fontFamily:"monospace",fontSize:11,fontWeight:700,border:`1px solid ${selected?theme.primary:"#334155"}`,background:selected?theme.primary+"22":"#020617",color:selected?theme.primary:"#64748b"}}>
-                        {day}
-                      </button>
-                    );
+                    return(<button key={day} type="button" onClick={()=>setPepForm(f=>({...f,pinDays:selected?(f.pinDays||[]).filter(d=>d!==day):[...(f.pinDays||[]),day]}))} style={{padding:"6px 10px",borderRadius:8,cursor:"pointer",fontFamily:"monospace",fontSize:11,fontWeight:700,border:`1px solid ${selected?theme.primary:"#334155"}`,background:selected?theme.primary+"22":"#020617",color:selected?theme.primary:"#64748b"}}>{day}</button>);
                   })}
+                </div>
+                <label style={formLabel}>Reminder</label>
+                <div style={{display:"flex",alignItems:"center",gap:10}}>
+                  <button type="button" onClick={()=>setPepForm(f=>({...f,reminderEnabled:!f.reminderEnabled}))} style={{width:44,height:24,borderRadius:999,border:"none",cursor:"pointer",background:pepForm.reminderEnabled?theme.primary:"#334155",position:"relative",transition:"all 0.2s",flexShrink:0}}>
+                    <div style={{width:18,height:18,borderRadius:"50%",background:"white",position:"absolute",top:3,left:pepForm.reminderEnabled?23:3,transition:"all 0.2s"}}/>
+                  </button>
+                  {pepForm.reminderEnabled&&<input type="time" value={pepForm.reminderTime||"08:00"} onChange={e=>setPepForm(f=>({...f,reminderTime:e.target.value}))} style={{...DS.input,width:"auto",flex:1}}/>}
                 </div>
               </div>
               <div style={{display:"flex",gap:8,marginTop:8}}>
@@ -1630,7 +1739,7 @@ export default function App() {
               );
             })()}
             <div style={{marginTop:14,paddingTop:14,borderTop:`1px solid ${theme.border}`}}>
-              <div style={{display:"flex",justifyContent:"space-between",alignItems:"center",marginBottom:10}}>
+              <div style={{display:"flex",justifyContent:"space-between",alignItems:"center",marginBottom:6}}>
                 <div style={{display:"flex",alignItems:"center",gap:8}}>
                   <Droplets size={18} color={theme.primary}/>
                   <span style={{fontSize:12,color:"#94a3b8",fontFamily:"monospace",fontWeight:700}}>WATER · {todayWater} oz</span>
@@ -1975,7 +2084,14 @@ export default function App() {
             {(()=>{
               const sorted=[...(workouts||[])].sort((a,b)=>new Date(b.date)-new Date(a.date));
               const weekMap={};
-              sorted.forEach(w=>{const d=new Date(w.date);const sun=new Date(d);sun.setDate(d.getDate()-d.getDay());const key=sun.toISOString().slice(0,10);if(!weekMap[key])weekMap[key]=[];weekMap[key].push(w);});
+              sorted.forEach(w=>{
+                const d=new Date(w.date);
+                const sun=new Date(d);
+                sun.setDate(d.getDate()-d.getDay());
+                const key=sun.toISOString().slice(0,10);
+                if(!weekMap[key])weekMap[key]=[];
+                weekMap[key].push(w);
+              });
               return Object.entries(weekMap).sort((a,b)=>new Date(b[0])-new Date(a[0])).map(([weekStart,wkWorkouts])=>{
                 const totalMins=wkWorkouts.reduce((s,w)=>s+(w.minutes||0),0);
                 const isCurrentWeek=new Date(weekStart)>=new Date(new Date().setDate(new Date().getDate()-new Date().getDay())-1);
@@ -2020,10 +2136,11 @@ export default function App() {
               {mySupplements.map(s=>{
                 const taken=takenToday.includes(s.id);
                 return(
-                  <div key={s.id} style={{display:"flex",alignItems:"center",gap:10,background:taken?theme.primary+"11":"#020617",border:`1px solid ${taken?theme.primary+"66":"#1e293b"}`,borderRadius:12,padding:"10px 14px",marginBottom:8,cursor:"pointer",transition:"all 0.15s"}} onClick={()=>{setEditingSupp(s);setSuppForm({dose:s.dose==="—"?"":s.dose,unit:s.unit||"mg",schedule:s.schedule,time:s.time});setSuppView("detail");}}>
+                  <div key={s.id} style={{display:"flex",alignItems:"center",gap:10,background:taken?theme.primary+"11":"#020617",border:`1px solid ${taken?theme.primary+"66":"#1e293b"}`,borderRadius:12,padding:"10px 14px",marginBottom:8,cursor:"pointer",transition:"all 0.15s"}} onClick={()=>{setEditingSupp(s);setSuppForm({dose:s.dose==="—"?"":s.dose,unit:s.unit||"mg",schedule:s.schedule,time:s.time,reminderEnabled:s.reminderEnabled||false,reminderTime:s.reminderTime||"08:00"});setSuppView("detail");}}>
                     <div style={{flex:1}}>
                       <div style={{fontWeight:700,fontSize:14,color:"#e2e8f0"}}>{s.name}</div>
                       <div style={{fontSize:11,color:"#64748b",fontFamily:"monospace",marginTop:2}}>{s.dose}{s.unit} · {s.schedule} · {s.time}</div>
+                      {s.reminderEnabled&&<div style={{fontSize:10,color:theme.primary,fontFamily:"monospace",marginTop:2}}>⏰ {s.reminderTime}</div>}
                       {taken&&<div style={{fontSize:10,color:theme.primary,fontFamily:"monospace",marginTop:3}}>✓ TAKEN TODAY</div>}
                     </div>
                     <button onClick={e=>{e.stopPropagation();toggleTaken(s.id);}} style={{width:36,height:36,borderRadius:"50%",border:`2px solid ${taken?theme.primary:"#334155"}`,background:taken?theme.primary+"33":"transparent",cursor:"pointer",display:"flex",alignItems:"center",justifyContent:"center",fontSize:16,color:taken?theme.primary:"#475569",flexShrink:0,transition:"all 0.15s"}}>✓</button>
@@ -2038,11 +2155,21 @@ export default function App() {
               <div style={{fontWeight:800,fontSize:16,color:"#f8fafc",marginBottom:14}}>{editingSupp.name}</div>
               <div style={formGrid}>
                 <label style={formLabel}>Dose</label>
-                <div style={{display:"flex",gap:6}}><input style={{...DS.input,flex:1}} type="number" placeholder="500" value={suppForm.dose} onChange={e=>setSuppForm({...suppForm,dose:e.target.value})}/><select style={{...DS.input,width:80}} value={suppForm.unit} onChange={e=>setSuppForm({...suppForm,unit:e.target.value})}>{["mg","mcg","g","IU","mL"].map(u=><option key={u}>{u}</option>)}</select></div>
+                <div style={{display:"flex",gap:6}}>
+                  <input style={{...DS.input,flex:1}} type="number" placeholder="500" value={suppForm.dose} onChange={e=>setSuppForm({...suppForm,dose:e.target.value})}/>
+                  <select style={{...DS.input,width:80}} value={suppForm.unit} onChange={e=>setSuppForm({...suppForm,unit:e.target.value})}>{["mg","mcg","g","IU","mL"].map(u=><option key={u}>{u}</option>)}</select>
+                </div>
                 <label style={formLabel}>Schedule</label>
                 <select style={DS.input} value={suppForm.schedule} onChange={e=>setSuppForm({...suppForm,schedule:e.target.value})}>{["Daily","Twice daily","Every other day","Weekly","As needed"].map(o=><option key={o}>{o}</option>)}</select>
                 <label style={formLabel}>Time</label>
                 <select style={DS.input} value={suppForm.time} onChange={e=>setSuppForm({...suppForm,time:e.target.value})}>{["Morning","Afternoon","Evening","Night","With meals","Pre-workout","Post-workout"].map(o=><option key={o}>{o}</option>)}</select>
+                <label style={formLabel}>Reminder</label>
+                <div style={{display:"flex",alignItems:"center",gap:10}}>
+                  <button type="button" onClick={()=>setSuppForm(f=>({...f,reminderEnabled:!f.reminderEnabled}))} style={{width:44,height:24,borderRadius:999,border:"none",cursor:"pointer",background:suppForm.reminderEnabled?theme.primary:"#334155",position:"relative",transition:"all 0.2s",flexShrink:0}}>
+                    <div style={{width:18,height:18,borderRadius:"50%",background:"white",position:"absolute",top:3,left:suppForm.reminderEnabled?23:3,transition:"all 0.2s"}}/>
+                  </button>
+                  {suppForm.reminderEnabled&&<input type="time" value={suppForm.reminderTime||"08:00"} onChange={e=>setSuppForm(f=>({...f,reminderTime:e.target.value}))} style={{...DS.input,width:"auto",flex:1}}/>}
+                </div>
               </div>
               <div style={{display:"flex",gap:8,marginTop:8}}>
                 <button style={{...DS.btn,gridColumn:"unset",flex:1,background:"#7f1d1d"}} onClick={()=>setConfirm({label:`Remove ${editingSupp.name} from your supplements?`,onConfirm:()=>deleteSupp(editingSupp.id)})}>Remove</button>
@@ -2056,11 +2183,21 @@ export default function App() {
               <div style={{fontWeight:800,fontSize:15,color:"#f8fafc",marginBottom:14}}>Add {pendingSupp.name}</div>
               <div style={formGrid}>
                 <label style={formLabel}>Dose</label>
-                <div style={{display:"flex",gap:6}}><input style={{...DS.input,flex:1}} type="number" placeholder="500" value={suppForm.dose} onChange={e=>setSuppForm({...suppForm,dose:e.target.value})}/><select style={{...DS.input,width:80}} value={suppForm.unit} onChange={e=>setSuppForm({...suppForm,unit:e.target.value})}>{["mg","mcg","g","IU","mL"].map(u=><option key={u}>{u}</option>)}</select></div>
+                <div style={{display:"flex",gap:6}}>
+                  <input style={{...DS.input,flex:1}} type="number" placeholder="500" value={suppForm.dose} onChange={e=>setSuppForm({...suppForm,dose:e.target.value})}/>
+                  <select style={{...DS.input,width:80}} value={suppForm.unit} onChange={e=>setSuppForm({...suppForm,unit:e.target.value})}>{["mg","mcg","g","IU","mL"].map(u=><option key={u}>{u}</option>)}</select>
+                </div>
                 <label style={formLabel}>Schedule</label>
                 <select style={DS.input} value={suppForm.schedule} onChange={e=>setSuppForm({...suppForm,schedule:e.target.value})}>{["Daily","Twice daily","Every other day","Weekly","As needed"].map(o=><option key={o}>{o}</option>)}</select>
                 <label style={formLabel}>Time</label>
                 <select style={DS.input} value={suppForm.time} onChange={e=>setSuppForm({...suppForm,time:e.target.value})}>{["Morning","Afternoon","Evening","Night","With meals","Pre-workout","Post-workout"].map(o=><option key={o}>{o}</option>)}</select>
+                <label style={formLabel}>Reminder</label>
+                <div style={{display:"flex",alignItems:"center",gap:10}}>
+                  <button type="button" onClick={()=>setSuppForm(f=>({...f,reminderEnabled:!f.reminderEnabled}))} style={{width:44,height:24,borderRadius:999,border:"none",cursor:"pointer",background:suppForm.reminderEnabled?theme.primary:"#334155",position:"relative",transition:"all 0.2s",flexShrink:0}}>
+                    <div style={{width:18,height:18,borderRadius:"50%",background:"white",position:"absolute",top:3,left:suppForm.reminderEnabled?23:3,transition:"all 0.2s"}}/>
+                  </button>
+                  {suppForm.reminderEnabled&&<input type="time" value={suppForm.reminderTime||"08:00"} onChange={e=>setSuppForm(f=>({...f,reminderTime:e.target.value}))} style={{...DS.input,width:"auto",flex:1}}/>}
+                </div>
               </div>
               <div style={{display:"flex",gap:8,marginTop:8}}>
                 <button style={{...DS.btn,gridColumn:"unset",flex:1,background:"#1e293b",color:"#94a3b8"}} onClick={()=>{setSuppView("my");setPendingSupp(null);}}>Cancel</button>
@@ -2078,12 +2215,21 @@ export default function App() {
                   {suppSearchResults.length===0&&<div style={{color:"#475569",fontSize:13,fontFamily:"monospace"}}>No results for "{suppSearch}"</div>}
                   {suppSearchResults.map(item=>{
                     const cat=Object.entries(SUPPLEMENT_LIBRARY).find(([,v])=>v.includes(item))?.[0];
-                    return(<button key={item} onClick={()=>{setPendingSupp({name:item,category:cat});setSuppForm({dose:"",unit:"mg",schedule:"Daily",time:"Morning"});setSuppView("add");}} style={{background:"#020617",border:`1px solid ${theme.primary}33`,borderRadius:12,padding:"11px 14px",color:"#e2e8f0",fontWeight:700,textAlign:"left",cursor:"pointer"}}>{item}<span style={{fontSize:10,color:"#64748b",fontFamily:"monospace",marginLeft:8}}>{cat?.replace(/([A-Z])/g," $1").trim()}</span></button>);
+                    return(
+                      <button key={item} onClick={()=>{setPendingSupp({name:item,category:cat});setSuppForm({dose:"",unit:"mg",schedule:"Daily",time:"Morning",reminderEnabled:false,reminderTime:"08:00"});setSuppView("add");}} style={{background:"#020617",border:`1px solid ${theme.primary}33`,borderRadius:12,padding:"11px 14px",color:"#e2e8f0",fontWeight:700,textAlign:"left",cursor:"pointer"}}>
+                        {item}<span style={{fontSize:10,color:"#64748b",fontFamily:"monospace",marginLeft:8}}>{cat?.replace(/([A-Z])/g," $1").trim()}</span>
+                      </button>
+                    );
                   })}
                 </div>
               ):(
                 <div style={{display:"grid",gridTemplateColumns:"1fr 1fr",gap:10}}>
-                  {Object.keys(SUPPLEMENT_LIBRARY).map(cat=>(<button key={cat} onClick={()=>{setSuppActiveCat(cat);setSuppView("items");}} style={{background:"#020617",border:`1px solid ${theme.primary}33`,borderRadius:14,padding:14,color:"#f8fafc",textAlign:"left",cursor:"pointer"}}><div style={{fontSize:14,fontWeight:700}}>{cat.replace(/([A-Z])/g," $1").trim()}</div><div style={{marginTop:4,fontSize:11,color:"#64748b",fontFamily:"monospace"}}>{SUPPLEMENT_LIBRARY[cat].length} options</div></button>))}
+                  {Object.keys(SUPPLEMENT_LIBRARY).map(cat=>(
+                    <button key={cat} onClick={()=>{setSuppActiveCat(cat);setSuppView("items");}} style={{background:"#020617",border:`1px solid ${theme.primary}33`,borderRadius:14,padding:14,color:"#f8fafc",textAlign:"left",cursor:"pointer"}}>
+                      <div style={{fontSize:14,fontWeight:700}}>{cat.replace(/([A-Z])/g," $1").trim()}</div>
+                      <div style={{marginTop:4,fontSize:11,color:"#64748b",fontFamily:"monospace"}}>{SUPPLEMENT_LIBRARY[cat].length} options</div>
+                    </button>
+                  ))}
                 </div>
               )}
             </>
@@ -2093,8 +2239,11 @@ export default function App() {
               <button style={{...DS.btn,gridColumn:"unset",background:"#020617",border:"1px solid #334155",color:"#94a3b8",marginBottom:12}} onClick={()=>setSuppView("cats")}>← Back</button>
               <div style={{fontSize:13,fontWeight:700,color:"#94a3b8",fontFamily:"monospace",marginBottom:10}}>{suppActiveCat.replace(/([A-Z])/g," $1").trim()}</div>
               <div style={{display:"flex",flexDirection:"column",gap:8}}>
-                {SUPPLEMENT_LIBRARY[suppActiveCat].
-map(item=>(<button key={item} onClick={()=>{setPendingSupp({name:item,category:suppActiveCat});setSuppForm({dose:"",unit:"mg",schedule:"Daily",time:"Morning"});setSuppView("add");}} style={{background:"#020617",border:`1px solid ${theme.primary}33`,borderRadius:12,padding:"11px 14px",color:"#e2e8f0",fontWeight:700,textAlign:"left",cursor:"pointer"}}>{item}</button>))}
+                {SUPPLEMENT_LIBRARY[suppActiveCat].map(item=>(
+                  <button key={item} onClick={()=>{setPendingSupp({name:item,category:suppActiveCat});setSuppForm({dose:"",unit:"mg",schedule:"Daily",time:"Morning",reminderEnabled:false,reminderTime:"08:00"});setSuppView("add");}} style={{background:"#020617",border:`1px solid ${theme.primary}33`,borderRadius:12,padding:"11px 14px",color:"#e2e8f0",fontWeight:700,textAlign:"left",cursor:"pointer"}}>
+                    {item}
+                  </button>
+                ))}
               </div>
             </>
           )}
@@ -2130,7 +2279,7 @@ map(item=>(<button key={item} onClick={()=>{setPendingSupp({name:item,category:s
                         <div style={{fontSize:11,color:"#64748b",fontFamily:"monospace"}}>{dayNotes.length} entr{dayNotes.length===1?"y":"ies"}</div>
                       </div>
                       <div style={{display:"flex",alignItems:"center",gap:8}}>
-                        <span style={{fontSize:12,color:"#475569",fontFamily:"monospace",maxWidth:120,overflow:"hidden",textOverflow:"ellipsis",whiteSpace:"nowrap"}}>{dayNotes[0].text.slice(0,40)}{dayNotes[0].text.length>40?"...":""}</span>
+                        <span style={{fontSize:11,color:"#475569",fontFamily:"monospace",maxWidth:120,overflow:"hidden",textOverflow:"ellipsis",whiteSpace:"nowrap"}}>{dayNotes[0].text.slice(0,40)}{dayNotes[0].text.length>40?"...":""}</span>
                         {isOpen?<ChevronUp size={16} color="#64748b"/>:<ChevronDown size={16} color="#64748b"/>}
                       </div>
                     </button>
