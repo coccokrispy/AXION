@@ -1496,45 +1496,70 @@ export default function App() {
         </div>
       )}
 
-      {/* DOSES TAB */}
+     {/* DOSES TAB */}
       {tab==="doses"&&(
         <div>
-          {(peptideStack||[]).length===0&&(<div style={{...DS.panel,textAlign:"center",color:"#475569",fontFamily:"monospace",fontSize:13}}>No peptides in your stack yet.<br/>Add peptides in the 🧬 Peptides tab first.</div>)}
-          {(peptideStack||[]).map(pep=>{
+          {(peptideStack||[]).length===0&&(
+            <div style={{...DS.panel,textAlign:"center",color:"#475569",fontFamily:"monospace",fontSize:13}}>No peptides in your stack yet.<br/>Add peptides in the 🧬 Peptides tab first.</div>
+          )}
+          {(peptideStack||[]).length>0&&(()=>{
+            const activePep=doseTab||(peptideStack[0]?.id);
+            const pep=(peptideStack||[]).find(p=>p.id===activePep)||peptideStack[0];
+            if(!pep)return null;
             const logs=(peptideLogs[pep.id]||[]).slice().sort((a,b)=>new Date(b.date)-new Date(a.date));
             const total=logs.reduce((s,l)=>s+Number(l.dose||0),0);
-            const isActive=doseTab===pep.id;
             const sc={active:theme.primary,planned:"#fbbf24",completed:"#64748b"};
+            const wk=pep.dateAdded?getWeekNumber(pep.dateAdded,todayISO()):null;
             return(
-              <div key={pep.id} style={{...DS.panel,borderLeft:`3px solid ${sc[pep.status]||"#475569"}`}}>
-                <div style={{display:"flex",justifyContent:"space-between",alignItems:"center",marginBottom:10}}>
-                  <div style={{flex:1}}>
-                    <div style={{fontWeight:700,fontSize:15,color:sc[pep.status]}}>{pep.name}</div>
-                    <div style={{display:"flex",alignItems:"center",gap:6,marginTop:4,flexWrap:"wrap"}}>
-                      <input type="number" step="0.025" value={pep.dose==="—"?"":pep.dose} onChange={e=>setPeptideStack(prev=>prev.map(p=>p.id===pep.id?{...p,dose:e.target.value}:p))} style={{background:"#0f172a",border:`1px solid ${theme.border}`,color:theme.primary,borderRadius:8,padding:"4px 8px",fontSize:13,fontFamily:"monospace",fontWeight:700,width:80,outline:"none"}}/>
-                      <span style={{color:"#64748b",fontSize:12,fontFamily:"monospace"}}>{pep.unit} · {pep.frequency}</span>
-                      <span style={{color:"#475569",fontSize:11,fontFamily:"monospace"}}>Total: {total.toFixed(3)}{pep.unit} · {logs.length} doses</span>
-                    </div>
-                    {(pep.pinDays||[]).length>0&&<div style={{marginTop:6,display:"flex",gap:4,flexWrap:"wrap"}}>{(pep.pinDays||[]).map(d=><span key={d} style={{fontSize:10,fontFamily:"monospace",background:theme.primary+"22",color:theme.primary,borderRadius:4,padding:"2px 6px"}}>{d}</span>)}</div>}
-                  </div>
-                  <button onClick={()=>setDoseTab(isActive?null:pep.id)} style={{background:isActive?"#1e293b":"#1e3a5f",color:isActive?"#94a3b8":"#60a5fa",border:`1px solid ${isActive?"#334155":"#60a5fa"}`,borderRadius:10,padding:"6px 14px",cursor:"pointer",fontFamily:"monospace",fontSize:11,fontWeight:700,flexShrink:0,marginLeft:8}}>{isActive?"Close":"+ Log Dose"}</button>
+              <div>
+                {/* PEPTIDE TABS */}
+                <div style={{display:"flex",gap:6,overflowX:"auto",paddingBottom:8,marginBottom:14,scrollbarWidth:"none"}}>
+                  {(peptideStack||[]).map(p=>{
+                    const isActive=(doseTab||peptideStack[0]?.id)===p.id;
+                    return(
+                      <button key={p.id} onClick={()=>setDoseTab(p.id)} style={{flexShrink:0,padding:"8px 14px",borderRadius:10,border:`1px solid ${isActive?theme.primary:"#334155"}`,background:isActive?theme.primary+"22":"#020617",color:isActive?theme.primary:"#64748b",fontFamily:"monospace",fontSize:11,fontWeight:700,cursor:"pointer",transition:"all 0.15s"}}>
+                        {p.name.length>14?p.name.slice(0,14)+"...":p.name}
+                      </button>
+                    );
+                  })}
                 </div>
-                {isActive&&(
-                  <div style={{background:"#020617",border:"1px solid #1e293b",borderRadius:12,padding:14,marginBottom:12}}>
-                    <div style={formGrid}>
-                      <label style={formLabel}>Date</label><input style={DS.input} type="date" value={doseForm.date} onChange={e=>setDoseForm({...doseForm,date:e.target.value})}/>
-                      <label style={formLabel}>Dose ({pep.unit})</label><input style={DS.input} type="number" step="0.025" placeholder={pep.dose} value={doseForm.dose} onChange={e=>setDoseForm({...doseForm,dose:e.target.value})}/>
-                      <label style={formLabel}>Note</label><input style={DS.input} placeholder="Optional" value={doseForm.note} onChange={e=>setDoseForm({...doseForm,note:e.target.value})}/>
-                      <button style={DS.btn} onClick={()=>logPeptideDose(pep.id)}>+ Log Dose</button>
+
+                {/* SELECTED PEPTIDE INFO */}
+                <div style={{background:"#020617",border:`1px solid ${theme.primary}33`,borderLeft:`3px solid ${sc[pep.status]||theme.primary}`,borderRadius:12,padding:14,marginBottom:14}}>
+                  <div style={{fontSize:15,fontWeight:700,color:sc[pep.status]||theme.primary,marginBottom:4}}>{pep.name}</div>
+                  <div style={{fontSize:11,color:"#64748b",fontFamily:"monospace"}}>{pep.dose}{pep.unit} · {pep.frequency}{pep.cycle?` · ${pep.cycle}`:""}{wk?` · WK ${wk}`:""}</div>
+                  <div style={{fontSize:11,color:"#475569",fontFamily:"monospace",marginTop:2}}>Total: {total.toFixed(3)}{pep.unit} · {logs.length} doses</div>
+                  {(pep.pinDays||[]).length>0&&(
+                    <div style={{marginTop:8,display:"flex",gap:4,flexWrap:"wrap"}}>
+                      {(pep.pinDays||[]).map(d=><span key={d} style={{fontSize:10,fontFamily:"monospace",background:theme.primary+"22",color:theme.primary,borderRadius:4,padding:"2px 6px"}}>{d}</span>)}
                     </div>
+                  )}
+                  {pep.notes&&<div style={{fontSize:11,color:"#94a3b8",marginTop:6,fontStyle:"italic"}}>{pep.notes}</div>}
+                </div>
+
+                {/* DOSE INPUT */}
+                <div style={{background:"#020617",border:`1px solid #1e293b`,borderRadius:12,padding:14,marginBottom:14}}>
+                  <div style={{fontSize:11,color:"#64748b",fontFamily:"monospace",textTransform:"uppercase",letterSpacing:1,marginBottom:12}}>Log a Dose</div>
+                  <div style={formGrid}>
+                    <label style={formLabel}>Date</label>
+                    <input style={DS.input} type="date" value={doseForm.date} onChange={e=>setDoseForm({...doseForm,date:e.target.value})}/>
+                    <label style={formLabel}>Dose ({pep.unit})</label>
+                    <input style={DS.input} type="number" step="0.025" placeholder={pep.dose} value={doseForm.dose} onChange={e=>setDoseForm({...doseForm,dose:e.target.value})}/>
+                    <label style={formLabel}>Note</label>
+                    <input style={DS.input} placeholder="Optional" value={doseForm.note} onChange={e=>setDoseForm({...doseForm,note:e.target.value})}/>
                   </div>
-                )}
-                {logs.length>0?(
-                  <div style={{display:"flex",flexDirection:"column",gap:6}}>
-                    {logs.slice(0,10).map(l=>(
-                      <div key={l.id} style={{display:"flex",justifyContent:"space-between",alignItems:"flex-start",gap:10,background:"#020617",border:"1px solid #1e293b",borderRadius:8,padding:"10px 12px",fontSize:13}}>
+                  <button style={{...DS.btn,gridColumn:"unset",width:"100%",marginTop:4}} onClick={()=>logPeptideDose(pep.id)}>+ Log Dose</button>
+                </div>
+
+                {/* DOSE HISTORY */}
+                <div style={{...DS.panel}}>
+                  <div style={{fontSize:11,color:"#64748b",fontFamily:"monospace",textTransform:"uppercase",letterSpacing:1,marginBottom:12}}>Dose History</div>
+                  {logs.length===0&&<div style={{color:"#475569",fontSize:12,fontFamily:"monospace"}}>No doses logged yet.</div>}
+                  {logs.map(l=>(
+                    <div key={l.id} style={{background:"#020617",border:"1px solid #1e293b",borderRadius:8,padding:"10px 12px",marginBottom:8,fontSize:13}}>
+                      <div style={{display:"flex",justifyContent:"space-between",alignItems:"flex-start",gap:10}}>
                         <div style={{flex:1}}>
-                          <div><b style={{color:"#fb7185"}}>{l.dose} {pep.unit}</b> · {l.date}</div>
+                          <div><b style={{color:"#fb7185"}}>{l.dose} {pep.unit}</b><span style={{color:"#64748b",fontSize:11,fontFamily:"monospace",marginLeft:8}}>{l.date}</span></div>
                           {editingDoseNote===l.id?(
                             <div style={{marginTop:8}}>
                               <textarea value={doseNoteText} onChange={e=>setDoseNoteText(e.target.value)} placeholder="How did this dose make you feel? Side effects, energy, sleep..." style={{width:"100%",boxSizing:"border-box",background:"#0f172a",border:`1px solid ${theme.primary}`,color:"#f8fafc",borderRadius:10,padding:"10px 12px",fontSize:12,fontFamily:"monospace",outline:"none",resize:"vertical",minHeight:80}}/>
@@ -1551,12 +1576,12 @@ export default function App() {
                         </div>
                         <button style={{...deleteBtn,flexShrink:0,alignSelf:"flex-start"}} onClick={()=>setConfirm({label:`${l.dose}${pep.unit} dose on ${l.date}`,onConfirm:()=>removePeptideDose(pep.id,l.id)})}>✕</button>
                       </div>
-                    ))}
-                  </div>
-                ):<div style={{color:"#475569",fontSize:12,fontFamily:"monospace"}}>No doses logged yet.</div>}
+                    </div>
+                  ))}
+                </div>
               </div>
             );
-          })}
+          })()}
         </div>
       )}
       {/* PEPTIDES TAB */}
