@@ -598,9 +598,9 @@ export default function App() {
     setWeeklyRecap({lostThisWeek,avgCals,avgProtein,totalMins,workoutCount:weekWorkouts.length,streak,sundayKey,isBulk:IS_BULK});
   },[weights,foods,workouts,streak]);
 
-  useEffect(()=>{
+ useEffect(()=>{
     const todayDay=["Sun","Mon","Tue","Wed","Thu","Fri","Sat"][new Date().getDay()];
-    const duePeptides=(peptideStack||[]).filter(p=>p.status==="active"&&(p.pinDays||[]).includes(todayDay));
+    const duePeptides=(peptideStack||[]).filter(p=>p.status==="active"&&(p.pinDays||[]).includes(todayDay)&&!p.reminderEnabled);
     if(duePeptides.length===0)return;
     const hour=new Date().getHours();
     const morningKey="axion_pin_morning_"+todayISO();
