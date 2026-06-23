@@ -277,17 +277,49 @@ function SearchBar({placeholder,value,onChange,onClear,accent}) {
   );
 }
 
-function WeightLineChart({weights,color}) {
-  const points=weights.slice(-10);
+function WeightLineChart({weights,color,fullHistory,startDate}) {
+  const sorted=weights.slice().sort((a,b)=>new Date(a.date)-new Date(b.date));
+  if(sorted.length<2) return null;
+
+  function closestWeight(targetDate){
+    let best=null;let bestDiff=Infinity;
+    sorted.forEach(w=>{
+      const diff=Math.abs(new Date(w.date)-targetDate);
+      if(diff<bestDiff){bestDiff=diff;best=w;}
+    });
+    return best;
+  }
+
+  const today=new Date();today.setHours(12,0,0,0);
+  let weekAnchors=[];
+  if(fullHistory){
+    const start=new Date(startDate);start.setHours(12,0,0,0);
+    let d=new Date(today);
+    while(d>=start){weekAnchors.unshift(new Date(d));d=new Date(d);d.setDate(d.getDate()-7);}
+  }else{
+    for(let i=7;i>=0;i--){const d=new Date(today);d.setDate(d.getDate()-i*7);weekAnchors.push(d);}
+  }
+
+  const firstLog=new Date(sorted[0].date);firstLog.setHours(12,0,0,0);
+  const points=weekAnchors
+    .filter(anchor=>anchor>=firstLog||Math.abs(anchor-firstLog)<7*86400000)
+    .map(anchor=>{
+      const w=closestWeight(anchor);
+      return {date:`${anchor.getFullYear()}-${String(anchor.getMonth()+1).padStart(2,'0')}-${String(anchor.getDate()).padStart(2,'0')}`,weight:w.weight};
+    });
+
   if(points.length<2) return null;
-  const values=points.map(w=>Number(w.weight));
+
+  const values=points.map(p=>Number(p.weight));
   const minV=Math.min(...values)-0.5; const maxV=Math.max(...values)+0.5;
-  const W=360;const H=160;const pL=44;const pR=16;const pT=20;const pB=32;
+  const W=360;const H=170;const pL=44;const pR=16;const pT=20;const pB=42;
   const x=i=>pL+(i/Math.max(1,points.length-1))*(W-pL-pR);
   const y=v=>pT+((maxV-v)/Math.max(0.01,maxV-minV))*(H-pT-pB);
   const lineStr=points.map((p,i)=>`${x(i).toFixed(1)},${y(Number(p.weight)).toFixed(1)}`).join(" ");
   const fillStr=`${lineStr} ${x(points.length-1).toFixed(1)},${(H-pB).toFixed(1)} ${pL},${(H-pB).toFixed(1)}`;
   const yTicks=[minV+0.5,(minV+maxV)/2,maxV-0.5];
+  const labelEvery=points.length>12?Math.ceil(points.length/8):1;
+
   return (
     <div style={{width:"100%",overflowX:"hidden"}}>
       <svg viewBox={`0 0 ${W} ${H}`} style={{width:"100%",height:H,display:"block"}}>
@@ -295,10 +327,10 @@ function WeightLineChart({weights,color}) {
         <polygon points={fillStr} fill={`${color}18`}/>
         <polyline points={lineStr} fill="none" stroke={color} strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round"/>
         {points.map((p,i)=>(
-          <g key={p.id||i}>
+          <g key={i}>
             <circle cx={x(i)} cy={y(Number(p.weight))} r="3.5" fill={color}/>
-            {(i===0||i===points.length-1||points.length<=5)&&<text x={x(i)} y={y(Number(p.weight))-9} textAnchor="middle" fill="#e2e8f0" fontSize="9.5" fontWeight="600">{p.weight}</text>}
-            <text x={x(i)} y={H-pB+14} textAnchor="middle" fill="#64748b" fontSize="8.5">{p.date.slice(5)}</text>
+            {(i===0||i===points.length-1||i%labelEvery===0)&&<text x={x(i)} y={y(Number(p.weight))-9} textAnchor="middle" fill="#e2e8f0" fontSize="9.5" fontWeight="600">{p.weight}</text>}
+            {(i===0||i===points.length-1||i%labelEvery===0)&&<text x={x(i)} y={H-pB+16} textAnchor="middle" fill="#64748b" fontSize="8.5" transform={`rotate(-40 ${x(i)} ${H-pB+16})`}>{p.date.slice(5)}</text>}
           </g>
         ))}
         {yTicks.map((v,i)=><text key={i} x={pL-4} y={y(v)+3} textAnchor="end" fill="#475569" fontSize="8.5">{v.toFixed(0)}</text>)}
@@ -488,6 +520,7 @@ export default function App() {
   const [editingDoseNote,setEditingDoseNote]=useState(null);
   const [doseNoteText,setDoseNoteText]=useState("");
   const [editingGoal,setEditingGoal]=useState(false);
+  const [showFullChart,setShowFullChart]=useState(false);
 
   const [noteText,setNoteText]=useState("");
   const [noteDate,setNoteDate]=useState(todayISO());
@@ -1499,7 +1532,14 @@ export default function App() {
           </div>
           {aiInsight?<div style={{background:"#020617",border:"1px solid #1e3a5f",borderRadius:10,padding:14,color:"#cbd5e1",fontSize:13,lineHeight:1.7}}>{aiInsight}</div>:<div style={{color:"#475569",fontSize:12,fontFamily:"monospace",fontStyle:"italic"}}>{sortedWeights.length<2?"Add a second weight entry to unlock.":!apiKey?"Add API key in ⚙️ Settings.":"Click GENERATE for your personalized breakdown."}</div>}
         </div>
-        {sortedWeights.length>1?<div style={DS.panel}><h2 style={{margin:"0 0 14px",fontSize:15,fontWeight:700,color:"#94a3b8",fontFamily:"monospace"}}>Weight Trend</h2><WeightLineChart weights={sortedWeights} color={theme.primary}/></div>:<div style={{...DS.panel,textAlign:"center",color:"#334155",fontFamily:"monospace",fontSize:13}}>Log at least 2 weight entries to see your trend chart.</div>}
+        {sortedWeights.length>1?<div style={DS.panel}>
+          <div style={{display:"flex",justifyContent:"space-between",alignItems:"center",marginBottom:14}}>
+            <h2 style={{margin:0,fontSize:15,fontWeight:700,color:"#94a3b8",fontFamily:"monospace"}}>Weekly Trend</h2>
+            <button onClick={()=>setShowFullChart(f=>!f)} style={{background:"#020617",border:`1px solid ${theme.border}`,color:theme.primary,borderRadius:8,padding:"5px 12px",cursor:"pointer",fontFamily:"monospace",fontSize:11,fontWeight:700}}>{showFullChart?"Last 2 Months":"See Complete Chart"}</button>
+          </div>
+          <WeightLineChart weights={sortedWeights} color={theme.primary} fullHistory={showFullChart} startDate={START_DATE}/>
+          <div style={{fontSize:10,color:"#475569",fontFamily:"monospace",textAlign:"center",marginTop:8}}>{showFullChart?"Weekly progress since you started":"Weekly progress · last 8 weeks"}</div>
+        </div>:<div style={{...DS.panel,textAlign:"center",color:"#334155",fontFamily:"monospace",fontSize:13}}>Log at least 2 weight entries to see your trend chart.</div>}
         <div style={{background:"#0f172a",border:"1px solid #854d0e",borderLeft:"4px solid #f59e0b",borderRadius:10,padding:14,color:"#94a3b8",fontSize:13,display:"flex",gap:10,alignItems:"flex-start",marginBottom:14}}>
           <span style={{fontSize:18}}>⚠️</span><span>{IS_BULK?"If energy tanks, progress stalls, or strength drops — check your calories, sleep, protein intake, and recovery. Adjust before changing your peptide protocol.":"If energy tanks, digestion stalls, or workouts fall apart — hydrate, hit protein, add carbs, sleep, keep dose changes disciplined."}</span>
         </div>
