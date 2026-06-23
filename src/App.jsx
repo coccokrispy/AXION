@@ -718,16 +718,11 @@ export default function App() {
       suppsDue.forEach(s=>localStorage.setItem(`axion_suppreminder_${s.id}_${todayStr}`,"shown"));
       setSuppTimeReminder(suppsDue);
     }
-    const pepsDue=(peptideStack||[]).filter(p=>{
-      if(!p.reminderEnabled||!p.reminderTime)return false;
-      if(p.status!=="active")return false;
-      const todayDayAbbr=["Sun","Mon","Tue","Wed","Thu","Fri","Sat"][new Date().getDay()];
+    const todayDayAbbr=["Sun","Mon","Tue","Wed","Thu","Fri","Sat"][new Date().getDay()];
     const pepsDue=(peptideStack||[]).filter(p=>{
       if(!p.reminderEnabled||!p.reminderTime)return false;
       if(p.status!=="active")return false;
       if((p.pinDays||[]).length>0&&!(p.pinDays||[]).includes(todayDayAbbr))return false;
-      if((peptideLogs[p.id]||[]).some(l=>l.date===todayStr))return false;
-      if(currentTime<p.reminderTime)return false;
       if((peptideLogs[p.id]||[]).some(l=>l.date===todayStr))return false;
       if(currentTime<p.reminderTime)return false;
       const snoozeKey=`axion_snooze_pep_${p.id}_${todayStr}`;
