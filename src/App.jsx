@@ -161,7 +161,6 @@ function isJunkFood(foodName){
   if(SAFE_FOODS.some(s=>lower.includes(s)))return false;
   return JUNK_FOODS.some(j=>lower.includes(j));
 }
-
 function getMotivationMessage(type,mode,userName,data={},isBulk=false){
   const name=userName?` ${userName}`:"";
   if(mode==="none"){
@@ -436,6 +435,11 @@ export default function App() {
   const [pinAlert,setPinAlert]=useState(null);
   const [suppTimeReminder,setSuppTimeReminder]=useState(null);
   const [pepTimeReminder,setPepTimeReminder]=useState(null);
+  const [backupReminder,setBackupReminder]=useState(false);
+  const [backupRemindersEnabled,setBackupRemindersEnabled]=usePersistedState("axion_backup_reminders_enabled",true);
+  const [showPasteRestore,setShowPasteRestore]=useState(false);
+  const [pasteText,setPasteText]=useState("");
+  const [restoreError,setRestoreError]=useState("");
 
   const [setupForm,setSetupForm]=useState({name:"",heightFeet:"",heightInches:"",startWeight:"",targetWeight:"",startDate:todayISO(),activityLevel:"moderate",agreed:false});
   const [weightForm,setWeightForm]=useState({date:todayISO(),weight:"",type:"Morning",note:""});
@@ -518,21 +522,13 @@ export default function App() {
   const thisWeekFoods=(foods||[]).filter(f=>new Date(f.date)>=weekStart);
   const thisWeekAvgCals=thisWeekFoods.length>0?Math.round(thisWeekFoods.reduce((s,f)=>s+(f.calories||0),0)/Math.max(1,new Set(thisWeekFoods.map(f=>f.date)).size)):null;
 
+  const lastBackup=localStorage.getItem("axion_last_backup");
+  const daysSinceBackup=lastBackup?daysBetween(lastBackup,todayISO()):null;
+
   const weightsByDay=useMemo(()=>{const map={};(weights||[]).forEach(w=>{if(!map[w.date])map[w.date]=[];map[w.date].push(w);});return map;},[weights]);
   const weightDays=useMemo(()=>Object.keys(weightsByDay).sort((a,b)=>new Date(b)-new Date(a)),[weightsByDay]);
 
   const getDayAvg=(day)=>weightsByDay[day]?(weightsByDay[day].reduce((s,e)=>s+Number(e.weight),0)/weightsByDay[day].length):null;
-  const getTrendForDay=(day)=>{
-    const idx=weightDays.indexOf(day);
-    if(idx<0||idx===weightDays.length-1)return null;
-    const prev=weightDays[idx+1];
-    const curr=getDayAvg(day);
-    const prevAvg=getDayAvg(prev);
-    if(!curr||!prevAvg)return null;
-    if(curr<prevAvg-0.1)return "down";
-    if(curr>prevAvg+0.1)return "up";
-    return "flat";
-  };
 
   const streak=useMemo(()=>{
     const allDates=new Set([...(weights||[]).map(w=>w.date),...(foods||[]).map(f=>f.date),...(workouts||[]).map(w=>w.date),...Object.values(peptideLogs||{}).flat().map(l=>l.date)]);
@@ -544,6 +540,78 @@ export default function App() {
     return count;
   },[weights,foods,workouts,peptideLogs]);
 
+  function buildBackupData(){
+    return {exportDate:new Date().toISOString(),version:"axion-1",profile:{name:localStorage.getItem("tracker_name"),heightFeet:localStorage.getItem("tracker_height_feet"),heightInches:localStorage.getItem("tracker_height_inches"),startWeight:localStorage.getItem("tracker_start_weight"),targetWeight:localStorage.getItem("tracker_target_weight"),startDate:localStorage.getItem("tracker_start_date"),activityLevel:localStorage.getItem("tracker_activity_level"),calorieTarget:localStorage.getItem("tracker_calorie_target")},theme:themeName,motivationMode,weights,foods,workouts,peptideStack,peptideLogs,supplements:mySupplements,notes,waterLog};
+  }
+
+  function restoreFromData(data){
+    try{
+      if(!data||typeof data!=="object")throw new Error("Not a valid AXION backup file.");
+      if(!data.profile&&!data.weights)throw new Error("This doesn't look like an AXION backup.");
+      const p=data.profile||{};
+      if(p.name)localStorage.setItem("tracker_name",p.name);
+      if(p.heightFeet)localStorage.setItem("tracker_height_feet",p.heightFeet);
+      if(p.heightInches)localStorage.setItem("tracker_height_inches",p.heightInches);
+      if(p.startWeight)localStorage.setItem("tracker_start_weight",p.startWeight);
+      if(p.targetWeight)localStorage.setItem("tracker_target_weight",p.targetWeight);
+      if(p.startDate)localStorage.setItem("tracker_start_date",p.startDate);
+      if(p.activityLevel)localStorage.setItem("tracker_activity_level",p.activityLevel);
+      if(p.calorieTarget)localStorage.setItem("tracker_calorie_target",p.calorieTarget);
+      if(data.theme)localStorage.setItem("axion_theme",JSON.stringify(data.theme));
+      if(data.motivationMode)localStorage.setItem("axion_motivation_mode",JSON.stringify(data.motivationMode));
+      localStorage.setItem("mr_weights",JSON.stringify(data.weights||[]));
+      localStorage.setItem("mr_foods",JSON.stringify(data.foods||[]));
+      localStorage.setItem("mr_workouts",JSON.stringify(data.workouts||[]));
+      localStorage.setItem("mr_peptide_stack",JSON.stringify(data.peptideStack||[]));
+      localStorage.setItem("mr_peptide_logs",JSON.stringify(data.peptideLogs||{}));
+      localStorage.setItem("my_supplements_v2",JSON.stringify(data.supplements||[]));
+      localStorage.setItem("axion_notes",JSON.stringify(data.notes||[]));
+      localStorage.setItem("axion_water",JSON.stringify(data.waterLog||[]));
+      localStorage.setItem("tracker_setup_complete","true");
+      localStorage.setItem("axion_access","true");
+      return true;
+    }catch(e){throw e;}
+  }
+
+  function handleFileRestore(file){
+    setRestoreError("");
+    const reader=new FileReader();
+    reader.onload=ev=>{
+      try{
+        const data=JSON.parse(ev.target.result);
+        restoreFromData(data);
+        location.reload();
+      }catch(e){setRestoreError("Couldn't read that file. Make sure it's your AXION backup .json file. ("+e.message+")");}
+    };
+    reader.onerror=()=>setRestoreError("Failed to read the file. Try again.");
+    reader.readAsText(file);
+  }
+
+  function handlePasteRestore(){
+    setRestoreError("");
+    try{
+      const data=JSON.parse(pasteText.trim());
+      restoreFromData(data);
+      location.reload();
+    }catch(e){setRestoreError("That text isn't valid. Make sure you pasted the ENTIRE backup with nothing cut off. A file upload is more reliable.");}
+  }
+
+  function downloadBackup(){
+    const data=buildBackupData();
+    const blob=new Blob([JSON.stringify(data,null,2)],{type:"application/json"});
+    const url=URL.createObjectURL(blob);
+    const a=document.createElement("a");a.href=url;a.download=`axion-backup-${todayISO()}.json`;a.click();URL.revokeObjectURL(url);
+    localStorage.setItem("axion_last_backup",todayISO());
+    flash("Backup downloaded ✓");
+  }
+
+  async function copyBackup(){
+    try{
+      await navigator.clipboard.writeText(JSON.stringify(buildBackupData(),null,2));
+      localStorage.setItem("axion_last_backup",todayISO());
+      flash("Backup copied ✓");
+    }catch(e){flash("Copy failed — use Download instead");}
+  }
   useEffect(()=>{
     if(totalChange<=0)return;
     const milestoneList=IS_BULK?BULK_MILESTONES:MILESTONES;
@@ -598,7 +666,18 @@ export default function App() {
     setWeeklyRecap({lostThisWeek,avgCals,avgProtein,totalMins,workoutCount:weekWorkouts.length,streak,sundayKey,isBulk:IS_BULK});
   },[weights,foods,workouts,streak]);
 
- useEffect(()=>{
+  useEffect(()=>{
+    const now=new Date();
+    const dayOfMonth=now.getDate();
+    if(dayOfMonth!==1)return;
+    if(!backupRemindersEnabled)return;
+    const monthKey="axion_backup_reminder_"+now.getFullYear()+"-"+now.getMonth();
+    if(localStorage.getItem(monthKey))return;
+    localStorage.setItem(monthKey,"shown");
+    setBackupReminder(true);
+  },[backupRemindersEnabled]);
+
+  useEffect(()=>{
     const todayDay=["Sun","Mon","Tue","Wed","Thu","Fri","Sat"][new Date().getDay()];
     const duePeptides=(peptideStack||[]).filter(p=>p.status==="active"&&(p.pinDays||[]).includes(todayDay)&&!p.reminderEnabled);
     if(duePeptides.length===0)return;
@@ -777,7 +856,6 @@ export default function App() {
   }
 
   function calcNutrition(per100g,weightG){const r=weightG/100;return{calories:Math.round((per100g.calories||0)*r),protein:+((per100g.protein||0)*r).toFixed(1),carbs:+((per100g.carbs||0)*r).toFixed(1),fat:+((per100g.fat||0)*r).toFixed(1),fiber:+((per100g.fiber||0)*r).toFixed(1),sugar:+((per100g.sugar||0)*r).toFixed(1),sodium:+((per100g.sodium||0)*r).toFixed(0)};}
-
   async function searchFood(){
     if(!foodQuery.trim())return;
     if(!apiKey){setFoodSearchError("Add your API key in Settings to search foods.");return;}
@@ -879,14 +957,6 @@ export default function App() {
   const formLabel={fontSize:11,color:"#64748b",fontFamily:"monospace",textTransform:"uppercase",letterSpacing:1,textAlign:"right"};
   const deleteBtn={background:"transparent",color:"#ef4444",border:"1px solid #450a0a",borderRadius:6,cursor:"pointer",padding:"3px 8px",fontSize:11};
   const VALID_CODES=["AXION-7K2M","AXION-9P4R","AXION-3X8W","AXION-6N1Q","AXION-5T7B","AXION-2H9F","AXION-8V4J","AXION-1L6D","AXION-4C3Y","AXION-0E5Z"];
-
-  const alertModal=(content,borderColor,glowColor)=>(
-    <div style={{position:"fixed",inset:0,background:"rgba(0,0,0,0.92)",display:"flex",alignItems:"center",justifyContent:"center",zIndex:600,padding:24}}>
-      <div style={{background:"#0f172a",border:`2px solid ${borderColor}`,borderRadius:20,padding:32,maxWidth:320,width:"100%",textAlign:"center",boxShadow:`0 0 60px ${glowColor}`,wordBreak:"break-word"}}>
-        {content}
-      </div>
-    </div>
-  );
   if(!accessGranted){
     return(
       <div style={DS.page}>
@@ -909,6 +979,26 @@ export default function App() {
   if(!HAS_SETUP){
     return (
       <div style={DS.page}>
+        {/* RESTORE FROM BACKUP */}
+        <div style={{...DS.panel,borderLeft:`4px solid ${theme.primary}`,marginBottom:16}}>
+          <div style={{fontSize:14,fontWeight:900,color:theme.primary,fontFamily:"monospace",letterSpacing:1,marginBottom:8}}>🔄 Returning user?</div>
+          <div style={{fontSize:12,color:"#94a3b8",fontFamily:"monospace",lineHeight:1.7,marginBottom:14}}>If you have an AXION backup, restore it here to pick up exactly where you left off.</div>
+          <label style={{display:"block",background:`linear-gradient(135deg,${theme.primaryDark},${theme.primary})`,color:"#020617",borderRadius:12,padding:"14px",cursor:"pointer",fontFamily:"monospace",fontSize:14,fontWeight:900,textAlign:"center",letterSpacing:1,marginBottom:8}}>
+            📁 Upload Backup File
+            <input type="file" accept="application/json,.json" style={{display:"none"}} onChange={e=>{const f=e.target.files[0];if(f)handleFileRestore(f);e.target.value="";}}/>
+          </label>
+          <div style={{fontSize:11,color:theme.primary,fontFamily:"monospace",textAlign:"center",marginBottom:12}}>✓ Recommended — safest and cleanest</div>
+          <button style={{width:"100%",background:"#0f172a",border:`1px solid ${theme.border}`,color:"#94a3b8",borderRadius:12,padding:"12px",cursor:"pointer",fontFamily:"monospace",fontSize:13,fontWeight:700}} onClick={()=>{setShowPasteRestore(true);setRestoreError("");}}>📋 Paste Backup Instead</button>
+          {showPasteRestore&&(
+            <div style={{marginTop:12}}>
+              <div style={{fontSize:11,color:"#64748b",fontFamily:"monospace",lineHeight:1.6,marginBottom:8}}>Paste your entire backup below. Make sure nothing is cut off — file upload is more reliable.</div>
+              <textarea value={pasteText} onChange={e=>setPasteText(e.target.value)} placeholder="Paste your full AXION backup here..." style={{width:"100%",boxSizing:"border-box",background:"#020617",border:`1px solid ${theme.border}`,color:"#f8fafc",borderRadius:10,padding:"10px 12px",fontSize:11,fontFamily:"monospace",outline:"none",resize:"vertical",minHeight:100,marginBottom:8}}/>
+              <button style={{...DS.btn,gridColumn:"unset",width:"100%"}} onClick={handlePasteRestore}>Restore From Paste</button>
+            </div>
+          )}
+          {restoreError&&<div style={{marginTop:10,color:"#ef4444",fontSize:12,fontFamily:"monospace",lineHeight:1.6,textAlign:"center"}}>{restoreError}</div>}
+        </div>
+
         <div style={{...DS.panel,border:"1px solid #854d0e",borderLeft:"4px solid #f59e0b",marginBottom:16}}>
           <div style={{fontSize:13,fontWeight:900,color:"#f59e0b",fontFamily:"monospace",letterSpacing:1,marginBottom:12}}>⚠️ IMPORTANT DISCLAIMER — READ BEFORE CONTINUING</div>
           <div style={{fontSize:12,color:"#94a3b8",lineHeight:1.8,fontFamily:"monospace"}}>
@@ -966,7 +1056,6 @@ export default function App() {
       </div>
     );
   }
-
   return (
     <div style={DS.page}>
 
@@ -990,7 +1079,7 @@ export default function App() {
         <div style={{position:"fixed",inset:0,background:"rgba(0,0,0,0.92)",display:"flex",alignItems:"center",justifyContent:"center",zIndex:600,padding:24}}>
           <div style={{background:"#0f172a",border:"2px solid #60a5fa",borderRadius:20,padding:32,maxWidth:320,width:"100%",textAlign:"center",boxShadow:"0 0 60px rgba(96,165,250,0.4)",wordBreak:"break-word"}}>
             <div style={{fontSize:48,marginBottom:12}}>{pinAlert.type==="morning"?"📌":"⏰"}</div>
-            <div style={{fontSize:15,color:"#60a5fa",fontFamily:"monospace",fontWeight:700,marginBottom:20,lineHeight:1.8}}>{pinAlert.msg}</div>
+            <div style={{fontSize:15,color:"#60a5fa",fontFamily:"monospace",fontWeight:700,marginBottom:20,lineHeight:1.8,whiteSpace:"normal"}}>{pinAlert.msg}</div>
             <div style={{display:"flex",gap:10,justifyContent:"center"}}>
               <button style={{background:"#1e293b",border:"2px solid #60a5fa",color:"#60a5fa",borderRadius:12,padding:"12px 20px",cursor:"pointer",fontFamily:"monospace",fontWeight:900,fontSize:14}} onClick={()=>setPinAlert(null)}>✕</button>
               <button style={{background:"linear-gradient(135deg,#1d4ed8,#60a5fa)",border:"none",color:"#020617",borderRadius:12,padding:"12px 20px",cursor:"pointer",fontFamily:"monospace",fontWeight:900,fontSize:14}} onClick={()=>{setPinAlert(null);setTab("doses");}}>Log Dose</button>
@@ -1106,6 +1195,22 @@ export default function App() {
         </div>
       )}
 
+      {/* BACKUP REMINDER (1st of month) */}
+      {backupReminder&&(
+        <div style={{position:"fixed",inset:0,background:"rgba(0,0,0,0.92)",display:"flex",alignItems:"center",justifyContent:"center",zIndex:600,padding:24}}>
+          <div style={{background:"#0f172a",border:`2px solid ${theme.primary}`,borderRadius:20,padding:32,width:"100%",maxWidth:320,textAlign:"center",boxShadow:`0 0 60px ${theme.glowStrong}`,wordBreak:"break-word"}}>
+            <div style={{fontSize:44,marginBottom:12}}>💾</div>
+            <div style={{fontWeight:900,color:"#f8fafc",fontSize:17,fontFamily:"monospace",letterSpacing:1,marginBottom:14}}>TIME TO BACK UP</div>
+            <div style={{fontSize:14,color:"#94a3b8",fontFamily:"monospace",marginBottom:14,lineHeight:1.8}}>Your data lives only on this phone. Back it up so you never lose it.</div>
+            <div style={{fontSize:12,color:"#64748b",fontFamily:"monospace",marginBottom:24,lineHeight:1.7}}>Tap below to download your backup file. Save it to iCloud, Drive, or email it to yourself.</div>
+            <div style={{display:"flex",flexDirection:"column",gap:10}}>
+              <button style={{width:"100%",background:`linear-gradient(135deg,${theme.primaryDark},${theme.primary})`,border:"none",color:"#020617",borderRadius:12,padding:"14px",cursor:"pointer",fontFamily:"monospace",fontWeight:900,fontSize:14,letterSpacing:1}} onClick={()=>{downloadBackup();setBackupReminder(false);}}>⬇️ Back Up Now</button>
+              <button style={{width:"100%",background:"transparent",border:"none",color:"#475569",cursor:"pointer",fontFamily:"monospace",fontSize:12,padding:"6px",lineHeight:1.6}} onClick={()=>setBackupReminder(false)}>Maybe later · turn these off in Settings</button>
+            </div>
+          </div>
+        </div>
+      )}
+
       {/* WEEKLY RECAP */}
       {weeklyRecap&&(
         <div style={{position:"fixed",inset:0,background:"rgba(0,0,0,0.92)",display:"flex",alignItems:"center",justifyContent:"center",zIndex:500,padding:24}}>
@@ -1167,7 +1272,6 @@ export default function App() {
           {saved}
         </div>
       )}
-
       {showSettings&&(
         <div style={{position:"fixed",inset:0,background:"rgba(0,0,0,0.8)",display:"flex",alignItems:"center",justifyContent:"center",zIndex:100,padding:16}} onClick={()=>setShowSettings(false)}>
           <div style={{background:"#0f172a",border:`1px solid ${theme.border}`,borderRadius:14,padding:20,maxWidth:480,width:"100%",maxHeight:"90vh",overflowY:"auto"}} onClick={e=>e.stopPropagation()}>
@@ -1189,6 +1293,7 @@ export default function App() {
               <button style={{...DS.btn,gridColumn:"unset",background:"#1e293b",color:"#94a3b8"}} onClick={()=>setShowSettings(false)}>Cancel</button>
             </div>
             <div style={{marginTop:12,fontSize:11,color:"#64748b",fontFamily:"monospace"}}>Status: {apiKey?<span style={{color:theme.primary}}>✓ AI active</span>:<span style={{color:"#fb7185"}}>✗ No key</span>}</div>
+
             <div style={{marginTop:16,paddingTop:16,borderTop:"1px solid #1e293b"}}>
               <div style={{fontSize:12,color:"#94a3b8",marginBottom:8}}><b style={{color:theme.primary}}>Motivation Mode</b></div>
               <div style={{display:"grid",gridTemplateColumns:"1fr 1fr 1fr",gap:8,marginBottom:12}}>
@@ -1204,6 +1309,7 @@ export default function App() {
                 {motivationMode==="drill"&&(IS_BULK?"Beast Mode. Calls out bad eating and wrong direction weight changes. No excuses on the bulk.":"Beast Mode. Tough love. Calls out bad choices and weight gains over 2 lbs.")}
               </div>
             </div>
+
             <div style={{marginTop:16,paddingTop:16,borderTop:"1px solid #1e293b"}}>
               <div style={{fontSize:12,color:"#94a3b8",marginBottom:8}}><b style={{color:theme.primary}}>Edit Profile</b></div>
               <div style={{display:"grid",gridTemplateColumns:"1fr 1fr",gap:8,marginBottom:8}}>
@@ -1214,20 +1320,31 @@ export default function App() {
               </div>
               <button style={{...DS.btn,gridColumn:"unset",width:"100%",marginBottom:16}} onClick={()=>{const sw=document.getElementById("edit_start_weight").value;const gw=document.getElementById("edit_goal_weight").value;const sd=document.getElementById("edit_start_date").value;const ct=document.getElementById("edit_calorie_target").value;if(sw)localStorage.setItem("tracker_start_weight",sw);if(gw)localStorage.setItem("tracker_target_weight",gw);if(sd)localStorage.setItem("tracker_start_date",sd);if(ct)localStorage.setItem("tracker_calorie_target",ct);setShowSettings(false);location.reload();}}>💾 Save Profile</button>
             </div>
+
             <div style={{marginTop:16,paddingTop:16,borderTop:"1px solid #1e293b"}}>
-              <div style={{fontSize:12,color:"#94a3b8",marginBottom:8}}><b style={{color:theme.primary}}>Export Your Data</b></div>
-              <div style={{fontSize:11,color:"#64748b",fontFamily:"monospace",marginBottom:10}}>Downloads all your AXION data as a JSON file.</div>
-              <button style={{...DS.btn,gridColumn:"unset",width:"100%",background:"#0f172a",border:`1px solid ${theme.primary}`,color:theme.primary}} onClick={()=>{
-                const data={exportDate:new Date().toISOString(),profile:{name:localStorage.getItem("tracker_name"),startWeight:localStorage.getItem("tracker_start_weight"),targetWeight:localStorage.getItem("tracker_target_weight"),startDate:localStorage.getItem("tracker_start_date"),height:`${localStorage.getItem("tracker_height_feet")}ft ${localStorage.getItem("tracker_height_inches")}in`,activityLevel:localStorage.getItem("tracker_activity_level"),calorieTarget:localStorage.getItem("tracker_calorie_target"),mode:IS_BULK?"bulk":"cut"},weights,foods,workouts,peptideStack,peptideLogs,supplements:mySupplements,notes,waterLog};
-                const blob=new Blob([JSON.stringify(data,null,2)],{type:"application/json"});
-                const url=URL.createObjectURL(blob);
-                const a=document.createElement("a");a.href=url;a.download=`axion-export-${new Date().toISOString().slice(0,10)}.json`;a.click();URL.revokeObjectURL(url);
-                flash("Data exported ✓");
-              }}>⬇️ Export All Data</button>
+              <div style={{fontSize:12,color:"#94a3b8",marginBottom:6}}><b style={{color:theme.primary}}>Backup & Restore</b></div>
+              <div style={{fontSize:11,color:"#64748b",fontFamily:"monospace",marginBottom:4,lineHeight:1.7}}>Your data lives only on this device. If you delete AXION or clear your browser, it's gone unless you have a backup.</div>
+              <div style={{fontSize:11,color:lastBackup?theme.primary:"#fb7185",fontFamily:"monospace",marginBottom:12}}>
+                {lastBackup?`Last backup: ${daysSinceBackup===0?"today":daysSinceBackup===1?"1 day ago":daysSinceBackup+" days ago"}`:"⚠️ You haven't backed up yet."}
+              </div>
+              <button style={{...DS.btn,gridColumn:"unset",width:"100%",marginBottom:6}} onClick={downloadBackup}>⬇️ Download Backup File</button>
+              <div style={{fontSize:11,color:theme.primary,fontFamily:"monospace",textAlign:"center",marginBottom:12}}>✓ Recommended — safest, cleanest backup. Save it to iCloud or Drive.</div>
+              <button style={{...DS.btn,gridColumn:"unset",width:"100%",background:"#0f172a",border:`1px solid ${theme.border}`,color:"#94a3b8",marginBottom:6}} onClick={copyBackup}>📋 Copy Backup to Clipboard</button>
+              <div style={{fontSize:11,color:"#64748b",fontFamily:"monospace",textAlign:"center",marginBottom:14,lineHeight:1.6}}>For pasting into Notes or a message. Less reliable — use the file if you can.</div>
+              <div style={{background:"#020617",border:`1px solid ${theme.border}`,borderRadius:12,padding:14,display:"flex",alignItems:"center",gap:12}}>
+                <div style={{flex:1}}>
+                  <div style={{fontSize:12,color:"#e2e8f0",fontFamily:"monospace",fontWeight:700}}>Monthly Backup Reminders</div>
+                  <div style={{fontSize:10,color:"#64748b",fontFamily:"monospace",marginTop:2}}>A nudge on the 1st of each month.</div>
+                </div>
+                <button onClick={()=>setBackupRemindersEnabled(v=>!v)} style={{width:44,height:24,borderRadius:999,border:"none",cursor:"pointer",background:backupRemindersEnabled?theme.primary:"#334155",position:"relative",transition:"all 0.2s",flexShrink:0}}>
+                  <div style={{width:18,height:18,borderRadius:"50%",background:"white",position:"absolute",top:3,left:backupRemindersEnabled?23:3,transition:"all 0.2s"}}/>
+                </button>
+              </div>
             </div>
           </div>
         </div>
       )}
+
       {/* GOAL CARD */}
       <div style={{display:"grid",gridTemplateColumns:"1fr 120px 1fr",alignItems:"center",gap:12,background:`radial-gradient(circle at center,${theme.bg},rgba(0,0,0,0.98) 58%)`,border:`1px solid ${theme.border}`,borderRadius:24,padding:"26px 18px 20px",marginBottom:20,boxShadow:`0 0 36px ${theme.glow}`}}>
         <div style={{textAlign:"left"}}><div><span style={{fontSize:34,fontWeight:900,color:"#f8fafc",fontFamily:"Impact,Arial Black,sans-serif"}}>{START_WEIGHT}</span><span style={{marginLeft:6,fontSize:15,fontWeight:800,color:"#f8fafc",fontFamily:"monospace"}}>LBS</span></div><div style={{marginTop:6,fontSize:11,color:"#94a3b8",letterSpacing:1.5,fontFamily:"monospace"}}>START</div></div>
@@ -1276,7 +1393,6 @@ export default function App() {
           </button>
         );})}
       </nav>
-
       {/* DASHBOARD */}
       {tab==="dashboard"&&<>
         {sortedWeights.length===0&&(
@@ -1496,7 +1612,7 @@ export default function App() {
         </div>
       )}
 
-     {/* DOSES TAB */}
+      {/* DOSES TAB */}
       {tab==="doses"&&(
         <div>
           {(peptideStack||[]).length===0&&(
@@ -1534,6 +1650,7 @@ export default function App() {
                       {(pep.pinDays||[]).map(d=><span key={d} style={{fontSize:10,fontFamily:"monospace",background:theme.primary+"22",color:theme.primary,borderRadius:4,padding:"2px 6px"}}>{d}</span>)}
                     </div>
                   )}
+                  {pep.reminderEnabled&&<div style={{fontSize:10,color:theme.primary,fontFamily:"monospace",marginTop:6}}>⏰ Reminder at {pep.reminderTime}</div>}
                   {pep.notes&&<div style={{fontSize:11,color:"#94a3b8",marginTop:6,fontStyle:"italic"}}>{pep.notes}</div>}
                 </div>
 
@@ -1613,6 +1730,145 @@ export default function App() {
                       <div style={{fontSize:11,color:"#64748b",fontFamily:"monospace",marginTop:4}}>{p.dose}{p.unit} · {p.frequency}{p.cycle?` · ${p.cycle}`:""}</div>
                       <div style={{fontSize:11,color:"#475569",fontFamily:"monospace",marginTop:2}}>Total: {total.toFixed(3)}{p.unit} · {logs.length} doses</div>
                       {(p.pinDays||[]).length>0&&<div style={{marginTop:6,display:"flex",gap:4,flexWrap:"wrap"}}>{(p.pinDays||[]).map(d=><span key={d} style={{fontSize:10,fontFamily:"monospace",background:theme.primary+"22",color:theme.primary,borderRadius:4,padding:"2px 6px"}}>{d}</span>)}</div>}
+                      {p.reminderEnabled&&<div style={{fontSize:10,color:theme.primary,fontFamily:"monospace",marginTop:4}}>⏰ {p.reminderTime}</div>}
+                      {p.notes&&<div style={{fontSize:11,color:"#94a3b8",marginTop:4,fontStyle:"italic"}}>{p.notes}</div>}
+                    </div>
+                    <div style={{display:"flex",gap:6,flexShrink:0}}>
+                      <button onClick={()=>{setEditingPep(p);setPepForm({dose:p.dose==="—"?"":p.dose,unit:p.unit,frequency:p.frequency,cycle:p.cycle,notes:p.notes||"",status:p.status,pinDays:p.pinDays||[],reminderEnabled:p.reminderEnabled||false,reminderTime:p.reminderTime||"08:00"});setPepView("edit");}} style={{background:"#0f172a",border:"1px solid #1e293b",color:"#60a5fa",cursor:"pointer",borderRadius:6,padding:"4px 8px",fontSize:11}}>Edit</button>
+                      <button onClick={()=>setConfirm({label:`Remove ${p.name} from your stack?`,onConfirm:()=>deletePep(p.id)})} style={{background:"transparent",border:"1px solid #450a0a",color:"#ef4444",cursor:"pointer",borderRadius:6,padding:"4px 8px",fontSize:11}}>✕</button>
+                    </div>
+                  </div>
+                </div>
+              );
+            })}
+            <button style={{...DS.btn,marginTop:8}} onClick={()=>setPepView("cats")}>+ Add Peptide</button>
+          </>}
+          {pepView==="edit"&&editingPep&&(
+            <div>
+              <div style={{fontWeight:800,fontSize:16,color:"#f8fafc",marginBottom:14}}>{editingPep.name}</div>
+              <div style={formGrid}>
+                <label style={formLabel}>Dose</label>
+                <div style={{display:"flex",gap:6}}><input style={{...DS.input,flex:1}} type="number" step="0.1" value={pepForm.dose} onChange={e=>setPepForm({...pepForm,dose:e.target.value})}/><select style={{...DS.input,width:80}} value={pepForm.unit} onChange={e=>setPepForm({...pepForm,unit:e.target.value})}>{["mg","mcg","g","IU","mL"].map(u=><option key={u}>{u}</option>)}</select></div>
+                <label style={formLabel}>Frequency</label><input style={DS.input} value={pepForm.frequency} onChange={e=>setPepForm({...pepForm,frequency:e.target.value})}/>
+                <label style={formLabel}>Cycle</label><input style={DS.input} value={pepForm.cycle} onChange={e=>setPepForm({...pepForm,cycle:e.target.value})}/>
+                <label style={formLabel}>Status</label>
+                <select style={DS.input} value={pepForm.status} onChange={e=>setPepForm({...pepForm,status:e.target.value})}>{["active","planned","completed"].map(o=><option key={o}>{o}</option>)}</select>
+                <label style={formLabel}>Notes</label><input style={DS.input} value={pepForm.notes} onChange={e=>setPepForm({...pepForm,notes:e.target.value})}/>
+                <label style={formLabel}>Pin Days</label>
+                <div style={{display:"flex",gap:6,flexWrap:"wrap"}}>
+                  {["Mon","Tue","Wed","Thu","Fri","Sat","Sun"].map(day=>{
+                    const selected=(pepForm.pinDays||[]).includes(day);
+                    return(<button key={day} type="button" onClick={()=>setPepForm(f=>({...f,pinDays:selected?(f.pinDays||[]).filter(d=>d!==day):[...(f.pinDays||[]),day]}))} style={{padding:"6px 10px",borderRadius:8,cursor:"pointer",fontFamily:"monospace",fontSize:11,fontWeight:700,border:`1px solid ${selected?theme.primary:"#334155"}`,background:selected?theme.primary+"22":"#020617",color:selected?theme.primary:"#64748b"}}>{day}</button>);
+                  })}
+                </div>
+                <label style={formLabel}>Reminder</label>
+                <div style={{display:"flex",alignItems:"center",gap:10}}>
+                  <button type="button" onClick={()=>setPepForm(f=>({...f,reminderEnabled:!f.reminderEnabled}))} style={{width:44,height:24,borderRadius:999,border:"none",cursor:"pointer",background:pepForm.reminderEnabled?theme.primary:"#334155",position:"relative",transition:"all 0.2s",flexShrink:0}}>
+                    <div style={{width:18,height:18,borderRadius:"50%",background:"white",position:"absolute",top:3,left:pepForm.reminderEnabled?23:3,transition:"all 0.2s"}}/>
+                  </button>
+                  {pepForm.reminderEnabled&&<input type="time" value={pepForm.reminderTime||"08:00"} onChange={e=>setPepForm(f=>({...f,reminderTime:e.target.value}))} style={{...DS.input,width:"auto",flex:1}}/>}
+                </div>
+              </div>
+              <div style={{display:"flex",gap:8,marginTop:8}}>
+                <button style={{...DS.btn,gridColumn:"unset",flex:1,background:"#7f1d1d"}} onClick={()=>setConfirm({label:`Remove ${editingPep.name} from your stack?`,onConfirm:()=>deletePep(editingPep.id)})}>Remove</button>
+                <button style={{...DS.btn,gridColumn:"unset",flex:1}} onClick={savePepEdit}>Save changes</button>
+              </div>
+              <button style={{...DS.btn,gridColumn:"unset",width:"100%",marginTop:8,background:"#1e293b",color:"#94a3b8"}} onClick={()=>{setPepView("stack");setEditingPep(null);}}>Cancel</button>
+            </div>
+          )}
+          {pepView==="cats"&&(
+            <>
+              <button style={{...DS.btn,gridColumn:"unset",background:"#020617",border:"1px solid #334155",color:"#94a3b8",marginBottom:12}} onClick={()=>setPepView("stack")}>← Back to Stack</button>
+              <SearchBar placeholder="Search all peptides..." value={pepSearch} onChange={setPepSearch} onClear={()=>setPepSearch("")} accent={theme.primary}/>
+              {pepSearch?(
+                <div style={{display:"flex",flexDirection:"column",gap:8}}>
+                  {pepSearchResults.length===0&&<div style={{color:"#475569",fontSize:13,fontFamily:"monospace"}}>No results for "{pepSearch}"</div>}
+                  {pepSearchResults.map(pep=>{
+                    const cat=Object.entries(PEPTIDE_LIBRARY).find(([,v])=>v.some(p=>p.name===pep.name))?.[0];
+                    return(<button key={pep.name} onClick={()=>{setPendingPep({...pep,category:cat});setPepForm({dose:"",unit:pep.unit||"mg",frequency:pep.frequency||"",cycle:pep.cycle||"",notes:"",status:"active",pinDays:[],reminderEnabled:false,reminderTime:"08:00"});setPepView("add");}} style={{background:"#020617",border:`1px solid ${theme.primary}33`,borderRadius:12,padding:"12px 14px",color:"#e2e8f0",textAlign:"left",cursor:"pointer"}}><div style={{fontWeight:700,fontSize:14}}>{pep.name}</div><div style={{fontSize:11,color:"#64748b",fontFamily:"monospace",marginTop:2}}>{pep.typicalDose} · {pep.frequency}</div><div style={{fontSize:11,color:"#94a3b8",marginTop:4,lineHeight:1.5}}>{pep.desc}</div></button>);
+                  })}
+                </div>
+              ):(
+                <div style={{display:"grid",gridTemplateColumns:"1fr 1fr",gap:10}}>
+                  {Object.keys(PEPTIDE_LIBRARY).map(cat=>(<button key={cat} onClick={()=>{setPepActiveCat(cat);setPepView("items");}} style={{background:"#020617",border:`1px solid ${theme.primary}33`,borderRadius:14,padding:14,color:"#f8fafc",textAlign:"left",cursor:"pointer"}}><div style={{fontSize:13,fontWeight:700}}>{cat}</div><div style={{marginTop:4,fontSize:11,color:"#64748b",fontFamily:"monospace"}}>{PEPTIDE_LIBRARY[cat].length} peptides</div></button>))}
+                </div>
+              )}
+            </>
+          )}
+          {pepView==="items"&&pepActiveCat&&(
+            <>
+              <button style={{...DS.btn,gridColumn:"unset",background:"#020617",border:"1px solid #334155",color:"#94a3b8",marginBottom:12}} onClick={()=>setPepView("cats")}>← Back</button>
+              <div style={{display:"flex",flexDirection:"column",gap:8}}>
+                {PEPTIDE_LIBRARY[pepActiveCat].map(pep=>(<button key={pep.name} onClick={()=>{setPendingPep({...pep,category:pepActiveCat});setPepForm({dose:"",unit:pep.unit||"mg",frequency:pep.frequency||"",cycle:pep.cycle||"",notes:"",status:"active",pinDays:[],reminderEnabled:false,reminderTime:"08:00"});setPepView("add");}} style={{background:"#020617",border:`1px solid ${theme.primary}33`,borderRadius:12,padding:"12px 14px",color:"#e2e8f0",textAlign:"left",cursor:"pointer"}}><div style={{fontWeight:700,fontSize:14}}>{pep.name}</div><div style={{fontSize:11,color:"#64748b",fontFamily:"monospace",marginTop:2}}>{pep.typicalDose} · {pep.frequency}</div><div style={{fontSize:11,color:"#94a3b8",marginTop:4,lineHeight:1.5}}>{pep.desc}</div></button>))}
+              </div>
+            </>
+          )}
+          {pepView==="add"&&pendingPep&&(
+            <div>
+              <div style={{fontWeight:800,fontSize:16,color:"#f8fafc",marginBottom:4}}>{pendingPep.name}</div>
+              <div style={{fontSize:12,color:"#64748b",fontFamily:"monospace",marginBottom:14,lineHeight:1.5}}>{pendingPep.desc}</div>
+              <div style={{background:"#020617",border:"1px solid #1e293b",borderRadius:8,padding:10,marginBottom:14,fontSize:11,color:"#94a3b8",fontFamily:"monospace"}}>Typical: {pendingPep.typicalDose} · {pendingPep.frequency} · Cycle: {pendingPep.cycle}</div>
+              <div style={formGrid}>
+                <label style={formLabel}>Dose</label>
+                <div style={{display:"flex",gap:6}}><input style={{...DS.input,flex:1}} type="number" step="0.1" placeholder={pendingPep.typicalDose} value={pepForm.dose} onChange={e=>setPepForm({...pepForm,dose:e.target.value})}/><select style={{...DS.input,width:80}} value={pepForm.unit} onChange={e=>setPepForm({...pepForm,unit:e.target.value})}>{["mg","mcg","g","IU","mL"].map(u=><option key={u}>{u}</option>)}</select></div>
+                <label style={formLabel}>Frequency</label><input style={DS.input} placeholder={pendingPep.frequency} value={pepForm.frequency} onChange={e=>setPepForm({...pepForm,frequency:e.target.value})}/>
+                <label style={formLabel}>Cycle</label><input style={DS.input} placeholder={pendingPep.cycle} value={pepForm.cycle} onChange={e=>setPepForm({...pepForm,cycle:e.target.value})}/>
+                <label style={formLabel}>Status</label>
+                <select style={DS.input} value={pepForm.status} onChange={e=>setPepForm({...pepForm,status:e.target.value})}>{["active","planned","completed"].map(o=><option key={o}>{o}</option>)}</select>
+                <label style={formLabel}>Notes</label><input style={DS.input} placeholder="Protocol notes..." value={pepForm.notes} onChange={e=>setPepForm({...pepForm,notes:e.target.value})}/>
+                <label style={formLabel}>Pin Days</label>
+                <div style={{display:"flex",gap:6,flexWrap:"wrap"}}>
+                  {["Mon","Tue","Wed","Thu","Fri","Sat","Sun"].map(day=>{
+                    const selected=(pepForm.pinDays||[]).includes(day);
+                    return(<button key={day} type="button" onClick={()=>setPepForm(f=>({...f,pinDays:selected?(f.pinDays||[]).filter(d=>d!==day):[...(f.pinDays||[]),day]}))} style={{padding:"6px 10px",borderRadius:8,cursor:"pointer",fontFamily:"monospace",fontSize:11,fontWeight:700,border:`1px solid ${selected?theme.primary:"#334155"}`,background:selected?theme.primary+"22":"#020617",color:selected?theme.primary:"#64748b"}}>{day}</button>);
+                  })}
+                </div>
+                <label style={formLabel}>Reminder</label>
+                <div style={{display:"flex",alignItems:"center",gap:10}}>
+                  <button type="button" onClick={()=>setPepForm(f=>({...f,reminderEnabled:!f.reminderEnabled}))} style={{width:44,height:24,borderRadius:999,border:"none",cursor:"pointer",background:pepForm.reminderEnabled?theme.primary:"#334155",position:"relative",transition:"all 0.2s",flexShrink:0}}>
+                    <div style={{width:18,height:18,borderRadius:"50%",background:"white",position:"absolute",top:3,left:pepForm.reminderEnabled?23:3,transition:"all 0.2s"}}/>
+                  </button>
+                  {pepForm.reminderEnabled&&<input type="time" value={pepForm.reminderTime||"08:00"} onChange={e=>setPepForm(f=>({...f,reminderTime:e.target.value}))} style={{...DS.input,width:"auto",flex:1}}/>}
+                </div>
+              </div>
+              <div style={{display:"flex",gap:8,marginTop:8}}>
+                <button style={{...DS.btn,gridColumn:"unset",flex:1,background:"#1e293b",color:"#94a3b8"}} onClick={()=>{setPepView("items");setPendingPep(null);}}>Cancel</button>
+                <button style={{...DS.btn,gridColumn:"unset",flex:1}} onClick={addPeptideToStack}>Add to Stack</button>
+              </div>
+            </div>
+          )}
+        </div>
+      )}
+      {/* PEPTIDES TAB */}
+      {tab==="peptides"&&(
+        <div style={DS.panel}>
+          <h2 style={{margin:"0 0 14px",fontSize:15,fontWeight:700,color:"#94a3b8",fontFamily:"monospace"}}>🧬 Peptides</h2>
+          {(pepView==="stack"||pepView==="cats"||pepView==="items")&&(
+            <div style={{display:"flex",gap:8,marginBottom:16}}>
+              <button onClick={()=>{setPepView("stack");setPepSearch("");}} style={pepView==="stack"?DS.pillActive:pill}>My Stack ({(peptideStack||[]).length})</button>
+              <button onClick={()=>{setPepView("cats");setPepSearch("");}} style={(pepView==="cats"||pepView==="items")?DS.pillActive:pill}>Library</button>
+            </div>
+          )}
+          {pepView==="stack"&&<>
+            {(peptideStack||[]).length===0&&<div style={{color:"#475569",fontSize:13,fontFamily:"monospace",padding:"12px 0"}}>No peptides yet. Browse the library to add.</div>}
+            {(peptideStack||[]).map(p=>{
+              const sc={active:theme.primary,planned:"#fbbf24",completed:"#64748b"};
+              const logs=peptideLogs[p.id]||[];
+              const total=logs.reduce((s,l)=>s+Number(l.dose||0),0);
+              const wk=p.dateAdded?getWeekNumber(p.dateAdded,todayISO()):null;
+              return(
+                <div key={p.id} style={{background:"#020617",border:"1px solid #1e293b",borderLeft:`3px solid ${sc[p.status]||"#475569"}`,borderRadius:12,padding:14,marginBottom:10}}>
+                  <div style={{display:"flex",justifyContent:"space-between",alignItems:"flex-start"}}>
+                    <div style={{flex:1}}>
+                      <div style={{display:"flex",gap:8,alignItems:"center",flexWrap:"wrap"}}>
+                        <span style={{fontSize:15,fontWeight:700,color:sc[p.status]}}>{p.name}</span>
+                        <span style={{fontSize:10,fontFamily:"monospace",background:sc[p.status]+"22",color:sc[p.status],borderRadius:4,padding:"2px 7px"}}>{p.status.toUpperCase()}</span>
+                        {wk&&p.status==="active"&&<span style={{fontSize:10,fontFamily:"monospace",color:"#475569",background:"#0f172a",borderRadius:4,padding:"2px 7px"}}>WK {wk}</span>}
+                      </div>
+                      <div style={{fontSize:11,color:"#64748b",fontFamily:"monospace",marginTop:4}}>{p.dose}{p.unit} · {p.frequency}{p.cycle?` · ${p.cycle}`:""}</div>
+                      <div style={{fontSize:11,color:"#475569",fontFamily:"monospace",marginTop:2}}>Total: {total.toFixed(3)}{p.unit} · {logs.length} doses</div>
+                      {(p.pinDays||[]).length>0&&<div style={{marginTop:6,display:"flex",gap:4,flexWrap:"wrap"}}>{(p.pinDays||[]).map(d=><span key={d} style={{fontSize:10,fontFamily:"monospace",background:theme.primary+"22",color:theme.primary,borderRadius:4,padding:"2px 6px"}}>{d}</span>)}</div>}
+                      {p.reminderEnabled&&<div style={{fontSize:10,color:theme.primary,fontFamily:"monospace",marginTop:4}}>⏰ {p.reminderTime}</div>}
                       {p.notes&&<div style={{fontSize:11,color:"#94a3b8",marginTop:4,fontStyle:"italic"}}>{p.notes}</div>}
                     </div>
                     <div style={{display:"flex",gap:6,flexShrink:0}}>
@@ -2109,14 +2365,7 @@ export default function App() {
             {(()=>{
               const sorted=[...(workouts||[])].sort((a,b)=>new Date(b.date)-new Date(a.date));
               const weekMap={};
-              sorted.forEach(w=>{
-                const d=new Date(w.date);
-                const sun=new Date(d);
-                sun.setDate(d.getDate()-d.getDay());
-                const key=sun.toISOString().slice(0,10);
-                if(!weekMap[key])weekMap[key]=[];
-                weekMap[key].push(w);
-              });
+              sorted.forEach(w=>{const d=new Date(w.date);const sun=new Date(d);sun.setDate(d.getDate()-d.getDay());const key=sun.toISOString().slice(0,10);if(!weekMap[key])weekMap[key]=[];weekMap[key].push(w);});
               return Object.entries(weekMap).sort((a,b)=>new Date(b[0])-new Date(a[0])).map(([weekStart,wkWorkouts])=>{
                 const totalMins=wkWorkouts.reduce((s,w)=>s+(w.minutes||0),0);
                 const isCurrentWeek=new Date(weekStart)>=new Date(new Date().setDate(new Date().getDate()-new Date().getDay())-1);
@@ -2150,6 +2399,7 @@ export default function App() {
           </div>
         </div>
       )}
+
       {/* SUPPLEMENTS TAB */}
       {tab==="supplements"&&(
         <div style={DS.panel}>
@@ -2180,10 +2430,7 @@ export default function App() {
               <div style={{fontWeight:800,fontSize:16,color:"#f8fafc",marginBottom:14}}>{editingSupp.name}</div>
               <div style={formGrid}>
                 <label style={formLabel}>Dose</label>
-                <div style={{display:"flex",gap:6}}>
-                  <input style={{...DS.input,flex:1}} type="number" placeholder="500" value={suppForm.dose} onChange={e=>setSuppForm({...suppForm,dose:e.target.value})}/>
-                  <select style={{...DS.input,width:80}} value={suppForm.unit} onChange={e=>setSuppForm({...suppForm,unit:e.target.value})}>{["mg","mcg","g","IU","mL"].map(u=><option key={u}>{u}</option>)}</select>
-                </div>
+                <div style={{display:"flex",gap:6}}><input style={{...DS.input,flex:1}} type="number" placeholder="500" value={suppForm.dose} onChange={e=>setSuppForm({...suppForm,dose:e.target.value})}/><select style={{...DS.input,width:80}} value={suppForm.unit} onChange={e=>setSuppForm({...suppForm,unit:e.target.value})}>{["mg","mcg","g","IU","mL"].map(u=><option key={u}>{u}</option>)}</select></div>
                 <label style={formLabel}>Schedule</label>
                 <select style={DS.input} value={suppForm.schedule} onChange={e=>setSuppForm({...suppForm,schedule:e.target.value})}>{["Daily","Twice daily","Every other day","Weekly","As needed"].map(o=><option key={o}>{o}</option>)}</select>
                 <label style={formLabel}>Time</label>
@@ -2208,10 +2455,7 @@ export default function App() {
               <div style={{fontWeight:800,fontSize:15,color:"#f8fafc",marginBottom:14}}>Add {pendingSupp.name}</div>
               <div style={formGrid}>
                 <label style={formLabel}>Dose</label>
-                <div style={{display:"flex",gap:6}}>
-                  <input style={{...DS.input,flex:1}} type="number" placeholder="500" value={suppForm.dose} onChange={e=>setSuppForm({...suppForm,dose:e.target.value})}/>
-                  <select style={{...DS.input,width:80}} value={suppForm.unit} onChange={e=>setSuppForm({...suppForm,unit:e.target.value})}>{["mg","mcg","g","IU","mL"].map(u=><option key={u}>{u}</option>)}</select>
-                </div>
+                <div style={{display:"flex",gap:6}}><input style={{...DS.input,flex:1}} type="number" placeholder="500" value={suppForm.dose} onChange={e=>setSuppForm({...suppForm,dose:e.target.value})}/><select style={{...DS.input,width:80}} value={suppForm.unit} onChange={e=>setSuppForm({...suppForm,unit:e.target.value})}>{["mg","mcg","g","IU","mL"].map(u=><option key={u}>{u}</option>)}</select></div>
                 <label style={formLabel}>Schedule</label>
                 <select style={DS.input} value={suppForm.schedule} onChange={e=>setSuppForm({...suppForm,schedule:e.target.value})}>{["Daily","Twice daily","Every other day","Weekly","As needed"].map(o=><option key={o}>{o}</option>)}</select>
                 <label style={formLabel}>Time</label>
@@ -2240,21 +2484,12 @@ export default function App() {
                   {suppSearchResults.length===0&&<div style={{color:"#475569",fontSize:13,fontFamily:"monospace"}}>No results for "{suppSearch}"</div>}
                   {suppSearchResults.map(item=>{
                     const cat=Object.entries(SUPPLEMENT_LIBRARY).find(([,v])=>v.includes(item))?.[0];
-                    return(
-                      <button key={item} onClick={()=>{setPendingSupp({name:item,category:cat});setSuppForm({dose:"",unit:"mg",schedule:"Daily",time:"Morning",reminderEnabled:false,reminderTime:"08:00"});setSuppView("add");}} style={{background:"#020617",border:`1px solid ${theme.primary}33`,borderRadius:12,padding:"11px 14px",color:"#e2e8f0",fontWeight:700,textAlign:"left",cursor:"pointer"}}>
-                        {item}<span style={{fontSize:10,color:"#64748b",fontFamily:"monospace",marginLeft:8}}>{cat?.replace(/([A-Z])/g," $1").trim()}</span>
-                      </button>
-                    );
+                    return(<button key={item} onClick={()=>{setPendingSupp({name:item,category:cat});setSuppForm({dose:"",unit:"mg",schedule:"Daily",time:"Morning",reminderEnabled:false,reminderTime:"08:00"});setSuppView("add");}} style={{background:"#020617",border:`1px solid ${theme.primary}33`,borderRadius:12,padding:"11px 14px",color:"#e2e8f0",fontWeight:700,textAlign:"left",cursor:"pointer"}}>{item}<span style={{fontSize:10,color:"#64748b",fontFamily:"monospace",marginLeft:8}}>{cat?.replace(/([A-Z])/g," $1").trim()}</span></button>);
                   })}
                 </div>
               ):(
                 <div style={{display:"grid",gridTemplateColumns:"1fr 1fr",gap:10}}>
-                  {Object.keys(SUPPLEMENT_LIBRARY).map(cat=>(
-                    <button key={cat} onClick={()=>{setSuppActiveCat(cat);setSuppView("items");}} style={{background:"#020617",border:`1px solid ${theme.primary}33`,borderRadius:14,padding:14,color:"#f8fafc",textAlign:"left",cursor:"pointer"}}>
-                      <div style={{fontSize:14,fontWeight:700}}>{cat.replace(/([A-Z])/g," $1").trim()}</div>
-                      <div style={{marginTop:4,fontSize:11,color:"#64748b",fontFamily:"monospace"}}>{SUPPLEMENT_LIBRARY[cat].length} options</div>
-                    </button>
-                  ))}
+                  {Object.keys(SUPPLEMENT_LIBRARY).map(cat=>(<button key={cat} onClick={()=>{setSuppActiveCat(cat);setSuppView("items");}} style={{background:"#020617",border:`1px solid ${theme.primary}33`,borderRadius:14,padding:14,color:"#f8fafc",textAlign:"left",cursor:"pointer"}}><div style={{fontSize:14,fontWeight:700}}>{cat.replace(/([A-Z])/g," $1").trim()}</div><div style={{marginTop:4,fontSize:11,color:"#64748b",fontFamily:"monospace"}}>{SUPPLEMENT_LIBRARY[cat].length} options</div></button>))}
                 </div>
               )}
             </>
@@ -2264,11 +2499,7 @@ export default function App() {
               <button style={{...DS.btn,gridColumn:"unset",background:"#020617",border:"1px solid #334155",color:"#94a3b8",marginBottom:12}} onClick={()=>setSuppView("cats")}>← Back</button>
               <div style={{fontSize:13,fontWeight:700,color:"#94a3b8",fontFamily:"monospace",marginBottom:10}}>{suppActiveCat.replace(/([A-Z])/g," $1").trim()}</div>
               <div style={{display:"flex",flexDirection:"column",gap:8}}>
-                {SUPPLEMENT_LIBRARY[suppActiveCat].map(item=>(
-                  <button key={item} onClick={()=>{setPendingSupp({name:item,category:suppActiveCat});setSuppForm({dose:"",unit:"mg",schedule:"Daily",time:"Morning",reminderEnabled:false,reminderTime:"08:00"});setSuppView("add");}} style={{background:"#020617",border:`1px solid ${theme.primary}33`,borderRadius:12,padding:"11px 14px",color:"#e2e8f0",fontWeight:700,textAlign:"left",cursor:"pointer"}}>
-                    {item}
-                  </button>
-                ))}
+                {SUPPLEMENT_LIBRARY[suppActiveCat].map(item=>(<button key={item} onClick={()=>{setPendingSupp({name:item,category:suppActiveCat});setSuppForm({dose:"",unit:"mg",schedule:"Daily",time:"Morning",reminderEnabled:false,reminderTime:"08:00"});setSuppView("add");}} style={{background:"#020617",border:`1px solid ${theme.primary}33`,borderRadius:12,padding:"11px 14px",color:"#e2e8f0",fontWeight:700,textAlign:"left",cursor:"pointer"}}>{item}</button>))}
               </div>
             </>
           )}
