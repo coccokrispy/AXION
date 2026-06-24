@@ -792,8 +792,11 @@ export default function App() {
       else msgType="weight_same";
     }
     setWeights([...(weights||[]),{...weightForm,id:uid(),weight:curr}]);
+    const wasNight=weightForm.type==="Night";
     setWeightForm({date:todayISO(),weight:"",type:"Morning",note:""});
-    if(motivationMode==="drill"){
+    if(wasNight){
+      flash("Logged ✓");
+    } else if(motivationMode==="drill"){
       const isBadGain=IS_BULK?(msgType==="weight_down"):(msgType==="weight_up_big");
       const isGoodMove=IS_BULK?(msgType==="weight_up_big"):(msgType==="weight_down");
       if(isBadGain){
