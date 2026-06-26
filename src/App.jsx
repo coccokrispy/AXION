@@ -562,6 +562,17 @@ export default function App() {
   const weightDays=useMemo(()=>Object.keys(weightsByDay).sort((a,b)=>new Date(b)-new Date(a)),[weightsByDay]);
 
   const getDayAvg=(day)=>weightsByDay[day]?(weightsByDay[day].reduce((s,e)=>s+Number(e.weight),0)/weightsByDay[day].length):null;
+  const getDayWeight=(day)=>{
+    const entries=weightsByDay[day];
+    if(!entries||entries.length===0)return null;
+    const morning=entries.find(e=>e.type==="Morning");
+    if(morning)return Number(morning.weight);
+    const afternoon=entries.find(e=>e.type==="Afternoon");
+    if(afternoon)return Number(afternoon.weight);
+    const night=entries.find(e=>e.type==="Night");
+    if(night)return Number(night.weight);
+    return Number(entries[0].weight);
+  };
 
   const streak=useMemo(()=>{
     const allDates=new Set([...(weights||[]).map(w=>w.date),...(foods||[]).map(f=>f.date),...(workouts||[]).map(w=>w.date),...Object.values(peptideLogs||{}).flat().map(l=>l.date)]);
@@ -1577,7 +1588,7 @@ export default function App() {
               if(isCurrent){
                 return days.map(day=>{
                   const entries=weightsByDay[day];
-                  const avg=(entries.reduce((s,e)=>s+Number(e.weight),0)/entries.length).toFixed(1);
+                  const avg=getDayWeight(day).toFixed(1);
                   const isOpen=expandedWeightDay===day;
                   return(
                     <div key={day} style={{background:"#020617",border:`1px solid ${isOpen?theme.primary+"66":"#1e293b"}`,borderRadius:12,marginBottom:8,overflow:"hidden"}}>
@@ -1621,7 +1632,7 @@ export default function App() {
                     <div style={{paddingLeft:8,marginTop:4}}>
                       {days.map(day=>{
                         const entries=weightsByDay[day];
-                        const avg=(entries.reduce((s,e)=>s+Number(e.weight),0)/entries.length).toFixed(1);
+                       const avg=getDayWeight(day).toFixed(1);
                         const isOpen=expandedWeightDay===day;
                         return(
                           <div key={day} style={{background:"#020617",border:`1px solid ${isOpen?theme.primary+"66":"#1e293b"}`,borderRadius:10,marginBottom:6,overflow:"hidden"}}>
