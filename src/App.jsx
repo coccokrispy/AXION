@@ -516,7 +516,16 @@ export default function App() {
   const [pepSearch,setPepSearch]=useState("");
 
   const [doseTab,setDoseTab]=useState(null);
-  const [doseForm,setDoseForm]=useState({date:todayISO(),dose:"",note:""});
+  const [doseForm,setDoseForm]=useState({date:todayISO(),dose:"",note:"",site:""});
+  const INJECTION_SITES=["Left Belly","Right Belly","Left Thigh","Right Thigh","Left Delt","Right Delt","Left Glute","Right Glute"];
+  const lastPinnedSite=useMemo(()=>{
+    const allDoses=Object.values(peptideLogs||{}).flat().filter(l=>l.site).sort((a,b)=>{
+      const dc=new Date(b.date)-new Date(a.date);
+      if(dc!==0)return dc;
+      return (b.id||0)-(a.id||0);
+    });
+    return allDoses.length?allDoses[0].site:null;
+  },[peptideLogs]);
   const [editingDoseNote,setEditingDoseNote]=useState(null);
   const [doseNoteText,setDoseNoteText]=useState("");
   const [editingGoal,setEditingGoal]=useState(false);
@@ -969,7 +978,13 @@ export default function App() {
   }
   function savePepEdit(){setPeptideStack(prev=>prev.map(p=>p.id===editingPep.id?{...p,dose:pepForm.dose||"—",unit:pepForm.unit,frequency:pepForm.frequency,cycle:pepForm.cycle,notes:pepForm.notes,status:pepForm.status,pinDays:pepForm.pinDays||[],reminderEnabled:pepForm.reminderEnabled||false,reminderTime:pepForm.reminderTime||"08:00"}:p));setEditingPep(null);setPepView("stack");}
   function deletePep(id){setPeptideStack(prev=>prev.filter(p=>p.id!==id));setPeptideLogs(prev=>{const n={...prev};delete n[id];return n;});setEditingPep(null);setPepView("stack");}
-  function logPeptideDose(peptideId){if(!doseForm.dose)return;setPeptideLogs(prev=>({...prev,[peptideId]:[...(prev[peptideId]||[]),{id:uid(),date:doseForm.date,dose:+doseForm.dose,note:doseForm.note}]}));setDoseForm({date:todayISO(),dose:"",note:""});flash("Dose logged ✓");}
+  function logPeptideDose(peptideId){
+    if(!doseForm.dose)return;
+    if(!doseForm.site){flash("Pick an injection site ⚠️");return;}
+    setPeptideLogs(prev=>({...prev,[peptideId]:[...(prev[peptideId]||[]),{id:uid(),date:doseForm.date,dose:+doseForm.dose,note:doseForm.note,site:doseForm.site}]}));
+    setDoseForm({date:todayISO(),dose:"",note:"",site:""});
+    flash("Dose logged ✓");
+  }
   function removePeptideDose(peptideId,entryId){setPeptideLogs(prev=>({...prev,[peptideId]:(prev[peptideId]||[]).filter(e=>e.id!==entryId)}));}
 
   async function getAIInsight(){
@@ -1718,6 +1733,23 @@ export default function App() {
                     <input style={DS.input} type="date" value={doseForm.date} onChange={e=>setDoseForm({...doseForm,date:e.target.value})}/>
                     <label style={formLabel}>Dose ({pep.unit})</label>
                     <input style={DS.input} type="number" step="0.025" placeholder={pep.dose} value={doseForm.dose} onChange={e=>setDoseForm({...doseForm,dose:e.target.value})}/>
+                  </div>
+                  <div style={{marginBottom:16}}>
+                    <div style={{fontSize:11,color:"#64748b",fontFamily:"monospace",textTransform:"uppercase",letterSpacing:1,marginBottom:8}}>Injection Site</div>
+                    {lastPinnedSite&&<div style={{fontSize:11,color:theme.primary,fontFamily:"monospace",marginBottom:8}}>📍 Last pinned: {lastPinnedSite} (locked out)</div>}
+                    <div style={{display:"flex",flexWrap:"wrap",gap:6}}>
+                      {INJECTION_SITES.map(site=>{
+                        const isLast=site===lastPinnedSite;
+                        const selected=doseForm.site===site;
+                        return(
+                          <button key={site} type="button" disabled={isLast} onClick={()=>setDoseForm({...doseForm,site})} style={{padding:"7px 11px",borderRadius:8,cursor:isLast?"not-allowed":"pointer",fontFamily:"monospace",fontSize:11,fontWeight:700,border:`1px solid ${isLast?"#1e293b":selected?theme.primary:"#334155"}`,background:isLast?"#0a0f1a":selected?theme.primary+"22":"#020617",color:isLast?"#334155":selected?theme.primary:"#94a3b8",opacity:isLast?0.5:1,textDecoration:isLast?"line-through":"none",transition:"all 0.15s"}}>
+                            {site}
+                          </button>
+                        );
+                      })}
+                    </div>
+                  </div>
+                  <div style={formGrid}>
                     <label style={formLabel}>Note</label>
                     <input style={DS.input} placeholder="Optional" value={doseForm.note} onChange={e=>setDoseForm({...doseForm,note:e.target.value})}/>
                   </div>
@@ -1732,7 +1764,7 @@ export default function App() {
                     <div key={l.id} style={{background:"#020617",border:"1px solid #1e293b",borderRadius:8,padding:"10px 12px",marginBottom:8,fontSize:13}}>
                       <div style={{display:"flex",justifyContent:"space-between",alignItems:"flex-start",gap:10}}>
                         <div style={{flex:1}}>
-                          <div><b style={{color:"#fb7185"}}>{l.dose} {pep.unit}</b><span style={{color:"#64748b",fontSize:11,fontFamily:"monospace",marginLeft:8}}>{l.date}</span></div>
+                          <div><b style={{color:"#fb7185"}}>{l.dose} {pep.unit}</b><span style={{color:"#64748b",fontSize:11,fontFamily:"monospace",marginLeft:8}}>{l.date}</span>{l.site&&<span style={{color:theme.primary,fontSize:11,fontFamily:"monospace",marginLeft:8}}>📍 {l.site}</span>}</div>
                           {editingDoseNote===l.id?(
                             <div style={{marginTop:8}}>
                               <textarea value={doseNoteText} onChange={e=>setDoseNoteText(e.target.value)} placeholder="How did this dose make you feel? Side effects, energy, sleep..." style={{width:"100%",boxSizing:"border-box",background:"#0f172a",border:`1px solid ${theme.primary}`,color:"#f8fafc",borderRadius:10,padding:"10px 12px",fontSize:12,fontFamily:"monospace",outline:"none",resize:"vertical",minHeight:80}}/>
