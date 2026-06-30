@@ -583,6 +583,12 @@ export default function App() {
   const [doseNoteText,setDoseNoteText]=useState("");
   const [editingGoal,setEditingGoal]=useState(false);
   const [showFullChart,setShowFullChart]=useState(false);
+  const [photos,setPhotos]=useState([]);
+  const [photoNote,setPhotoNote]=useState("");
+  const [viewingPhoto,setViewingPhoto]=useState(null);
+  const [compareMode,setCompareMode]=useState(false);
+  const [compareSelection,setCompareSelection]=useState([]);
+  const [photoLoading,setPhotoLoading]=useState(false);
 
   const [noteText,setNoteText]=useState("");
   const [noteDate,setNoteDate]=useState(todayISO());
@@ -635,6 +641,42 @@ export default function App() {
     if(night)return Number(night.weight);
     return Number(entries[0].weight);
   };
+  useEffect(()=>{getAllPhotos().then(setPhotos).catch(()=>{});},[]);
+
+  async function addProgressPhoto(file){
+    if(!file)return;
+    setPhotoLoading(true);
+    try{
+      const reader=new FileReader();
+      reader.onload=async ev=>{
+        const compressed=await compressImage(ev.target.result);
+        const dayW=getDayWeight(todayISO());
+        const photo={id:uid(),date:todayISO(),weight:dayW||null,note:photoNote.trim(),img:compressed,created:new Date().toISOString()};
+        await savePhoto(photo);
+        const all=await getAllPhotos();
+        setPhotos(all);
+        setPhotoNote("");
+        setPhotoLoading(false);
+        flash("Photo saved ✓");
+      };
+      reader.readAsDataURL(file);
+    }catch(e){setPhotoLoading(false);flash("Photo failed");}
+  }
+
+  async function removeProgressPhoto(id){
+    await deletePhotoDB(id);
+    const all=await getAllPhotos();
+    setPhotos(all);
+    setViewingPhoto(null);
+  }
+
+  function toggleCompareSelect(id){
+    setCompareSelection(prev=>{
+      if(prev.includes(id))return prev.filter(x=>x!==id);
+      if(prev.length>=2)return [prev[1],id];
+      return [...prev,id];
+    });
+  }
 
   const streak=useMemo(()=>{
     const allDates=new Set([...(weights||[]).map(w=>w.date),...(foods||[]).map(f=>f.date),...(workouts||[]).map(w=>w.date),...Object.values(peptideLogs||{}).flat().map(l=>l.date)]);
@@ -1373,6 +1415,54 @@ export default function App() {
           </div>
         </div>
       )}
+      {/* PHOTO VIEWER */}
+      {viewingPhoto&&(
+        <div style={{position:"fixed",inset:0,background:"rgba(0,0,0,0.95)",display:"flex",flexDirection:"column",alignItems:"center",justifyContent:"center",zIndex:600,padding:20}} onClick={()=>setViewingPhoto(null)}>
+          <img src={viewingPhoto.img} alt="Progress" style={{maxWidth:"100%",maxHeight:"75vh",borderRadius:14,border:`1px solid ${theme.border}`}} onClick={e=>e.stopPropagation()}/>
+          <div style={{marginTop:16,textAlign:"center"}} onClick={e=>e.stopPropagation()}>
+            <div style={{fontSize:16,fontWeight:900,color:theme.primary,fontFamily:"monospace"}}>{new Date(viewingPhoto.date+"T12:00:00").toLocaleDateString("en-US",{month:"long",day:"numeric",year:"numeric"})}</div>
+            {viewingPhoto.weight&&<div style={{fontSize:14,color:"#94a3b8",fontFamily:"monospace",marginTop:4}}>{viewingPhoto.weight} lbs</div>}
+            {viewingPhoto.note&&<div style={{fontSize:13,color:"#94a3b8",fontStyle:"italic",marginTop:6}}>{viewingPhoto.note}</div>}
+            <div style={{display:"flex",gap:10,marginTop:18,justifyContent:"center"}}>
+              <button style={{background:"#450a0a",border:"1px solid #ef4444",color:"#ef4444",borderRadius:12,padding:"12px 24px",cursor:"pointer",fontFamily:"monospace",fontWeight:700,fontSize:13}} onClick={()=>setConfirm({label:`Delete this progress photo?`,onConfirm:()=>removeProgressPhoto(viewingPhoto.id)})}>Delete</button>
+              <button style={{background:`linear-gradient(135deg,${theme.primaryDark},${theme.primary})`,border:"none",color:"#020617",borderRadius:12,padding:"12px 24px",cursor:"pointer",fontFamily:"monospace",fontWeight:900,fontSize:13}} onClick={()=>setViewingPhoto(null)}>Close</button>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* COMPARE VIEW */}
+      {compareMode&&compareSelection.length===2&&(()=>{
+        const a=photos.find(p=>p.id===compareSelection[0]);
+        const b=photos.find(p=>p.id===compareSelection[1]);
+        if(!a||!b)return null;
+        const ordered=[a,b].sort((x,y)=>new Date(x.date)-new Date(y.date));
+        return(
+          <div style={{position:"fixed",inset:0,background:"rgba(0,0,0,0.96)",zIndex:650,overflowY:"auto",padding:20}}>
+            <div style={{maxWidth:430,margin:"0 auto"}}>
+              <div style={{display:"flex",justifyContent:"space-between",alignItems:"center",marginBottom:16}}>
+                <div style={{fontSize:16,fontWeight:900,color:theme.primary,fontFamily:"monospace",letterSpacing:1}}>COMPARE</div>
+                <button style={{background:"#1e293b",border:`1px solid ${theme.border}`,color:"#94a3b8",borderRadius:10,padding:"8px 16px",cursor:"pointer",fontFamily:"monospace",fontWeight:700,fontSize:13}} onClick={()=>{setCompareMode(false);setCompareSelection([]);}}>✕ Exit</button>
+              </div>
+              {ordered.map((p,i)=>(
+                <div key={p.id} style={{marginBottom:18}}>
+                  <img src={p.img} alt="Progress" style={{width:"100%",borderRadius:14,border:`1px solid ${theme.border}`,display:"block"}}/>
+                  <div style={{textAlign:"center",marginTop:8}}>
+                    <div style={{fontSize:14,fontWeight:900,color:theme.primary,fontFamily:"monospace"}}>{i===0?"BEFORE · ":"AFTER · "}{new Date(p.date+"T12:00:00").toLocaleDateString("en-US",{month:"short",day:"numeric",year:"numeric"})}</div>
+                    {p.weight&&<div style={{fontSize:13,color:"#94a3b8",fontFamily:"monospace",marginTop:2}}>{p.weight} lbs</div>}
+                  </div>
+                </div>
+              ))}
+              {ordered[0].weight&&ordered[1].weight&&(
+                <div style={{background:`linear-gradient(145deg,#020617,${theme.primary}11)`,border:`1px solid ${theme.primary}44`,borderRadius:12,padding:14,textAlign:"center",marginBottom:12}}>
+                  <div style={{fontSize:13,color:theme.primary,fontFamily:"monospace",fontWeight:700}}>{Math.abs(ordered[1].weight-ordered[0].weight).toFixed(1)} lbs {ordered[1].weight<ordered[0].weight?"lost":"gained"} · {daysBetween(ordered[0].date,ordered[1].date)} days</div>
+                </div>
+              )}
+              <button style={{width:"100%",background:`linear-gradient(135deg,${theme.primaryDark},${theme.primary})`,border:"none",color:"#020617",borderRadius:12,padding:"14px",cursor:"pointer",fontFamily:"monospace",fontWeight:900,fontSize:14,letterSpacing:1}} onClick={()=>{setCompareMode(false);setCompareSelection([]);}}>Done</button>
+            </div>
+          </div>
+        );
+      })()}
 
       <header style={{display:"flex",flexDirection:"column",alignItems:"center",justifyContent:"center",marginBottom:22,textAlign:"center"}}>
         <div style={{marginTop:55,fontSize:58,lineHeight:0.9,fontWeight:900,letterSpacing:13,color:"#f8fafc",fontFamily:"Impact,Arial Black,sans-serif",textTransform:"uppercase"}}>AXION</div>
