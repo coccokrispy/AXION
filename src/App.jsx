@@ -151,6 +151,59 @@ function pctProgress(w) {
   return (((START_WEIGHT-w)/START_WEIGHT)*100).toFixed(1);
 }
 function uid() { return Date.now()+Math.floor(Math.random()*10000); }
+const PHOTO_DB="axion_photos_db";
+const PHOTO_STORE="photos";
+function openPhotoDB(){
+  return new Promise((resolve,reject)=>{
+    const req=indexedDB.open(PHOTO_DB,1);
+    req.onupgradeneeded=()=>{const db=req.result;if(!db.objectStoreNames.contains(PHOTO_STORE))db.createObjectStore(PHOTO_STORE,{keyPath:"id"});};
+    req.onsuccess=()=>resolve(req.result);
+    req.onerror=()=>reject(req.error);
+  });
+}
+async function savePhoto(photo){
+  const db=await openPhotoDB();
+  return new Promise((resolve,reject)=>{
+    const tx=db.transaction(PHOTO_STORE,"readwrite");
+    tx.objectStore(PHOTO_STORE).put(photo);
+    tx.oncomplete=()=>resolve(true);
+    tx.onerror=()=>reject(tx.error);
+  });
+}
+async function getAllPhotos(){
+  const db=await openPhotoDB();
+  return new Promise((resolve,reject)=>{
+    const tx=db.transaction(PHOTO_STORE,"readonly");
+    const req=tx.objectStore(PHOTO_STORE).getAll();
+    req.onsuccess=()=>resolve(req.result||[]);
+    req.onerror=()=>reject(req.error);
+  });
+}
+async function deletePhotoDB(id){
+  const db=await openPhotoDB();
+  return new Promise((resolve,reject)=>{
+    const tx=db.transaction(PHOTO_STORE,"readwrite");
+    tx.objectStore(PHOTO_STORE).delete(id);
+    tx.oncomplete=()=>resolve(true);
+    tx.onerror=()=>reject(tx.error);
+  });
+}
+function compressImage(dataUrl,maxW=1000,quality=0.7){
+  return new Promise((resolve)=>{
+    const img=new Image();
+    img.onload=()=>{
+      const scale=Math.min(1,maxW/img.width);
+      const w=Math.round(img.width*scale);
+      const h=Math.round(img.height*scale);
+      const canvas=document.createElement("canvas");
+      canvas.width=w;canvas.height=h;
+      const ctx=canvas.getContext("2d");
+      ctx.drawImage(img,0,0,w,h);
+      resolve(canvas.toDataURL("image/jpeg",quality));
+    };
+    img.src=dataUrl;
+  });
+}
 
 const JUNK_FOODS=["pizza","burger","cheeseburger","hamburger","whopper","big mac","quarter pounder","mcdonald","mcdonalds","wendy","wendys","taco bell","kfc","popeyes","chick-fil-a","chickfila","five guys","shake shack","in-n-out","innout","sonic","dairy queen","dq blizzard","jack in the box","carl's jr","carls jr","hardees","white castle","waffle house","dominos","papa john","little caesar","pizza hut","calzone","stromboli","hot dog","corn dog","bratwurst","sausage biscuit","mcmuffin","egg mcmuffin","breakfast burrito","french fries","fries","onion rings","mozzarella sticks","fried chicken","chicken nuggets","nuggets","chicken strips","chicken tenders","fried fish","fish and chips","funnel cake","fried oreos","fried twinkies","chips","doritos","cheetos","lays","pringles","fritos","funyuns","crackers","goldfish crackers","cheez its","ritz crackers","popcorn chicken","nachos","queso","tater tots","hash browns","waffle fries","curly fries","cheese fries","loaded fries","chili cheese fries","cookie","cookies","oreo","oreos","chips ahoy","nutter butter","girl scout cookies","donut","donuts","doughnut","krispy kreme","dunkin","munchkins","pastry","croissant","danish","cinnamon roll","cinnabon","pop tart","toaster strudel","cake","birthday cake","chocolate cake","cheesecake","cupcake","muffin","brownie","brownie sundae","ice cream","gelato","sorbet","frozen yogurt","froyo","milkshake","shake","sundae","banana split","hot fudge","whipped cream","candy","m&ms","skittles","starburst","gummy bears","gummy worms","sour patch","swedish fish","nerds","twix","snickers","kit kat","reese","peanut butter cup","butterfinger","milky way","3 musketeers","almond joy","mounds","hershey","cadbury","toblerone","ferrero rocher","nutella","cotton candy","caramel corn","kettle corn","chocolate bar","candy bar","lollipop","jolly rancher","airheads","laffy taffy","marshmallow","peeps","twinkies","ding dongs","ho hos","little debbie","hostess","swiss rolls","oatmeal cream pie","soda","cola","pepsi","coca cola","coke","sprite","fanta","mountain dew","dr pepper","root beer","ginger ale","cream soda","orange soda","grape soda","energy drink","red bull","monster","rockstar","bang energy","full throttle","nos energy","5 hour energy","slurpee","icee","slushie","juice box","kool aid","sweet tea","lemonade","punch","sports drink","gatorade","powerade","vitamin water","alcohol","beer","lager","ale","ipa","stout","porter","hard seltzer","white claw","truly","bud light","budweiser","coors","miller lite","corona","modelo","heineken","stella","guinness","wine","red wine","white wine","rose","champagne","prosecco","sangria","mimosa","hard cider","spiked","vodka","tequila","whiskey","bourbon","rum","gin","margarita","mojito","daiquiri","pina colada","long island","cosmopolitan","bloody mary","hard lemonade","mikes hard","twisted tea","four loko","mac and cheese","velveeta","kraft dinner","ramen","instant noodles","cup noodles","top ramen","spam","bologna","hot pocket","lean pocket","totinos","pizza roll","bagel bite","lunchable","tv dinner","frozen pizza","frozen burrito","microwave burrito","frozen meal","hungry man","marie callender","stouffers","banquet meal","fried rice","lo mein","chow mein","egg roll","spring roll","crab rangoon","general tso","orange chicken","sweet and sour","fried wonton","pad see ew","drunken noodles","waffle","pancake","french toast","syrup","maple syrup","powdered sugar","whipped butter","biscuits and gravy","fried egg sandwich","bacon sandwich","sausage sandwich","philly cheesesteak","cheesesteak","sub","hoagie","meatball sub","italian sub","club sandwich","blt","grilled cheese","quesadilla","loaded quesadilla","nachos supreme","loaded nachos","chipotle bowl","mission burrito","smash burger","animal style","double double","triple triple","loaded burger","bacon burger","bbq burger","mushroom swiss","patty melt","fried bologna","pulled pork sandwich","bbq sandwich","chicken sandwich","popcorn shrimp","coconut shrimp","fried shrimp","lobster roll","clam chowder bread bowl","deep dish","stuffed crust","extra cheese","double pepperoni","meat lovers","supreme pizza","hawaiian pizza","buffalo wings","wings","boneless wings","lemon pepper wings","garlic parmesan wings","teriyaki wings","bbq wings","dry rub wings","ranch dressing","blue cheese dressing","thousand island","caesar dressing","honey mustard","special sauce"];
 
