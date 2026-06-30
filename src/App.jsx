@@ -1821,10 +1821,57 @@ export default function App() {
                   )}
                 </div>
               );
-            });
+         });
           })()}
         </div>
       )}
+      {tab==="weight"&&(
+        <div style={DS.panel}>
+          <div style={{display:"flex",justifyContent:"space-between",alignItems:"center",marginBottom:6}}>
+            <h2 style={{margin:0,fontSize:15,fontWeight:700,color:"#94a3b8",fontFamily:"monospace"}}>📸 Progress Photos</h2>
+            {photos.length>=2&&(
+              <button onClick={()=>{setCompareMode(c=>!c);setCompareSelection([]);}} style={{background:compareMode?theme.primary+"22":"#020617",border:`1px solid ${compareMode?theme.primary:theme.border}`,color:compareMode?theme.primary:"#94a3b8",borderRadius:8,padding:"6px 12px",cursor:"pointer",fontFamily:"monospace",fontSize:11,fontWeight:700}}>{compareMode?"Cancel":"Compare"}</button>
+            )}
+          </div>
+          <div style={{fontSize:10,color:"#475569",fontFamily:"monospace",marginBottom:14,lineHeight:1.6}}>Stored on this device only — keep your originals in your camera roll. Photos aren't included in backups.</div>
+
+          {compareMode&&(
+            <div style={{background:`${theme.primary}11`,border:`1px solid ${theme.primary}44`,borderRadius:10,padding:10,marginBottom:12,fontSize:12,color:theme.primary,fontFamily:"monospace",textAlign:"center"}}>
+              Select 2 photos to compare · {compareSelection.length}/2 chosen
+            </div>
+          )}
+
+          {!compareMode&&(
+            <div style={{marginBottom:14}}>
+              <input style={{...DS.input,marginBottom:8}} placeholder="Optional note (e.g. front relaxed, 12 weeks in)" value={photoNote} onChange={e=>setPhotoNote(e.target.value)}/>
+              <div style={{display:"flex",gap:8}}>
+                <label style={{flex:1,display:"block",background:`linear-gradient(135deg,${theme.primaryDark},${theme.primary})`,color:"#020617",borderRadius:10,padding:"12px",cursor:"pointer",fontFamily:"monospace",fontSize:13,fontWeight:900,textAlign:"center"}}>{photoLoading?"Saving...":"📷 Take Photo"}<input type="file" accept="image/*" capture="environment" style={{display:"none"}} onChange={e=>{addProgressPhoto(e.target.files[0]);e.target.value="";}}/></label>
+                <label style={{flex:1,display:"block",background:"#1e293b",border:`1px solid ${theme.border}`,color:"#94a3b8",borderRadius:10,padding:"12px",cursor:"pointer",fontFamily:"monospace",fontSize:13,fontWeight:700,textAlign:"center"}}>🖼️ Upload<input type="file" accept="image/*" style={{display:"none"}} onChange={e=>{addProgressPhoto(e.target.files[0]);e.target.value="";}}/></label>
+              </div>
+            </div>
+          )}
+
+          {photos.length===0?(
+            <div style={{color:"#475569",fontSize:13,fontFamily:"monospace",textAlign:"center",padding:"12px 0"}}>No progress photos yet. Add your first one above.</div>
+          ):(
+            <div style={{display:"grid",gridTemplateColumns:"1fr 1fr 1fr",gap:6}}>
+              {[...photos].sort((a,b)=>new Date(b.date)-new Date(a.date)).map(p=>{
+                const selected=compareSelection.includes(p.id);
+                return(
+                  <div key={p.id} onClick={()=>compareMode?toggleCompareSelect(p.id):setViewingPhoto(p)} style={{position:"relative",aspectRatio:"1",borderRadius:10,overflow:"hidden",cursor:"pointer",border:`2px solid ${selected?theme.primary:"transparent"}`}}>
+                    <img src={p.img} alt="Progress" style={{width:"100%",height:"100%",objectFit:"cover",display:"block"}}/>
+                    <div style={{position:"absolute",bottom:0,left:0,right:0,background:"linear-gradient(transparent,rgba(0,0,0,0.85))",padding:"12px 6px 5px",pointerEvents:"none"}}>
+                      <div style={{fontSize:9,color:"#fff",fontFamily:"monospace",fontWeight:700}}>{p.date.slice(5)}</div>
+                      {p.weight&&<div style={{fontSize:9,color:theme.primary,fontFamily:"monospace"}}>{p.weight} lbs</div>}
+                    </div>
+                    {compareMode&&selected&&<div style={{position:"absolute",top:4,right:4,background:theme.primary,color:"#020617",borderRadius:"50%",width:20,height:20,display:"flex",alignItems:"center",justifyContent:"center",fontSize:11,fontWeight:900,fontFamily:"monospace"}}>{compareSelection.indexOf(p.id)+1}</div>}
+                  </div>
+                );
+              })}
+            </div>
+          )}
+        </div>
+      )}  
 
       {/* DOSES TAB */}
       {tab==="doses"&&(
