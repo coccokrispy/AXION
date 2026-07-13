@@ -557,7 +557,7 @@ export default function App() {
   const [genView,setGenView]=useState("idle");
   const [genEquipMode,setGenEquipMode]=useState("type");
   const [genEquipText,setGenEquipText]=useState("");
-  const [genEquipImage,setGenEquipImage]=useState(null);
+  const [genEquipImages,setGenEquipImages]=useState([]);
   const [genMuscles,setGenMuscles]=useState([]);
   const [genIntensity,setGenIntensity]=useState("Moderate");
   const [genDuration,setGenDuration]=useState(30);
@@ -1218,16 +1218,21 @@ Build the workout.`;
   }
 
   async function scanEquipment(){
-    if(!genEquipImage||!apiKey){setGenError("Add API key in Settings.");return;}
+    if(genEquipImages.length===0){setGenError("Add at least one photo.");return;}
+    if(!apiKey){setGenError("Add API key in Settings.");return;}
     setGenLoading(true);setGenError("");
     try{
-      const base64=genEquipImage.split(",")[1];
-      const mediaType=genEquipImage.split(";")[0].split(":")[1];
-      const data=await callClaude(apiKey,{system:`Identify all workout equipment visible in this image. Return ONLY a plain comma-separated list of the equipment, nothing else. Example: "dumbbells up to 50lb, flat bench, pull-up bar, resistance bands". If you can't identify anything, return "unclear".`,messages:[{role:"user",content:[{type:"image",source:{type:"base64",media_type:mediaType,data:base64}},{type:"text",text:"What equipment is here?"}]}]});
+      const imageBlocks=genEquipImages.map(img=>({
+        type:"image",
+        source:{type:"base64",media_type:img.split(";")[0].split(":")[1],data:img.split(",")[1]}
+      }));
+      const extraNote=genEquipText.trim()?`\n\nThe user also typed these notes about their equipment — include anything here that the photos missed: "${genEquipText.trim()}"`:"";
+      const data=await callClaude(apiKey,{
+        system:`Identify all workout equipment visible across ALL the images provided. They are different angles or areas of the same gym/space — combine everything into one complete list, no duplicates. Return ONLY a plain comma-separated list, nothing else. Example: "dumbbells up to 50lb, flat bench, pull-up bar, resistance bands, squat rack, barbell with plates". If you truly can't identify anything, return "unclear".`,
+        messages:[{role:"user",content:[...imageBlocks,{type:"text",text:`Here are ${genEquipImages.length} photo${genEquipImages.length>1?"s":""} of my available equipment. List everything you see.${extraNote}`}]}]
+      });
       const txt=data.content.map(b=>b.text||"").join("").trim();
-      setGenEquipText(txt==="unclear"?"":txt);
-      setGenEquipMode("type");
-      setGenEquipImage(null);
+      setGenEquipText(txt==="unclear"?genEquipText:txt);
       flash("Equipment identified — edit if needed");
     }catch(e){setGenError("Scan failed: "+e.message);}
     setGenLoading(false);
@@ -2648,32 +2653,49 @@ Build the workout.`;
             {genView==="setup"&&(
               <div>
                 <div style={{fontSize:11,color:"#64748b",fontFamily:"monospace",textTransform:"uppercase",letterSpacing:1,marginBottom:8}}>1 · Equipment</div>
-                <div style={{display:"flex",gap:6,marginBottom:10}}>
-                  {[["type","✏️ Type"],["photo","📷 Photo"],["bodyweight","🏃 Bodyweight"]].map(([m,l])=>(
-                    <button key={m} onClick={()=>{setGenEquipMode(m);setGenError("");}} style={{flex:1,padding:"9px 4px",borderRadius:10,border:`1px solid ${genEquipMode===m?theme.primary:"#334155"}`,background:genEquipMode===m?theme.primary+"22":"#020617",color:genEquipMode===m?theme.primary:"#64748b",cursor:"pointer",fontSize:11,fontFamily:"monospace",fontWeight:700}}>{l}</button>
+                <div style={{display:"flex",gap:6,marginBottom:12}}>
+                  {[["type","✏️ Text"],["photo","📷 Photos + Text"],["bodyweight","🏃 Bodyweight"]].map(([m,l])=>(
+                    <button key={m} onClick={()=>{setGenEquipMode(m);setGenError("");}} style={{flex:1,padding:"9px 4px",borderRadius:10,border:`1px solid ${genEquipMode===m?theme.primary:"#334155"}`,background:genEquipMode===m?theme.primary+"22":"#020617",color:genEquipMode===m?theme.primary:"#64748b",cursor:"pointer",fontSize:10,fontFamily:"monospace",fontWeight:700}}>{l}</button>
                   ))}
                 </div>
-                {genEquipMode==="type"&&<input style={{...DS.input,marginBottom:14}} placeholder="e.g. dumbbells up to 50, bench, pull-up bar" value={genEquipText} onChange={e=>setGenEquipText(e.target.value)}/>}
+
+                {genEquipMode==="type"&&(
+                  <textarea style={{width:"100%",boxSizing:"border-box",background:"#000000",border:`1px solid ${theme.border}`,color:"#f8fafc",borderRadius:12,padding:"11px 13px",fontSize:13,fontFamily:"monospace",outline:"none",resize:"vertical",minHeight:70,marginBottom:14,lineHeight:1.6}} placeholder="List everything you have. e.g. dumbbells 5-50lb, flat bench, pull-up bar, squat rack, barbell + plates, resistance bands, cable machine..." value={genEquipText} onChange={e=>setGenEquipText(e.target.value)}/>
+                )}
+
                 {genEquipMode==="photo"&&(
                   <div style={{marginBottom:14}}>
-                    {!genEquipImage?(
-                      <div style={{display:"flex",gap:8}}>
-                        <label style={{flex:1,display:"block",background:"#0f172a",border:"1px solid #334155",color:"#e2e8f0",borderRadius:10,padding:"11px",cursor:"pointer",fontFamily:"monospace",fontSize:12,fontWeight:700,textAlign:"center"}}>📷 Take Photo<input type="file" accept="image/*" capture="environment" style={{display:"none"}} onChange={e=>{const f=e.target.files[0];if(!f)return;const r=new FileReader();r.onload=ev=>setGenEquipImage(ev.target.result);r.readAsDataURL(f);e.target.value="";}}/></label>
-                        <label style={{flex:1,display:"block",background:"#1e293b",border:"1px solid #334155",color:"#e2e8f0",borderRadius:10,padding:"11px",cursor:"pointer",fontFamily:"monospace",fontSize:12,fontWeight:700,textAlign:"center"}}>🖼️ Upload<input type="file" accept="image/*" style={{display:"none"}} onChange={e=>{const f=e.target.files[0];if(!f)return;const r=new FileReader();r.onload=ev=>setGenEquipImage(ev.target.result);r.readAsDataURL(f);e.target.value="";}}/></label>
+                    <div style={{fontSize:10,color:"#475569",fontFamily:"monospace",marginBottom:8,lineHeight:1.6}}>Snap a few angles of your space. Add up to 10 photos, then type anything the camera missed.</div>
+
+                    {genEquipImages.length>0&&(
+                      <div style={{display:"grid",gridTemplateColumns:"repeat(4,1fr)",gap:6,marginBottom:10}}>
+                        {genEquipImages.map((img,i)=>(
+                          <div key={i} style={{position:"relative",aspectRatio:"1",borderRadius:8,overflow:"hidden",border:`1px solid ${theme.border}`}}>
+                            <img src={img} alt={`Equipment ${i+1}`} style={{width:"100%",height:"100%",objectFit:"cover",display:"block"}}/>
+                            <button onClick={()=>setGenEquipImages(prev=>prev.filter((_,idx)=>idx!==i))} style={{position:"absolute",top:2,right:2,width:20,height:20,borderRadius:"50%",background:"rgba(0,0,0,0.85)",border:"1px solid #ef4444",color:"#ef4444",cursor:"pointer",fontSize:11,fontWeight:900,display:"flex",alignItems:"center",justifyContent:"center",lineHeight:1,padding:0}}>✕</button>
+                          </div>
+                        ))}
                       </div>
-                    ):(
-                      <div>
-                        <img src={genEquipImage} alt="Equipment" style={{width:"100%",maxHeight:180,objectFit:"cover",borderRadius:10,border:"1px solid #1e293b",marginBottom:8}}/>
-                        <div style={{display:"flex",gap:8}}>
-                          <button style={{...DS.btn,gridColumn:"unset",flex:1,opacity:genLoading?0.6:1}} onClick={scanEquipment} disabled={genLoading}>{genLoading?"Scanning...":"🔍 Identify Equipment"}</button>
-                          <button style={{...DS.btn,gridColumn:"unset",background:"#7f1d1d",minWidth:56}} onClick={()=>setGenEquipImage(null)}>✕</button>
-                        </div>
+                    )}
+
+                    {genEquipImages.length<10&&(
+                      <div style={{display:"flex",gap:8,marginBottom:10}}>
+                        <label style={{flex:1,display:"block",background:"#0f172a",border:"1px solid #334155",color:"#e2e8f0",borderRadius:10,padding:"11px",cursor:"pointer",fontFamily:"monospace",fontSize:12,fontWeight:700,textAlign:"center"}}>📷 Take Photo<input type="file" accept="image/*" capture="environment" style={{display:"none"}} onChange={e=>{const f=e.target.files[0];if(!f)return;const r=new FileReader();r.onload=ev=>setGenEquipImages(prev=>[...prev,ev.target.result].slice(0,10));r.readAsDataURL(f);e.target.value="";}}/></label>
+                        <label style={{flex:1,display:"block",background:"#1e293b",border:"1px solid #334155",color:"#e2e8f0",borderRadius:10,padding:"11px",cursor:"pointer",fontFamily:"monospace",fontSize:12,fontWeight:700,textAlign:"center"}}>🖼️ Upload<input type="file" accept="image/*" multiple style={{display:"none"}} onChange={e=>{const files=Array.from(e.target.files||[]);files.forEach(f=>{const r=new FileReader();r.onload=ev=>setGenEquipImages(prev=>[...prev,ev.target.result].slice(0,10));r.readAsDataURL(f);});e.target.value="";}}/></label>
                       </div>
+                    )}
+
+                    <div style={{fontSize:10,color:"#475569",fontFamily:"monospace",marginBottom:6}}>{genEquipImages.length}/10 photos</div>
+
+                    <textarea style={{width:"100%",boxSizing:"border-box",background:"#000000",border:`1px solid ${theme.border}`,color:"#f8fafc",borderRadius:12,padding:"11px 13px",fontSize:13,fontFamily:"monospace",outline:"none",resize:"vertical",minHeight:60,marginBottom:10,lineHeight:1.6}} placeholder="Anything the photos missed? e.g. also have bands, a 45lb bar, and adjustable dumbbells up to 70..." value={genEquipText} onChange={e=>setGenEquipText(e.target.value)}/>
+
+                    {genEquipImages.length>0&&(
+                      <button style={{...DS.btn,gridColumn:"unset",width:"100%",opacity:genLoading?0.6:1}} onClick={scanEquipment} disabled={genLoading}>{genLoading?"Reading photos...":`🔍 Identify Equipment (${genEquipImages.length} photo${genEquipImages.length>1?"s":""})`}</button>
                     )}
                   </div>
                 )}
-                {genEquipMode==="bodyweight"&&<div style={{background:"#020617",border:`1px solid ${theme.border}`,borderRadius:10,padding:12,marginBottom:14,fontSize:12,color:theme.primary,fontFamily:"monospace",textAlign:"center"}}>No equipment. Just you and gravity.</div>}
 
+                {genEquipMode==="bodyweight"&&<div style={{background:"#020617",border:`1px solid ${theme.border}`,borderRadius:10,padding:12,marginBottom:14,fontSize:12,color:theme.primary,fontFamily:"monospace",textAlign:"center"}}>No equipment. Just you and gravity.</div>}
                 <div style={{fontSize:11,color:"#64748b",fontFamily:"monospace",textTransform:"uppercase",letterSpacing:1,marginBottom:8}}>2 · Muscle Groups</div>
                 <div style={{display:"flex",flexWrap:"wrap",gap:6,marginBottom:14}}>
                   {MUSCLE_GROUPS.map(m=>{
