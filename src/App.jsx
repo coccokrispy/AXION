@@ -495,7 +495,7 @@ export default function App() {
   const [peptideStack,setPeptideStack]=usePersistedState("mr_peptide_stack",[]);
   const [peptideLogs,setPeptideLogs]=usePersistedState("mr_peptide_logs",{});
   const [foods,setFoods]=usePersistedState("mr_foods",[]);
-  const [,set]=usePersistedState("mr_",[]);
+  const [workouts,setWorkouts]=usePersistedState("mr_workouts",[]);
   const [mySupplements,setMySupplements]=usePersistedState("my_supplements_v2",[]);
   const [takenToday,setTakenToday]=usePersistedState("supp_taken_"+todayISO(),[]);
   const [notes,setNotes]=usePersistedState("axion_notes",[]);
