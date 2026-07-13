@@ -495,7 +495,7 @@ export default function App() {
   const [peptideStack,setPeptideStack]=usePersistedState("mr_peptide_stack",[]);
   const [peptideLogs,setPeptideLogs]=usePersistedState("mr_peptide_logs",{});
   const [foods,setFoods]=usePersistedState("mr_foods",[]);
-  const [workouts,setWorkouts]=usePersistedState("mr_workouts",[]);
+  const [,set]=usePersistedState("mr_",[]);
   const [mySupplements,setMySupplements]=usePersistedState("my_supplements_v2",[]);
   const [takenToday,setTakenToday]=usePersistedState("supp_taken_"+todayISO(),[]);
   const [notes,setNotes]=usePersistedState("axion_notes",[]);
@@ -553,6 +553,29 @@ export default function App() {
   const [workoutForm,setWorkoutForm]=useState({date:todayISO(),type:"",minutes:"",note:"",calories:"",intensity:"",runType:"",miles:"",runTime:""});
   const [insightLoading,setInsightLoading]=useState(false);
   const [aiInsight,setAiInsight]=useState("");
+  const [savedWorkouts,setSavedWorkouts]=usePersistedState("axion_saved_workouts",[]);
+  const [genView,setGenView]=useState("idle");
+  const [genEquipMode,setGenEquipMode]=useState("type");
+  const [genEquipText,setGenEquipText]=useState("");
+  const [genEquipImage,setGenEquipImage]=useState(null);
+  const [genMuscles,setGenMuscles]=useState([]);
+  const [genIntensity,setGenIntensity]=useState("Moderate");
+  const [genDuration,setGenDuration]=useState(30);
+  const [genLoading,setGenLoading]=useState(false);
+  const [genError,setGenError]=useState("");
+  const [genWorkout,setGenWorkout]=useState(null);
+  const [showDisclaimer,setShowDisclaimer]=useState(false);
+  const [aiDeclined,setAiDeclined]=useState(false);
+  const [liveMode,setLiveMode]=useState(false);
+  const [liveIdx,setLiveIdx]=useState(0);
+  const [liveSet,setLiveSet]=useState(1);
+  const [liveSeconds,setLiveSeconds]=useState(0);
+  const [restSeconds,setRestSeconds]=useState(0);
+  const [resting,setResting]=useState(false);
+  const [liveDone,setLiveDone]=useState(false);
+  const MUSCLE_GROUPS=["Chest","Back","Shoulders","Arms","Legs","Core","Cardio","Full Body"];
+  const DURATIONS=[15,30,45,60,80];
+  const aiAccepted=localStorage.getItem("axion_workout_ai_accepted")==="true";
 
   const [suppView,setSuppView]=useState("my");
   const [suppActiveCat,setSuppActiveCat]=useState(null);
@@ -1095,6 +1118,128 @@ export default function App() {
     }catch(e){setAiInsight("Insight unavailable: "+e.message);}
     setInsightLoading(false);
   }
+  useEffect(()=>{
+    if(!liveMode||liveDone)return;
+    const t=setInterval(()=>setLiveSeconds(s=>s+1),1000);
+    return ()=>clearInterval(t);
+  },[liveMode,liveDone]);
+
+  useEffect(()=>{
+    if(!resting||restSeconds<=0)return;
+    const t=setInterval(()=>{
+      setRestSeconds(s=>{
+        if(s<=1){setResting(false);advanceSet();return 0;}
+        return s-1;
+      });
+    },1000);
+    return ()=>clearInterval(t);
+  },[resting,restSeconds]);
+
+  function fmtTime(sec){
+    const m=Math.floor(sec/60);
+    const s=sec%60;
+    return `${m}:${String(s).padStart(2,"0")}`;
+  }
+
+  function advanceSet(){
+    if(!genWorkout)return;
+    const ex=genWorkout.exercises[liveIdx];
+    if(!ex)return;
+    if(liveSet<ex.sets){
+      setLiveSet(v=>v+1);
+    } else if(liveIdx<genWorkout.exercises.length-1){
+      setLiveIdx(i=>i+1);
+      setLiveSet(1);
+    } else {
+      setLiveDone(true);
+    }
+  }
+
+  function completeSet(){
+    if(!genWorkout)return;
+    const ex=genWorkout.exercises[liveIdx];
+    const isLastSetOfLastEx=liveIdx===genWorkout.exercises.length-1&&liveSet>=ex.sets;
+    if(isLastSetOfLastEx){setLiveDone(true);return;}
+    const rest=Number(ex.rest_seconds)||60;
+    setRestSeconds(rest);
+    setResting(true);
+  }
+
+  function skipExercise(){
+    if(!genWorkout)return;
+    setResting(false);setRestSeconds(0);
+    if(liveIdx<genWorkout.exercises.length-1){setLiveIdx(i=>i+1);setLiveSet(1);}
+    else setLiveDone(true);
+  }
+
+  function endLiveWorkout(){
+    setLiveMode(false);setLiveDone(false);setLiveIdx(0);setLiveSet(1);
+    setLiveSeconds(0);setRestSeconds(0);setResting(false);
+  }
+
+  function logLiveWorkout(){
+    const mins=Math.max(1,Math.round(liveSeconds/60));
+    const w={id:uid(),date:todayISO(),type:genWorkout.name||"AI Workout",minutes:mins,calories:0,intensity:genIntensity,note:genWorkout.exercises.map(e=>`${e.name} ${e.sets}x${e.reps}`).join(", "),runType:"",miles:"",runTime:""};
+    setWorkouts(prev=>[...(prev||[]),w]);
+    endLiveWorkout();
+    setGenView("idle");
+    setGenWorkout(null);
+    flash("Workout logged ✓");
+  }
+
+  async function generateWorkout(){
+    if(!apiKey){setGenError("Add your API key in Settings.");return;}
+    if(genMuscles.length===0){setGenError("Pick at least one muscle group.");return;}
+    setGenLoading(true);setGenError("");setGenWorkout(null);
+    const goal=IS_BULK?"BULKING — prioritize hypertrophy and strength. Use heavier compound lifts, moderate rep ranges (6-12), longer rest (90-180s), lower total volume per set but higher intensity.":"CUTTING — prioritize preserving muscle while burning calories. Moderate-to-higher reps (10-15), shorter rest (45-90s), include supersets or circuits where appropriate, keep intensity density high.";
+    let equipDesc=genEquipMode==="bodyweight"?"NO EQUIPMENT — bodyweight only.":genEquipText.trim()||"Standard commercial gym equipment.";
+    const sys=`You are an experienced strength and conditioning coach. Build a single workout session grounded in established training principles: compound movements before isolation, appropriate rep ranges for the stated goal, sensible rest intervals, and total volume that realistically fits the time budget. Never prescribe anything unsafe or beyond the equipment listed.
+
+Return ONLY valid JSON, no markdown fences, in exactly this shape:
+{"name":"Short name like 'Push Day' or 'Legs + Core'","summary":"1-2 sentence overview","exercises":[{"name":"Exercise name","sets":4,"reps":"8-10","rest_seconds":90,"note":"brief form or intent cue"}],"warmup":"1-2 sentence warmup instruction","cooldown":"1-2 sentence cooldown instruction"}
+
+Rules: reps is a string (can be "8-10" or "30 sec" for timed/cardio work). sets is a number. rest_seconds is a number. Fit the total workout to the requested duration including rest. For Cardio, structure it as intervals or steady-state with sets/reps expressed in time.`;
+    const usr=`Equipment available: ${equipDesc}
+Muscle groups to target: ${genMuscles.join(", ")}
+Intensity: ${genIntensity}
+Duration: ${genDuration} minutes total
+Goal: ${goal}
+
+Build the workout.`;
+    try{
+      const data=await callClaude(apiKey,{system:sys,messages:[{role:"user",content:usr}]});
+      const raw=data.content.map(b=>b.text||"").join("").replace(/```json|```/g,"").trim();
+      const parsed=JSON.parse(raw);
+      if(!parsed.exercises||!Array.isArray(parsed.exercises)||parsed.exercises.length===0)throw new Error("Bad workout format");
+      setGenWorkout(parsed);
+      setGenView("result");
+    }catch(e){setGenError("Generation failed: "+e.message);}
+    setGenLoading(false);
+  }
+
+  async function scanEquipment(){
+    if(!genEquipImage||!apiKey){setGenError("Add API key in Settings.");return;}
+    setGenLoading(true);setGenError("");
+    try{
+      const base64=genEquipImage.split(",")[1];
+      const mediaType=genEquipImage.split(";")[0].split(":")[1];
+      const data=await callClaude(apiKey,{system:`Identify all workout equipment visible in this image. Return ONLY a plain comma-separated list of the equipment, nothing else. Example: "dumbbells up to 50lb, flat bench, pull-up bar, resistance bands". If you can't identify anything, return "unclear".`,messages:[{role:"user",content:[{type:"image",source:{type:"base64",media_type:mediaType,data:base64}},{type:"text",text:"What equipment is here?"}]}]});
+      const txt=data.content.map(b=>b.text||"").join("").trim();
+      setGenEquipText(txt==="unclear"?"":txt);
+      setGenEquipMode("type");
+      setGenEquipImage(null);
+      flash("Equipment identified — edit if needed");
+    }catch(e){setGenError("Scan failed: "+e.message);}
+    setGenLoading(false);
+  }
+
+  function saveGeneratedWorkout(){
+    if(!genWorkout)return;
+    const dateLabel=new Date().toLocaleDateString("en-US",{month:"short",day:"numeric"});
+    const autoName=`${genWorkout.name} · ${dateLabel}`;
+    setSavedWorkouts(prev=>[...(prev||[]),{id:uid(),name:autoName,date:todayISO(),intensity:genIntensity,duration:genDuration,muscles:genMuscles,workout:genWorkout}]);
+    flash("Workout saved ✓");
+  }
 
   const TABS=["dashboard","weight","doses","peptides","food","workouts","supplements","notes","calculator"];
   const ICONS={dashboard:Zap,weight:Scale,doses:Syringe,peptides:Dna,food:Utensils,workouts:Dumbbell,supplements:Pill,notes:BookOpen,calculator:Calculator};
@@ -1459,6 +1604,90 @@ export default function App() {
                 </div>
               )}
               <button style={{width:"100%",background:`linear-gradient(135deg,${theme.primaryDark},${theme.primary})`,border:"none",color:"#020617",borderRadius:12,padding:"14px",cursor:"pointer",fontFamily:"monospace",fontWeight:900,fontSize:14,letterSpacing:1}} onClick={()=>{setCompareMode(false);setCompareSelection([]);}}>Done</button>
+            </div>
+          </div>
+        );
+      })()}
+      {/* WORKOUT AI DISCLAIMER */}
+      {showDisclaimer&&(
+        <div style={{position:"fixed",inset:0,background:"rgba(0,0,0,0.97)",zIndex:700,overflowY:"auto",padding:20}}>
+          <div style={{maxWidth:430,margin:"0 auto",paddingTop:20,paddingBottom:40}}>
+            <div style={{textAlign:"center",marginBottom:20}}>
+              <div style={{fontSize:52,marginBottom:10}}>⚠️</div>
+              <div style={{fontSize:19,fontWeight:900,color:"#f59e0b",fontFamily:"monospace",letterSpacing:1}}>BEFORE YOU TRAIN</div>
+            </div>
+            <div style={{background:"#0f172a",border:"1px solid #854d0e",borderLeft:"4px solid #f59e0b",borderRadius:16,padding:20,marginBottom:20}}>
+              <div style={{fontSize:13,color:"#94a3b8",lineHeight:1.9,fontFamily:"monospace"}}>
+                <p style={{margin:"0 0 12px"}}>These workouts are <b style={{color:"#f8fafc"}}>generated by AI</b>. AXION is not a certified trainer, coach, or medical professional.</p>
+                <p style={{margin:"0 0 12px"}}><b style={{color:"#f8fafc"}}>Always warm up.</b> Cold muscles tear. Take the time.</p>
+                <p style={{margin:"0 0 12px"}}><b style={{color:"#f8fafc"}}>Form over ego.</b> Use a weight you can control through the full range of motion. Bad reps build bad joints.</p>
+                <p style={{margin:"0 0 12px"}}><b style={{color:"#f8fafc"}}>Know your limits.</b> If an exercise feels wrong, skip it. If something hurts — sharp pain, not muscle burn — stop immediately.</p>
+                <p style={{margin:"0 0 12px"}}>Consult a licensed physician before starting any new training program, especially if you have injuries, heart conditions, or other health concerns.</p>
+                <p style={{margin:0,color:"#64748b"}}>You train at your own risk. The creators of AXION accept no liability for injury, harm, or damages resulting from use of this feature.</p>
+              </div>
+            </div>
+            <button style={{width:"100%",background:`linear-gradient(135deg,${theme.primaryDark},${theme.primary})`,border:"none",color:"#020617",borderRadius:14,padding:"16px",cursor:"pointer",fontFamily:"monospace",fontWeight:900,fontSize:15,letterSpacing:1,marginBottom:10}} onClick={()=>{localStorage.setItem("axion_workout_ai_accepted","true");setShowDisclaimer(false);setAiDeclined(false);setGenView("setup");}}>✓ ACCEPT & CONTINUE</button>
+            <button style={{width:"100%",background:"#1e293b",border:"1px solid #334155",color:"#94a3b8",borderRadius:14,padding:"16px",cursor:"pointer",fontFamily:"monospace",fontWeight:700,fontSize:14}} onClick={()=>{setShowDisclaimer(false);setAiDeclined(true);setGenView("idle");}}>✕ DECLINE</button>
+            <div style={{fontSize:11,color:"#475569",fontFamily:"monospace",textAlign:"center",marginTop:14,lineHeight:1.7}}>Declining locks the AI workout generator. You can still log your own workouts manually.</div>
+          </div>
+        </div>
+      )}
+
+      {/* LIVE WORKOUT MODE */}
+      {liveMode&&genWorkout&&(()=>{
+        const ex=genWorkout.exercises[liveIdx];
+        const totalSets=genWorkout.exercises.reduce((s,e)=>s+e.sets,0);
+        let doneSets=0;
+        for(let i=0;i<liveIdx;i++)doneSets+=genWorkout.exercises[i].sets;
+        doneSets+=liveSet-1;
+        const pct=Math.min(100,(doneSets/totalSets)*100);
+        if(liveDone)return(
+          <div style={{position:"fixed",inset:0,background:"rgba(0,0,0,0.97)",zIndex:700,display:"flex",alignItems:"center",justifyContent:"center",padding:24}}>
+            <div style={{maxWidth:340,width:"100%",textAlign:"center"}}>
+              <div style={{fontSize:64,marginBottom:16}}>🏆</div>
+              <div style={{fontSize:24,fontWeight:900,color:theme.primary,fontFamily:"monospace",letterSpacing:2,marginBottom:8}}>WORKOUT COMPLETE</div>
+              <div style={{fontSize:38,fontWeight:900,color:"#f8fafc",fontFamily:"monospace",marginBottom:6}}>{fmtTime(liveSeconds)}</div>
+              <div style={{fontSize:13,color:"#94a3b8",fontFamily:"monospace",marginBottom:28}}>{genWorkout.exercises.length} exercises · {totalSets} sets · {genIntensity}</div>
+              <button style={{width:"100%",background:`linear-gradient(135deg,${theme.primaryDark},${theme.primary})`,border:"none",color:"#020617",borderRadius:14,padding:"16px",cursor:"pointer",fontFamily:"monospace",fontWeight:900,fontSize:15,letterSpacing:1,marginBottom:10}} onClick={logLiveWorkout}>LOG THIS WORKOUT</button>
+              <button style={{width:"100%",background:"#1e293b",border:"1px solid #334155",color:"#94a3b8",borderRadius:14,padding:"14px",cursor:"pointer",fontFamily:"monospace",fontWeight:700,fontSize:13}} onClick={endLiveWorkout}>Discard</button>
+            </div>
+          </div>
+        );
+        return(
+          <div style={{position:"fixed",inset:0,background:"rgba(0,0,0,0.97)",zIndex:700,overflowY:"auto",padding:20}}>
+            <div style={{maxWidth:430,margin:"0 auto"}}>
+              <div style={{display:"flex",justifyContent:"space-between",alignItems:"center",marginBottom:14}}>
+                <div style={{fontSize:26,fontWeight:900,color:theme.primary,fontFamily:"monospace"}}>{fmtTime(liveSeconds)}</div>
+                <button style={{background:"#450a0a",border:"1px solid #ef4444",color:"#ef4444",borderRadius:10,padding:"8px 14px",cursor:"pointer",fontFamily:"monospace",fontWeight:700,fontSize:12}} onClick={()=>setConfirm({label:"End this workout early?",onConfirm:()=>setLiveDone(true)})}>End</button>
+              </div>
+              <div style={{background:"#1e293b",borderRadius:999,height:8,overflow:"hidden",marginBottom:6}}>
+                <div style={{height:"100%",borderRadius:999,width:`${pct}%`,background:`linear-gradient(90deg,${theme.primaryDark},${theme.primary})`,transition:"width 0.3s"}}/>
+              </div>
+              <div style={{fontSize:11,color:"#475569",fontFamily:"monospace",textAlign:"center",marginBottom:22}}>{doneSets} / {totalSets} sets · Exercise {liveIdx+1} of {genWorkout.exercises.length}</div>
+
+              {resting?(
+                <div style={{background:`linear-gradient(145deg,#020617,${theme.primary}11)`,border:`2px solid ${theme.primary}`,borderRadius:20,padding:32,textAlign:"center",marginBottom:16}}>
+                  <div style={{fontSize:12,color:"#64748b",fontFamily:"monospace",letterSpacing:2,marginBottom:10}}>REST</div>
+                  <div style={{fontSize:56,fontWeight:900,color:theme.primary,fontFamily:"monospace",lineHeight:1}}>{restSeconds}</div>
+                  <div style={{fontSize:12,color:"#94a3b8",fontFamily:"monospace",marginTop:8}}>seconds</div>
+                  <button style={{marginTop:20,width:"100%",background:"#1e293b",border:`1px solid ${theme.border}`,color:"#94a3b8",borderRadius:12,padding:"12px",cursor:"pointer",fontFamily:"monospace",fontWeight:700,fontSize:13}} onClick={()=>{setResting(false);setRestSeconds(0);advanceSet();}}>Skip Rest →</button>
+                </div>
+              ):(
+                <div style={{background:"#0f172a",border:`2px solid ${theme.primary}`,borderRadius:20,padding:28,textAlign:"center",marginBottom:16,boxShadow:`0 0 40px ${theme.glow}`}}>
+                  <div style={{fontSize:20,fontWeight:900,color:"#f8fafc",fontFamily:"monospace",marginBottom:10,lineHeight:1.4}}>{ex.name}</div>
+                  <div style={{fontSize:15,color:theme.primary,fontFamily:"monospace",fontWeight:700,marginBottom:6}}>SET {liveSet} OF {ex.sets}</div>
+                  <div style={{fontSize:32,fontWeight:900,color:"#f8fafc",fontFamily:"monospace",marginBottom:10}}>{ex.reps}</div>
+                  {ex.note&&<div style={{fontSize:12,color:"#94a3b8",fontFamily:"monospace",fontStyle:"italic",lineHeight:1.6,marginBottom:6}}>{ex.note}</div>}
+                  <div style={{fontSize:11,color:"#475569",fontFamily:"monospace"}}>Rest after: {ex.rest_seconds}s</div>
+                </div>
+              )}
+
+              {!resting&&(
+                <>
+                  <button style={{width:"100%",background:`linear-gradient(135deg,${theme.primaryDark},${theme.primary})`,border:"none",color:"#020617",borderRadius:14,padding:"18px",cursor:"pointer",fontFamily:"monospace",fontWeight:900,fontSize:16,letterSpacing:1,marginBottom:10}} onClick={completeSet}>✓ SET COMPLETE</button>
+                  <button style={{width:"100%",background:"#1e293b",border:"1px solid #334155",color:"#94a3b8",borderRadius:12,padding:"12px",cursor:"pointer",fontFamily:"monospace",fontWeight:700,fontSize:12}} onClick={skipExercise}>Skip Exercise →</button>
+                </>
+              )}
             </div>
           </div>
         );
@@ -2538,6 +2767,131 @@ export default function App() {
       {/* WORKOUTS TAB */}
       {tab==="workouts"&&(
         <div>
+          <div style={{...DS.panel,borderLeft:`4px solid ${theme.primary}`}}>
+            <h2 style={{margin:"0 0 6px",fontSize:15,fontWeight:700,color:"#94a3b8",fontFamily:"monospace"}}>🤖 AI Workout Generator</h2>
+            <div style={{fontSize:11,color:"#475569",fontFamily:"monospace",marginBottom:14,lineHeight:1.6}}>Tell it what you've got. It builds the session.</div>
+
+            {aiDeclined&&(
+              <div style={{background:"#450a0a",border:"1px solid #ef4444",borderRadius:12,padding:14,marginBottom:12,fontSize:12,color:"#ef4444",fontFamily:"monospace",lineHeight:1.7,textAlign:"center"}}>
+                You declined the terms. The AI generator is locked.<br/>
+                <button style={{marginTop:10,background:"transparent",border:"1px solid #ef4444",color:"#ef4444",borderRadius:8,padding:"8px 16px",cursor:"pointer",fontFamily:"monospace",fontSize:12,fontWeight:700}} onClick={()=>{setAiDeclined(false);setShowDisclaimer(true);}}>Review Terms Again</button>
+              </div>
+            )}
+
+            {genView==="idle"&&!aiDeclined&&(
+              <button style={{...DS.btn,gridColumn:"unset",width:"100%"}} onClick={()=>{if(aiAccepted){setGenView("setup");}else{setShowDisclaimer(true);}}}>⚡ Generate a Workout</button>
+            )}
+
+            {genView==="setup"&&(
+              <div>
+                <div style={{fontSize:11,color:"#64748b",fontFamily:"monospace",textTransform:"uppercase",letterSpacing:1,marginBottom:8}}>1 · Equipment</div>
+                <div style={{display:"flex",gap:6,marginBottom:10}}>
+                  {[["type","✏️ Type"],["photo","📷 Photo"],["bodyweight","🏃 Bodyweight"]].map(([m,l])=>(
+                    <button key={m} onClick={()=>{setGenEquipMode(m);setGenError("");}} style={{flex:1,padding:"9px 4px",borderRadius:10,border:`1px solid ${genEquipMode===m?theme.primary:"#334155"}`,background:genEquipMode===m?theme.primary+"22":"#020617",color:genEquipMode===m?theme.primary:"#64748b",cursor:"pointer",fontSize:11,fontFamily:"monospace",fontWeight:700}}>{l}</button>
+                  ))}
+                </div>
+                {genEquipMode==="type"&&<input style={{...DS.input,marginBottom:14}} placeholder="e.g. dumbbells up to 50, bench, pull-up bar" value={genEquipText} onChange={e=>setGenEquipText(e.target.value)}/>}
+                {genEquipMode==="photo"&&(
+                  <div style={{marginBottom:14}}>
+                    {!genEquipImage?(
+                      <div style={{display:"flex",gap:8}}>
+                        <label style={{flex:1,display:"block",background:"#0f172a",border:"1px solid #334155",color:"#e2e8f0",borderRadius:10,padding:"11px",cursor:"pointer",fontFamily:"monospace",fontSize:12,fontWeight:700,textAlign:"center"}}>📷 Take Photo<input type="file" accept="image/*" capture="environment" style={{display:"none"}} onChange={e=>{const f=e.target.files[0];if(!f)return;const r=new FileReader();r.onload=ev=>setGenEquipImage(ev.target.result);r.readAsDataURL(f);e.target.value="";}}/></label>
+                        <label style={{flex:1,display:"block",background:"#1e293b",border:"1px solid #334155",color:"#e2e8f0",borderRadius:10,padding:"11px",cursor:"pointer",fontFamily:"monospace",fontSize:12,fontWeight:700,textAlign:"center"}}>🖼️ Upload<input type="file" accept="image/*" style={{display:"none"}} onChange={e=>{const f=e.target.files[0];if(!f)return;const r=new FileReader();r.onload=ev=>setGenEquipImage(ev.target.result);r.readAsDataURL(f);e.target.value="";}}/></label>
+                      </div>
+                    ):(
+                      <div>
+                        <img src={genEquipImage} alt="Equipment" style={{width:"100%",maxHeight:180,objectFit:"cover",borderRadius:10,border:"1px solid #1e293b",marginBottom:8}}/>
+                        <div style={{display:"flex",gap:8}}>
+                          <button style={{...DS.btn,gridColumn:"unset",flex:1,opacity:genLoading?0.6:1}} onClick={scanEquipment} disabled={genLoading}>{genLoading?"Scanning...":"🔍 Identify Equipment"}</button>
+                          <button style={{...DS.btn,gridColumn:"unset",background:"#7f1d1d",minWidth:56}} onClick={()=>setGenEquipImage(null)}>✕</button>
+                        </div>
+                      </div>
+                    )}
+                  </div>
+                )}
+                {genEquipMode==="bodyweight"&&<div style={{background:"#020617",border:`1px solid ${theme.border}`,borderRadius:10,padding:12,marginBottom:14,fontSize:12,color:theme.primary,fontFamily:"monospace",textAlign:"center"}}>No equipment. Just you and gravity.</div>}
+
+                <div style={{fontSize:11,color:"#64748b",fontFamily:"monospace",textTransform:"uppercase",letterSpacing:1,marginBottom:8}}>2 · Muscle Groups</div>
+                <div style={{display:"flex",flexWrap:"wrap",gap:6,marginBottom:14}}>
+                  {MUSCLE_GROUPS.map(m=>{
+                    const sel=genMuscles.includes(m);
+                    return(<button key={m} onClick={()=>setGenMuscles(prev=>sel?prev.filter(x=>x!==m):[...prev,m])} style={{padding:"8px 12px",borderRadius:10,cursor:"pointer",fontFamily:"monospace",fontSize:11,fontWeight:700,border:`1px solid ${sel?theme.primary:"#334155"}`,background:sel?theme.primary+"22":"#020617",color:sel?theme.primary:"#94a3b8"}}>{m}</button>);
+                  })}
+                </div>
+
+                <div style={{fontSize:11,color:"#64748b",fontFamily:"monospace",textTransform:"uppercase",letterSpacing:1,marginBottom:8}}>3 · Intensity</div>
+                <div style={{display:"grid",gridTemplateColumns:"repeat(4,1fr)",gap:6,marginBottom:14}}>
+                  {[["Easy","#4ade80"],["Moderate","#f59e0b"],["Hard","#f97316"],["Max","#ef4444"]].map(([lv,c])=>(
+                    <button key={lv} onClick={()=>setGenIntensity(lv)} style={{padding:"9px 4px",borderRadius:10,cursor:"pointer",fontFamily:"monospace",fontSize:11,fontWeight:700,border:`1px solid ${genIntensity===lv?c:"#1e293b"}`,background:genIntensity===lv?c+"22":"#020617",color:genIntensity===lv?c:"#64748b"}}>{lv}</button>
+                  ))}
+                </div>
+
+                <div style={{fontSize:11,color:"#64748b",fontFamily:"monospace",textTransform:"uppercase",letterSpacing:1,marginBottom:8}}>4 · Duration</div>
+                <div style={{display:"grid",gridTemplateColumns:"repeat(5,1fr)",gap:6,marginBottom:16}}>
+                  {DURATIONS.map(d=>(
+                    <button key={d} onClick={()=>setGenDuration(d)} style={{padding:"9px 2px",borderRadius:10,cursor:"pointer",fontFamily:"monospace",fontSize:11,fontWeight:700,border:`1px solid ${genDuration===d?theme.primary:"#334155"}`,background:genDuration===d?theme.primary+"22":"#020617",color:genDuration===d?theme.primary:"#64748b"}}>{d}m</button>
+                  ))}
+                </div>
+
+                <div style={{background:"#020617",border:`1px solid ${theme.border}`,borderRadius:10,padding:10,marginBottom:14,fontSize:11,color:"#64748b",fontFamily:"monospace",textAlign:"center"}}>Goal: <b style={{color:theme.primary}}>{IS_BULK?"BULK — hypertrophy focus":"CUT — preserve muscle, burn calories"}</b></div>
+
+                {genError&&<div style={{color:"#ef4444",fontSize:12,fontFamily:"monospace",marginBottom:10,textAlign:"center"}}>{genError}</div>}
+                <div style={{display:"flex",gap:8}}>
+                  <button style={{...DS.btn,gridColumn:"unset",flex:1,background:"#1e293b",color:"#94a3b8"}} onClick={()=>{setGenView("idle");setGenError("");}}>Cancel</button>
+                  <button style={{...DS.btn,gridColumn:"unset",flex:2,opacity:genLoading?0.6:1}} onClick={generateWorkout} disabled={genLoading}>{genLoading?"Building...":"⚡ Generate"}</button>
+                </div>
+              </div>
+            )}
+
+            {genView==="result"&&genWorkout&&(
+              <div>
+                <div style={{fontSize:18,fontWeight:900,color:theme.primary,fontFamily:"monospace",marginBottom:4}}>{genWorkout.name}</div>
+                <div style={{fontSize:12,color:"#94a3b8",fontFamily:"monospace",lineHeight:1.6,marginBottom:12}}>{genWorkout.summary}</div>
+                <div style={{fontSize:11,color:"#475569",fontFamily:"monospace",marginBottom:14}}>{genMuscles.join(" · ")} · {genIntensity} · {genDuration} min</div>
+
+                {genWorkout.warmup&&<div style={{background:"#020617",border:`1px solid ${theme.border}`,borderRadius:10,padding:12,marginBottom:12,fontSize:12,color:"#94a3b8",fontFamily:"monospace",lineHeight:1.6}}><b style={{color:theme.primary}}>WARM UP · </b>{genWorkout.warmup}</div>}
+
+                <div style={{display:"flex",flexDirection:"column",gap:8,marginBottom:12}}>
+                  {genWorkout.exercises.map((ex,i)=>(
+                    <div key={i} style={{background:"#020617",border:`1px solid ${theme.border}`,borderLeft:`3px solid ${theme.primary}`,borderRadius:10,padding:12}}>
+                      <div style={{display:"flex",justifyContent:"space-between",alignItems:"flex-start",gap:8}}>
+                        <div style={{flex:1}}>
+                          <div style={{fontWeight:700,fontSize:14,color:"#f8fafc"}}>{i+1}. {ex.name}</div>
+                          <div style={{fontSize:12,color:theme.primary,fontFamily:"monospace",marginTop:3,fontWeight:700}}>{ex.sets} × {ex.reps}</div>
+                          {ex.note&&<div style={{fontSize:11,color:"#94a3b8",fontStyle:"italic",marginTop:4,lineHeight:1.5}}>{ex.note}</div>}
+                        </div>
+                        <div style={{fontSize:10,color:"#475569",fontFamily:"monospace",flexShrink:0,background:"#0f172a",borderRadius:6,padding:"3px 7px"}}>{ex.rest_seconds}s rest</div>
+                      </div>
+                    </div>
+                  ))}
+                </div>
+
+                {genWorkout.cooldown&&<div style={{background:"#020617",border:`1px solid ${theme.border}`,borderRadius:10,padding:12,marginBottom:16,fontSize:12,color:"#94a3b8",fontFamily:"monospace",lineHeight:1.6}}><b style={{color:theme.primary}}>COOL DOWN · </b>{genWorkout.cooldown}</div>}
+
+                <button style={{width:"100%",background:`linear-gradient(135deg,${theme.primaryDark},${theme.primary})`,border:"none",color:"#020617",borderRadius:14,padding:"16px",cursor:"pointer",fontFamily:"monospace",fontWeight:900,fontSize:15,letterSpacing:1,marginBottom:8}} onClick={()=>{setLiveMode(true);setLiveIdx(0);setLiveSet(1);setLiveSeconds(0);setLiveDone(false);setResting(false);setRestSeconds(0);}}>▶ START WORKOUT</button>
+                <div style={{display:"flex",gap:8}}>
+                  <button style={{...DS.btn,gridColumn:"unset",flex:1,background:"#0f172a",border:`1px solid ${theme.primary}`,color:theme.primary}} onClick={saveGeneratedWorkout}>💾 Save</button>
+                  <button style={{...DS.btn,gridColumn:"unset",flex:1,background:"#1e293b",color:"#94a3b8"}} onClick={()=>{setGenView("setup");setGenWorkout(null);}}>↺ Redo</button>
+                </div>
+              </div>
+            )}
+          </div>
+
+          {(savedWorkouts||[]).length>0&&(
+            <div style={DS.panel}>
+              <h2 style={{margin:"0 0 12px",fontSize:15,fontWeight:700,color:"#94a3b8",fontFamily:"monospace"}}>💾 Saved Workouts</h2>
+              {(savedWorkouts||[]).slice().reverse().map(sw=>(
+                <div key={sw.id} style={{background:"#020617",border:`1px solid ${theme.border}`,borderRadius:12,padding:12,marginBottom:8,display:"flex",justifyContent:"space-between",alignItems:"center",gap:10}}>
+                  <div style={{flex:1,cursor:"pointer"}} onClick={()=>{setGenWorkout(sw.workout);setGenMuscles(sw.muscles||[]);setGenIntensity(sw.intensity||"Moderate");setGenDuration(sw.duration||30);setGenView("result");}}>
+                    <div style={{fontWeight:700,fontSize:13,color:theme.primary}}>{sw.name}</div>
+                    <div style={{fontSize:11,color:"#64748b",fontFamily:"monospace",marginTop:2}}>{(sw.muscles||[]).join(" · ")} · {sw.intensity} · {sw.duration}m · {sw.workout.exercises.length} exercises</div>
+                  </div>
+                  <button style={{...deleteBtn,flexShrink:0}} onClick={()=>setConfirm({label:sw.name,onConfirm:()=>setSavedWorkouts(prev=>prev.filter(x=>x.id!==sw.id))})}>✕</button>
+                </div>
+              ))}
+            </div>
+          )}
+
           <div style={{display:"grid",gridTemplateColumns:"repeat(3,1fr)",gap:10,marginBottom:14}}>
             {[["Today",`${todayMinutes}`,"min"],["This Week",`${thisWeekMins}`,"min"],["Total",`${(workouts||[]).length}`,"sessions"]].map(([l,v,u])=>(
               <div key={l} style={DS.card}>
