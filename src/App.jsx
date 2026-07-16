@@ -606,6 +606,24 @@ export default function App() {
   const [doseNoteText,setDoseNoteText]=useState("");
   const [editingGoal,setEditingGoal]=useState(false);
   const [showFullChart,setShowFullChart]=useState(false);
+  const [bodyScans,setBodyScans]=usePersistedState("axion_body_scans",[]);
+  const [bodyView,setBodyView]=useState("idle");
+  const [bodyImage,setBodyImage]=useState(null);
+  const [bodyLoading,setBodyLoading]=useState(false);
+  const [bodyError,setBodyError]=useState("");
+  const [bodyForm,setBodyForm]=useState({date:todayISO(),bodyfat:"",muscle:"",visceral:"",water:"",bmr:"",bone:""});
+  const [mealPrepMode,setMealPrepMode]=useState("type");
+  const [mealPrepText,setMealPrepText]=useState("");
+  const [mealPrepImage,setMealPrepImage]=useState(null);
+  const [mealPrepResult,setMealPrepResult]=useState("");
+  const [mealPrepLoading,setMealPrepLoading]=useState(false);
+  const [mealPrepError,setMealPrepError]=useState("");
+  const [showMealPrep,setShowMealPrep]=useState(false);
+  const [eatOutText,setEatOutText]=useState("");
+  const [eatOutResult,setEatOutResult]=useState("");
+  const [eatOutLoading,setEatOutLoading]=useState(false);
+  const [eatOutError,setEatOutError]=useState("");
+  const [showEatOut,setShowEatOut]=useState(false);
   const [photos,setPhotos]=useState([]);
   const [photoNote,setPhotoNote]=useState("");
   const [viewingPhoto,setViewingPhoto]=useState(null);
@@ -916,6 +934,110 @@ export default function App() {
   const estimatedCalories=setupForm.startWeight?Math.round((Number(setupForm.startWeight)*activityMultipliers[setupForm.activityLevel])-500):0;
 
   function flash(msg){setSaved(msg);setTimeout(()=>setSaved(""),2500);}
+  const latestScan=useMemo(()=>{
+    const s=[...(bodyScans||[])].sort((a,b)=>new Date(b.date)-new Date(a.date));
+    return s[0]||null;
+  },[bodyScans]);
+  const prevScan=useMemo(()=>{
+    const s=[...(bodyScans||[])].sort((a,b)=>new Date(b.date)-new Date(a.date));
+    return s[1]||null;
+  },[bodyScans]);
+  const lowestBodyFat=useMemo(()=>{
+    const vals=(bodyScans||[]).map(s=>Number(s.bodyfat)).filter(v=>v>0);
+    return vals.length?Math.min(...vals):null;
+  },[bodyScans]);
+  const highestMuscle=useMemo(()=>{
+    const vals=(bodyScans||[]).map(s=>Number(s.muscle)).filter(v=>v>0);
+    return vals.length?Math.max(...vals):null;
+  },[bodyScans]);
+
+  async function scanBodyComp(){
+    if(!bodyImage||!apiKey){setBodyError("Add API key in Settings.");return;}
+    setBodyLoading(true);setBodyError("");
+    try{
+      const small=await compressImage(bodyImage,1200,0.6);
+      const base64=small.split(",")[1];
+      const data=await callClaude(apiKey,{
+        system:`You are reading a body composition scan result (InBody, DEXA, smart scale app, etc). Extract the numeric values you can clearly see. Return ONLY valid JSON, no markdown:
+{"bodyfat":number or null,"muscle":number or null,"visceral":number or null,"water":number or null,"bmr":number or null,"bone":number or null}
+- bodyfat = body fat percentage (just the number)
+- muscle = lean muscle mass or skeletal muscle mass in lbs (convert kg to lbs if needed, 1kg=2.205lb)
+- visceral = visceral fat level/rating
+- water = body water percentage
+- bmr = basal metabolic rate in calories
+- bone = bone mass in lbs
+Use null for anything not visible. Only report numbers you can actually read.`,
+        messages:[{role:"user",content:[{type:"image",source:{type:"base64",media_type:"image/jpeg",data:base64}},{type:"text",text:"Read the body composition numbers from this scan."}]}]
+      });
+      const parsed=JSON.parse(data.content.map(b=>b.text||"").join("").replace(/```json|```/g,"").trim());
+      setBodyForm({
+        date:todayISO(),
+        bodyfat:parsed.bodyfat!=null?String(parsed.bodyfat):"",
+        muscle:parsed.muscle!=null?String(parsed.muscle):"",
+        visceral:parsed.visceral!=null?String(parsed.visceral):"",
+        water:parsed.water!=null?String(parsed.water):"",
+        bmr:parsed.bmr!=null?String(parsed.bmr):"",
+        bone:parsed.bone!=null?String(parsed.bone):"",
+      });
+      setBodyImage(null);
+      setBodyView("confirm");
+      flash("Scan read — check the numbers");
+    }catch(e){setBodyError("Scan failed: "+e.message);}
+    setBodyLoading(false);
+  }
+
+  function saveBodyScan(){
+    const hasData=["bodyfat","muscle","visceral","water","bmr","bone"].some(k=>bodyForm[k]!=="");
+    if(!hasData){setBodyError("Enter at least one value.");return;}
+    setBodyScans(prev=>[...(prev||[]),{
+      id:uid(),date:bodyForm.date,
+      bodyfat:bodyForm.bodyfat?+bodyForm.bodyfat:null,
+      muscle:bodyForm.muscle?+bodyForm.muscle:null,
+      visceral:bodyForm.visceral?+bodyForm.visceral:null,
+      water:bodyForm.water?+bodyForm.water:null,
+      bmr:bodyForm.bmr?+bodyForm.bmr:null,
+      bone:bodyForm.bone?+bodyForm.bone:null,
+    }]);
+    setBodyForm({date:todayISO(),bodyfat:"",muscle:"",visceral:"",water:"",bmr:"",bone:""});
+    setBodyView("idle");setBodyError("");
+    flash("Body scan saved ✓");
+  }
+
+  async function runMealPrep(){
+    if(!apiKey){setMealPrepError("Add your API key in Settings.");return;}
+    if(mealPrepMode==="type"&&!mealPrepText.trim()){setMealPrepError("Type what food you have.");return;}
+    if(mealPrepMode==="photo"&&!mealPrepImage){setMealPrepError("Add a photo of your food.");return;}
+    setMealPrepLoading(true);setMealPrepError("");setMealPrepResult("");
+    const goal=IS_BULK?"bulking — needs a calorie surplus, high protein, prioritize muscle gain":"cutting — needs a calorie deficit, high protein to preserve muscle, filling low-cal foods";
+    const calTarget=calorieTarget?`Their daily calorie target is about ${calorieTarget} kcal.`:"";
+    const proteinTarget=Math.round((Number(localStorage.getItem("tracker_start_weight"))||200)*0.7);
+    const sys=`You are a practical meal-prep coach. The user is ${goal}. ${calTarget} Aim for roughly ${proteinTarget}g protein/day. Suggest 2-4 realistic meals or meal-prep ideas using ONLY the ingredients they have (plus basic staples like salt, oil, spices). Keep it simple and high-protein. For each meal give a rough calorie and protein estimate. Be concise and practical — no fluff. Format as a clean readable list, plain text, no markdown headers.`;
+    try{
+      let content;
+      if(mealPrepMode==="photo"){
+        const small=await compressImage(mealPrepImage,1200,0.6);
+        content=[{type:"image",source:{type:"base64",media_type:"image/jpeg",data:small.split(",")[1]}},{type:"text",text:`Here's what I have. Give me meal prep ideas.${mealPrepText.trim()?" Also: "+mealPrepText.trim():""}`}];
+      }else{
+        content=`Here's what I have: ${mealPrepText.trim()}. Give me meal prep ideas.`;
+      }
+      const data=await callClaude(apiKey,{system:sys,messages:[{role:"user",content}]});
+      setMealPrepResult(data.content.map(b=>b.text||"").join("").trim());
+    }catch(e){setMealPrepError("Failed: "+e.message);}
+    setMealPrepLoading(false);
+  }
+
+  async function runEatOut(){
+    if(!apiKey){setEatOutError("Add your API key in Settings.");return;}
+    if(!eatOutText.trim()){setEatOutError("Enter a restaurant or cuisine.");return;}
+    setEatOutLoading(true);setEatOutError("");setEatOutResult("");
+    const goal=IS_BULK?"bulking (calorie surplus, high protein, building muscle)":"cutting (calorie deficit, high protein, preserving muscle)";
+    const sys=`You are a nutrition-savvy coach helping someone eat out while ${goal}. They'll name a restaurant or cuisine type. Give practical "what to order" guidance to hit their goals — general strategy, good choices, what to ask for, what to skip. Base it on how these foods generally work, NOT on specific menu prices or items you can't verify. Never invent specific menu items or prices. Keep it concise, practical, plain text, no markdown headers.`;
+    try{
+      const data=await callClaude(apiKey,{system:sys,messages:[{role:"user",content:`I'm eating at: ${eatOutText.trim()}. What should I order for my goal?`}]});
+      setEatOutResult(data.content.map(b=>b.text||"").join("").trim());
+    }catch(e){setEatOutError("Failed: "+e.message);}
+    setEatOutLoading(false);
+  }
 
   function addWeight(){
     if(!weightForm.weight)return;
