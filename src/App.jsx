@@ -2585,6 +2585,59 @@ Build the workout.`;
               </div>
             </div>
           </div>
+          <div style={DS.panel}>
+            <div style={{display:"flex",gap:8,marginBottom:showMealPrep||showEatOut?14:0}}>
+              <button onClick={()=>{setShowMealPrep(m=>!m);setShowEatOut(false);}} style={{flex:1,padding:"12px 8px",borderRadius:12,border:`1px solid ${showMealPrep?theme.primary:theme.border}`,background:showMealPrep?theme.primary+"22":"#020617",color:showMealPrep?theme.primary:"#94a3b8",cursor:"pointer",fontFamily:"monospace",fontSize:12,fontWeight:700}}>🍳 Meal Prep</button>
+              <button onClick={()=>{setShowEatOut(m=>!m);setShowMealPrep(false);}} style={{flex:1,padding:"12px 8px",borderRadius:12,border:`1px solid ${showEatOut?theme.primary:theme.border}`,background:showEatOut?theme.primary+"22":"#020617",color:showEatOut?theme.primary:"#94a3b8",cursor:"pointer",fontFamily:"monospace",fontSize:12,fontWeight:700}}>🍽️ Eating Out</button>
+            </div>
+
+            {showMealPrep&&(
+              <div style={{marginTop:4}}>
+                <div style={{fontSize:11,color:"#475569",fontFamily:"monospace",marginBottom:10,lineHeight:1.6}}>Tell me what food you've got. I'll suggest meals that fit your {IS_BULK?"bulk":"cut"}.</div>
+                <div style={{display:"flex",gap:6,marginBottom:10}}>
+                  {[["type","✏️ Type"],["photo","📷 Photo"]].map(([m,l])=>(
+                    <button key={m} onClick={()=>{setMealPrepMode(m);setMealPrepError("");}} style={{flex:1,padding:"8px 4px",borderRadius:10,border:`1px solid ${mealPrepMode===m?theme.primary:"#334155"}`,background:mealPrepMode===m?theme.primary+"22":"#020617",color:mealPrepMode===m?theme.primary:"#64748b",cursor:"pointer",fontSize:11,fontFamily:"monospace",fontWeight:700}}>{l}</button>
+                  ))}
+                </div>
+                {mealPrepMode==="type"&&(
+                  <textarea style={{width:"100%",boxSizing:"border-box",background:"#000000",border:`1px solid ${theme.border}`,color:"#f8fafc",borderRadius:12,padding:"11px 13px",fontSize:13,fontFamily:"monospace",outline:"none",resize:"vertical",minHeight:70,marginBottom:10,lineHeight:1.6}} placeholder="e.g. chicken breast, rice, eggs, broccoli, greek yogurt, olive oil..." value={mealPrepText} onChange={e=>setMealPrepText(e.target.value)}/>
+                )}
+                {mealPrepMode==="photo"&&(
+                  <div style={{marginBottom:10}}>
+                    {!mealPrepImage?(
+                      <div style={{display:"flex",gap:8}}>
+                        <label style={{flex:1,display:"block",background:"#0f172a",border:"1px solid #334155",color:"#e2e8f0",borderRadius:10,padding:"11px",cursor:"pointer",fontFamily:"monospace",fontSize:12,fontWeight:700,textAlign:"center"}}>📷 Photo<input type="file" accept="image/*" capture="environment" style={{display:"none"}} onChange={e=>{const f=e.target.files[0];if(!f)return;const r=new FileReader();r.onload=ev=>setMealPrepImage(ev.target.result);r.readAsDataURL(f);e.target.value="";}}/></label>
+                        <label style={{flex:1,display:"block",background:"#1e293b",border:"1px solid #334155",color:"#e2e8f0",borderRadius:10,padding:"11px",cursor:"pointer",fontFamily:"monospace",fontSize:12,fontWeight:700,textAlign:"center"}}>🖼️ Upload<input type="file" accept="image/*" style={{display:"none"}} onChange={e=>{const f=e.target.files[0];if(!f)return;const r=new FileReader();r.onload=ev=>setMealPrepImage(ev.target.result);r.readAsDataURL(f);e.target.value="";}}/></label>
+                      </div>
+                    ):(
+                      <div>
+                        <img src={mealPrepImage} alt="Food" style={{width:"100%",maxHeight:200,objectFit:"cover",borderRadius:10,border:"1px solid #1e293b",marginBottom:8}}/>
+                        <button style={{...DS.btn,gridColumn:"unset",width:"100%",background:"#7f1d1d"}} onClick={()=>setMealPrepImage(null)}>Remove Photo</button>
+                      </div>
+                    )}
+                    <textarea style={{width:"100%",boxSizing:"border-box",background:"#000000",border:`1px solid ${theme.border}`,color:"#f8fafc",borderRadius:12,padding:"11px 13px",fontSize:13,fontFamily:"monospace",outline:"none",resize:"vertical",minHeight:50,marginTop:8,lineHeight:1.6}} placeholder="Anything to add? (optional)" value={mealPrepText} onChange={e=>setMealPrepText(e.target.value)}/>
+                  </div>
+                )}
+                {mealPrepError&&<div style={{color:"#ef4444",fontSize:12,fontFamily:"monospace",marginBottom:8,textAlign:"center"}}>{mealPrepError}</div>}
+                <button style={{...DS.btn,gridColumn:"unset",width:"100%",opacity:mealPrepLoading?0.6:1}} onClick={runMealPrep} disabled={mealPrepLoading}>{mealPrepLoading?"Thinking...":"🍳 Get Meal Ideas"}</button>
+                {mealPrepResult&&(
+                  <div style={{marginTop:12,background:"#020617",border:`1px solid ${theme.primary}44`,borderRadius:12,padding:14,fontSize:13,color:"#cbd5e1",fontFamily:"monospace",lineHeight:1.7,whiteSpace:"pre-wrap"}}>{mealPrepResult}</div>
+                )}
+              </div>
+            )}
+
+            {showEatOut&&(
+              <div style={{marginTop:4}}>
+                <div style={{fontSize:11,color:"#475569",fontFamily:"monospace",marginBottom:10,lineHeight:1.6}}>Where are you eating? I'll tell you what to order for your {IS_BULK?"bulk":"cut"}.</div>
+                <input style={{...DS.input,marginBottom:10}} placeholder="e.g. Chipotle, sushi, Italian, a steakhouse..." value={eatOutText} onChange={e=>setEatOutText(e.target.value)} onKeyDown={e=>e.key==="Enter"&&runEatOut()}/>
+                {eatOutError&&<div style={{color:"#ef4444",fontSize:12,fontFamily:"monospace",marginBottom:8,textAlign:"center"}}>{eatOutError}</div>}
+                <button style={{...DS.btn,gridColumn:"unset",width:"100%",opacity:eatOutLoading?0.6:1}} onClick={runEatOut} disabled={eatOutLoading}>{eatOutLoading?"Thinking...":"🍽️ What Should I Order?"}</button>
+                {eatOutResult&&(
+                  <div style={{marginTop:12,background:"#020617",border:`1px solid ${theme.primary}44`,borderRadius:12,padding:14,fontSize:13,color:"#cbd5e1",fontFamily:"monospace",lineHeight:1.7,whiteSpace:"pre-wrap"}}>{eatOutResult}</div>
+                )}
+              </div>
+            )}
+          </div>
 
           <div style={DS.panel}>
             <div style={{display:"flex",gap:6,marginBottom:16}}>
