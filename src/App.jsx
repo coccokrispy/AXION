@@ -329,7 +329,40 @@ function SearchBar({placeholder,value,onChange,onClear,accent}) {
     </div>
   );
 }
-
+function MetricChart({scans,metricKey,label,color,unit,lowerIsBetter}){
+  const points=scans.filter(s=>s[metricKey]!=null).sort((a,b)=>new Date(a.date)-new Date(b.date)).slice(-10);
+  if(points.length<2)return <div style={{fontSize:11,color:"#475569",fontFamily:"monospace",textAlign:"center",padding:"14px 0"}}>Need 2+ scans to chart {label}.</div>;
+  const values=points.map(p=>Number(p[metricKey]));
+  const minV=Math.min(...values)-(Math.max(...values)-Math.min(...values))*0.15-0.5;
+  const maxV=Math.max(...values)+(Math.max(...values)-Math.min(...values))*0.15+0.5;
+  const W=340,H=120,pL=40,pR=14,pT=16,pB=26;
+  const x=i=>pL+(i/Math.max(1,points.length-1))*(W-pL-pR);
+  const y=v=>pT+((maxV-v)/Math.max(0.01,maxV-minV))*(H-pT-pB);
+  const line=points.map((p,i)=>`${x(i).toFixed(1)},${y(Number(p[metricKey])).toFixed(1)}`).join(" ");
+  const fill=`${line} ${x(points.length-1).toFixed(1)},${(H-pB).toFixed(1)} ${pL},${(H-pB).toFixed(1)}`;
+  const first=values[0],last=values[values.length-1];
+  const improved=lowerIsBetter?last<=first:last>=first;
+  const trendColor=improved?"#4ade80":"#ef4444";
+  return(
+    <div style={{marginBottom:4}}>
+      <div style={{display:"flex",justifyContent:"space-between",alignItems:"center",marginBottom:4}}>
+        <span style={{fontSize:12,fontWeight:700,color:"#94a3b8",fontFamily:"monospace"}}>{label}</span>
+        <span style={{fontSize:12,fontWeight:900,color:trendColor,fontFamily:"monospace"}}>{last}{unit} {improved?"▼":"▲"}</span>
+      </div>
+      <svg viewBox={`0 0 ${W} ${H}`} style={{width:"100%",height:H,display:"block"}}>
+        <polygon points={fill} fill={`${color}18`}/>
+        <polyline points={line} fill="none" stroke={color} strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round"/>
+        {points.map((p,i)=>(
+          <g key={i}>
+            <circle cx={x(i)} cy={y(Number(p[metricKey]))} r="3" fill={color}/>
+            {(i===0||i===points.length-1)&&<text x={x(i)} y={y(Number(p[metricKey]))-8} textAnchor="middle" fill="#e2e8f0" fontSize="9" fontWeight="600">{p[metricKey]}</text>}
+            <text x={x(i)} y={H-pB+13} textAnchor="middle" fill="#64748b" fontSize="8">{p.date.slice(5)}</text>
+          </g>
+        ))}
+      </svg>
+    </div>
+  );
+}
 function WeightLineChart({weights,color,fullHistory,startDate}) {
   const sorted=weights.slice().sort((a,b)=>new Date(a.date)-new Date(b.date));
   if(sorted.length<2) return null;
@@ -3220,7 +3253,84 @@ Build the workout.`;
           </div>
         </div>
       )}
+      {/* BODY TAB */}
+      {tab==="body"&&(
+        <div>
+          <div style={{...DS.panel,borderLeft:`4px solid ${theme.primary}`}}>
+            <h2 style={{margin:"0 0 6px",fontSize:15,fontWeight:700,color:"#94a3b8",fontFamily:"monospace"}}>🔥 Body Composition</h2>
+            <div style={{fontSize:11,color:"#475569",fontFamily:"monospace",marginBottom:14,lineHeight:1.6}}>Log your scan results from InBody, DEXA, or a smart scale. Snap a photo and AI reads the numbers, or type them in.</div>
 
+            {bodyView==="idle"&&(
+              <div style={{display:"flex",gap:8}}>
+                <button style={{...DS.btn,gridColumn:"unset",flex:1}} onClick={()=>{setBodyView("scan");setBodyError("");}}>📷 Scan Results</button>
+                <button style={{...DS.btn,gridColumn:"unset",flex:1,background:"#0f172a",border:`1px solid ${theme.primary}`,color:theme.primary}} onClick={()=>{setBodyForm({date:todayISO(),bodyfat:"",muscle:"",visceral:"",water:"",bmr:"",bone:""});setBodyView("confirm");setBodyError("");}}>✏️ Type Manually</button>
+              </div>
+            )}
+
+            {bodyView==="scan"&&(
+              <div>
+                {!bodyImage?(
+                  <div style={{display:"flex",gap:8,marginBottom:10}}>
+                    <label style={{flex:1,display:"block",background:"#0f172a",border:"1px solid #334155",color:"#e2e8f0",borderRadius:10,padding:"11px",cursor:"pointer",fontFamily:"monospace",fontSize:12,fontWeight:700,textAlign:"center"}}>📷 Take Photo<input type="file" accept="image/*" capture="environment" style={{display:"none"}} onChange={e=>{const f=e.target.files[0];if(!f)return;const r=new FileReader();r.onload=ev=>setBodyImage(ev.target.result);r.readAsDataURL(f);e.target.value="";}}/></label>
+                    <label style={{flex:1,display:"block",background:"#1e293b",border:"1px solid #334155",color:"#e2e8f0",borderRadius:10,padding:"11px",cursor:"pointer",fontFamily:"monospace",fontSize:12,fontWeight:700,textAlign:"center"}}>🖼️ Upload<input type="file" accept="image/*" style={{display:"none"}} onChange={e=>{const f=e.target.files[0];if(!f)return;const r=new FileReader();r.onload=ev=>setBodyImage(ev.target.result);r.readAsDataURL(f);e.target.value="";}}/></label>
+                  </div>
+                ):(
+                  <div style={{marginBottom:10}}>
+                    <img src={bodyImage} alt="Scan" style={{width:"100%",maxHeight:220,objectFit:"contain",borderRadius:10,border:"1px solid #1e293b",marginBottom:8,background:"#000"}}/>
+                    <div style={{display:"flex",gap:8}}>
+                      <button style={{...DS.btn,gridColumn:"unset",flex:1,opacity:bodyLoading?0.6:1}} onClick={scanBodyComp} disabled={bodyLoading}>{bodyLoading?"Reading...":"🔍 Read Numbers"}</button>
+                      <button style={{...DS.btn,gridColumn:"unset",background:"#7f1d1d",minWidth:56}} onClick={()=>setBodyImage(null)}>✕</button>
+                    </div>
+                  </div>
+                )}
+                {bodyError&&<div style={{color:"#ef4444",fontSize:12,fontFamily:"monospace",marginBottom:8,textAlign:"center"}}>{bodyError}</div>}
+                <button style={{...DS.btn,gridColumn:"unset",width:"100%",background:"#1e293b",color:"#94a3b8"}} onClick={()=>{setBodyView("idle");setBodyImage(null);setBodyError("");}}>Cancel</button>
+              </div>
+            )}
+
+            {bodyView==="confirm"&&(
+              <div>
+                <div style={{fontSize:11,color:theme.primary,fontFamily:"monospace",marginBottom:12,textAlign:"center"}}>Check the numbers, fix anything, then save.</div>
+                <div style={formGrid}>
+                  <label style={formLabel}>Date</label><input style={DS.input} type="date" value={bodyForm.date} onChange={e=>setBodyForm({...bodyForm,date:e.target.value})}/>
+                  <label style={formLabel}>Body Fat %</label><input style={DS.input} type="number" step="0.1" placeholder="e.g. 18.5" value={bodyForm.bodyfat} onChange={e=>setBodyForm({...bodyForm,bodyfat:e.target.value})}/>
+                  <label style={formLabel}>Lean Muscle (lbs)</label><input style={DS.input} type="number" step="0.1" placeholder="e.g. 155" value={bodyForm.muscle} onChange={e=>setBodyForm({...bodyForm,muscle:e.target.value})}/>
+                  <label style={formLabel}>Visceral Fat</label><input style={DS.input} type="number" step="0.1" placeholder="level" value={bodyForm.visceral} onChange={e=>setBodyForm({...bodyForm,visceral:e.target.value})}/>
+                  <label style={formLabel}>Body Water %</label><input style={DS.input} type="number" step="0.1" placeholder="e.g. 55" value={bodyForm.water} onChange={e=>setBodyForm({...bodyForm,water:e.target.value})}/>
+                  <label style={formLabel}>BMR (kcal)</label><input style={DS.input} type="number" placeholder="e.g. 1850" value={bodyForm.bmr} onChange={e=>setBodyForm({...bodyForm,bmr:e.target.value})}/>
+                  <label style={formLabel}>Bone Mass (lbs)</label><input style={DS.input} type="number" step="0.1" placeholder="e.g. 7.2" value={bodyForm.bone} onChange={e=>setBodyForm({...bodyForm,bone:e.target.value})}/>
+                </div>
+                {bodyError&&<div style={{color:"#ef4444",fontSize:12,fontFamily:"monospace",marginBottom:8,textAlign:"center"}}>{bodyError}</div>}
+                <div style={{display:"flex",gap:8}}>
+                  <button style={{...DS.btn,gridColumn:"unset",flex:1,background:"#1e293b",color:"#94a3b8"}} onClick={()=>{setBodyView("idle");setBodyError("");}}>Cancel</button>
+                  <button style={{...DS.btn,gridColumn:"unset",flex:2}} onClick={saveBodyScan}>Save Scan</button>
+                </div>
+              </div>
+            )}
+          </div>
+
+          {(bodyScans||[]).length>0&&(
+            <>
+              <div style={DS.panel}>
+                <h2 style={{margin:"0 0 14px",fontSize:15,fontWeight:700,color:"#94a3b8",fontFamily:"monospace"}}>📈 Trends</h2>
+                <MetricChart scans={bodyScans} metricKey="bodyfat" label="Body Fat %" color={theme.primary} unit="%" lowerIsBetter={true}/>
+                <div style={{height:14}}/>
+                <MetricChart scans={bodyScans} metricKey="muscle" label="Lean Muscle (lbs)" color="#60a5fa" unit="" lowerIsBetter={false}/>
+                <div style={{height:14}}/>
+                <MetricChart scans={bodyScans} metricKey="visceral" label="Visceral Fat" color="#f59e0b" unit="" lowerIsBetter={true}/>
+                <div style={{height:14}}/>
+                <MetricChart scans={bodyScans} metricKey="water" label="Body Water %" color="#a78bfa" unit="%" lowerIsBetter={false}/>
+              </div>
+
+              <div style={DS.panel}>
+                <h2 style={{margin:"0 0 14px",fontSize:15,fontWeight:700,color:"#94a3b8",fontFamily:"monospace"}}>Scan History</h2>
+                {[...(bodyScans||[])].sort((a,b)=>new Date(b.date)-new Date(a.date)).map(s=>(
+                  <div key={s.id} style={{background:"#020617",border:`1px solid ${theme.border}`,borderRadius:12,padding:14,marginBottom:8}}>
+                    <div style={{display:"flex",justifyContent:"space-between",alignItems:"flex-start",marginBottom:8}}>
+                      <div style={{fontWeight:700,fontSize:14,color:theme.primary,fontFamily:"monospace"}}>{new Date(s.date+"T12:00:00").toLocaleDateString("en-US",{month:"short",day:"numeric",year:"numeric"})}</div>
+                      <button style={{...deleteBtn,flexShrink:0}} onClick={()=>setConfirm({label:`Delete scan from ${s.date}?`,onConfirm:()=>setBodyScans(prev=>prev.filter(x=>x.id!==s.id))})}>✕</button>
+                    </div>
+                    <div style={{display:"grid",gridTemplateColum
       {tab==="calculator"&&<PeptideCalculator theme={theme} DS={DS}/>}
     </div>
   );
