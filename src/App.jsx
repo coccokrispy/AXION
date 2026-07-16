@@ -1379,8 +1379,8 @@ Build the workout.`;
     flash("Workout saved ✓");
   }
 
-  const TABS=["dashboard","weight","doses","peptides","food","workouts","supplements","notes","calculator"];
-  const ICONS={dashboard:Zap,weight:Scale,doses:Syringe,peptides:Dna,food:Utensils,workouts:Dumbbell,supplements:Pill,notes:BookOpen,calculator:Calculator};
+  const TABS=["dashboard","weight","doses","peptides","food","body","workouts","supplements","notes","calculator"];
+  const ICONS={dashboard:Zap,weight:Scale,doses:Syringe,peptides:Dna,food:Utensils,body:TrendingUp,workouts:Dumbbell,supplements:Pill,notes:BookOpen,calculator:Calculator};
 
   const DS={
     page:{minHeight:"100vh",background:`radial-gradient(circle at top,${theme.bg} 0%,#020403 24%,#000000 72%)`,color:"#f8fafc",padding:"42px 12px 48px",fontFamily:"Inter,Arial,sans-serif",maxWidth:430,margin:"0 auto"},
@@ -1959,8 +1959,8 @@ Build the workout.`;
         );})}
       </nav>
       {/* TABS - ROW 2 */}
-      <nav style={{display:"grid",gridTemplateColumns:"1fr 1fr 1fr 1fr",gap:5,marginBottom:16}}>
-        {["workouts","notes","doses","calculator"].map(t=>{const Icon=ICONS[t];return(
+      <nav style={{display:"grid",gridTemplateColumns:"1fr 1fr 1fr 1fr 1fr",gap:5,marginBottom:16}}>
+        {["body","workouts","notes","doses","calculator"].map(t=>{const Icon=ICONS[t];return(
           <button key={t} onClick={()=>setTab(t)} style={tab===t?{...DS.activeTab,flex:"unset"}:{display:"flex",flexDirection:"column",alignItems:"center",gap:6,padding:"14px 4px",background:"linear-gradient(145deg,#000000,#020806)",border:`1px solid ${theme.border}`,borderRadius:18,cursor:"pointer",color:theme.primary+"99",fontFamily:"monospace",transition:"all 0.18s ease"}}>
             <Icon size={22} strokeWidth={1.8} color={tab===t?theme.primary:theme.primary+"99"}/>
             <span style={{fontSize:9,textTransform:"capitalize"}}>{t}</span>
@@ -1989,14 +1989,25 @@ Build the workout.`;
             ["% Progress",totalChange>0?`${progressPct.toFixed(1)}`:"0.0","%"],
             ["Avg/wk",avgPerWeek>0?`${avgPerWeek.toFixed(2)}`:"--","lbs"],
             [`To ${TARGET_WEIGHT}`,remainingToGoal>0?`${remainingToGoal.toFixed(1)}`:"0.0","lbs"],
-            ["Protein",todayProtein>0?`${todayProtein}`:"--","g"],
+           ["Protein",todayProtein>0?`${todayProtein}`:"--","g"],
             ["Calories",todayCals>0?`${todayCals}`:"--","kcal"],
-          ].map(([l,v,u])=>(
+            ["Body Fat",lowestBodyFat!=null?`${lowestBodyFat}`:"--","%","bodyfat"],
+            ["Lean Muscle",highestMuscle!=null?`${highestMuscle}`:"--","lbs","muscle"],
+          ].map(([l,v,u,special])=>{
+            let numColor=v==="--"?"#334155":theme.primary;
+            if(special==="bodyfat"&&latestScan&&prevScan&&latestScan.bodyfat!=null&&prevScan.bodyfat!=null){
+              numColor=latestScan.bodyfat<=prevScan.bodyfat?"#4ade80":"#ef4444";
+            }
+            if(special==="muscle"&&latestScan&&prevScan&&latestScan.muscle!=null&&prevScan.muscle!=null){
+              numColor=latestScan.muscle>=prevScan.muscle?"#4ade80":"#ef4444";
+            }
+            return(
             <div key={l} style={DS.card}>
               <div style={{fontSize:10,color:"#475569",textTransform:"uppercase",letterSpacing:1.5,fontFamily:"monospace",marginBottom:4}}>{l}</div>
-              <div style={{fontSize:22,fontWeight:900,lineHeight:1,color:v==="--"?"#334155":theme.primary}}>{v}<span style={{fontSize:13,fontWeight:400,color:v==="--"?"#334155":undefined}}> {u}</span></div>
+              <div style={{fontSize:22,fontWeight:900,lineHeight:1,color:numColor}}>{v}<span style={{fontSize:13,fontWeight:400,color:v==="--"?"#334155":undefined}}> {u}</span></div>
             </div>
-          ))}
+            );
+          })}
         </div>
         {todayWater>0&&(
           <div style={{...DS.panel,marginBottom:14}}>
