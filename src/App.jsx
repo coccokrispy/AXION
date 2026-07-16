@@ -1217,19 +1217,30 @@ Build the workout.`;
     setGenLoading(false);
   }
 
-  async function scanEquipment(){
+ async function scanEquipment(){
     if(genEquipImages.length===0){setGenError("Add at least one photo.");return;}
     if(!apiKey){setGenError("Add API key in Settings.");return;}
     setGenLoading(true);setGenError("");
     try{
-      const imageBlocks=genEquipImages.map(img=>({
+      const recompressed=[];
+      for(const img of genEquipImages){
+        const small=await compressImage(img,900,0.5);
+        recompressed.push(small);
+      }
+      const totalBytes=recompressed.reduce((s,img)=>s+Math.ceil((img.length-img.indexOf(",")-1)*0.75),0);
+      if(totalBytes>9000000){
+        setGenLoading(false);
+        setGenError("Too many/large photos to send at once. Remove a couple and try again, or add the rest as text.");
+        return;
+      }
+      const imageBlocks=recompressed.map(img=>({
         type:"image",
-        source:{type:"base64",media_type:img.split(";")[0].split(":")[1],data:img.split(",")[1]}
+        source:{type:"base64",media_type:"image/jpeg",data:img.split(",")[1]}
       }));
       const extraNote=genEquipText.trim()?`\n\nThe user also typed these notes about their equipment — include anything here that the photos missed: "${genEquipText.trim()}"`:"";
       const data=await callClaude(apiKey,{
         system:`Identify all workout equipment visible across ALL the images provided. They are different angles or areas of the same gym/space — combine everything into one complete list, no duplicates. Return ONLY a plain comma-separated list, nothing else. Example: "dumbbells up to 50lb, flat bench, pull-up bar, resistance bands, squat rack, barbell with plates". If you truly can't identify anything, return "unclear".`,
-        messages:[{role:"user",content:[...imageBlocks,{type:"text",text:`Here are ${genEquipImages.length} photo${genEquipImages.length>1?"s":""} of my available equipment. List everything you see.${extraNote}`}]}]
+        messages:[{role:"user",content:[...imageBlocks,{type:"text",text:`Here are ${recompressed.length} photo${recompressed.length>1?"s":""} of my available equipment. List everything you see.${extraNote}`}]}]
       });
       const txt=data.content.map(b=>b.text||"").join("").trim();
       setGenEquipText(txt==="unclear"?genEquipText:txt);
