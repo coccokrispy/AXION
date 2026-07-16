@@ -1380,7 +1380,7 @@ Build the workout.`;
   }
 
   const TABS=["dashboard","weight","doses","peptides","food","body","workouts","supplements","notes","calculator"];
-  const ICONS={dashboard:Zap,weight:Scale,doses:Syringe,peptides:Dna,food:Utensils,body:TrendingUp,workouts:Dumbbell,supplements:Pill,notes:BookOpen,calculator:Calculator};
+  const ICONS={dashboard:Zap,weight:Scale,doses:Syringe,peptides:Dna,food:Utensils,body:Flame,workouts:Dumbbell,supplements:Pill,notes:BookOpen,calculator:Calculator};
 
   const DS={
     page:{minHeight:"100vh",background:`radial-gradient(circle at top,${theme.bg} 0%,#020403 24%,#000000 72%)`,color:"#f8fafc",padding:"42px 12px 48px",fontFamily:"Inter,Arial,sans-serif",maxWidth:430,margin:"0 auto"},
