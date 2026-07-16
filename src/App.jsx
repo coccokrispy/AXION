@@ -988,7 +988,20 @@ export default function App() {
     if(!bodyImage||!apiKey){setBodyError("Add API key in Settings.");return;}
     setBodyLoading(true);setBodyError("");
     try{
-      const small=await compressImage(bodyImage,1200,0.6);
+      const small=await new Promise((resolve)=>{
+        const img=new Image();
+        img.onload=()=>{
+          const maxDim=1500;
+          let w=img.width,h=img.height;
+          if(w>h&&w>maxDim){h=Math.round(h*(maxDim/w));w=maxDim;}
+          else if(h>=w&&h>maxDim){w=Math.round(w*(maxDim/h));h=maxDim;}
+          const canvas=document.createElement("canvas");
+          canvas.width=w;canvas.height=h;
+          canvas.getContext("2d").drawImage(img,0,0,w,h);
+          resolve(canvas.toDataURL("image/jpeg",0.6));
+        };
+        img.src=bodyImage;
+      });
       const base64=small.split(",")[1];
       const data=await callClaude(apiKey,{
         system:`You are reading a body composition scan result (InBody, DEXA, smart scale app, etc). Extract the numeric values you can clearly see. Return ONLY valid JSON, no markdown:
