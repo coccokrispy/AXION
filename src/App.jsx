@@ -2980,13 +2980,14 @@ Build the workout.`;
                 {genWorkout.warmup&&<div style={{background:"#020617",border:`1px solid ${theme.border}`,borderRadius:10,padding:12,marginBottom:12,fontSize:12,color:"#94a3b8",fontFamily:"monospace",lineHeight:1.6}}><b style={{color:theme.primary}}>WARM UP · </b>{genWorkout.warmup}</div>}
 
                 <div style={{display:"flex",flexDirection:"column",gap:8,marginBottom:12}}>
-                  {genWorkout.exercises.map((ex,i)=>(
+                 {genWorkout.exercises.map((ex,i)=>(
                     <div key={i} style={{background:"#020617",border:`1px solid ${theme.border}`,borderLeft:`3px solid ${theme.primary}`,borderRadius:10,padding:12}}>
                       <div style={{display:"flex",justifyContent:"space-between",alignItems:"flex-start",gap:8}}>
                         <div style={{flex:1}}>
                           <div style={{fontWeight:700,fontSize:14,color:"#f8fafc"}}>{i+1}. {ex.name}</div>
                           <div style={{fontSize:12,color:theme.primary,fontFamily:"monospace",marginTop:3,fontWeight:700}}>{ex.sets} × {ex.reps}</div>
                           {ex.note&&<div style={{fontSize:11,color:"#94a3b8",fontStyle:"italic",marginTop:4,lineHeight:1.5}}>{ex.note}</div>}
+                          <a href={`https://www.youtube.com/results?search_query=${encodeURIComponent(ex.name+" proper form")}`} target="_blank" rel="noopener noreferrer" style={{display:"inline-block",marginTop:8,fontSize:11,color:"#ef4444",fontFamily:"monospace",fontWeight:700,textDecoration:"none",border:"1px solid #ef444455",borderRadius:6,padding:"4px 10px"}}>▶ Watch Form</a>
                         </div>
                         <div style={{fontSize:10,color:"#475569",fontFamily:"monospace",flexShrink:0,background:"#0f172a",borderRadius:6,padding:"3px 7px"}}>{ex.rest_seconds}s rest</div>
                       </div>
