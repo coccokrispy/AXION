@@ -3330,7 +3330,22 @@ Build the workout.`;
                       <div style={{fontWeight:700,fontSize:14,color:theme.primary,fontFamily:"monospace"}}>{new Date(s.date+"T12:00:00").toLocaleDateString("en-US",{month:"short",day:"numeric",year:"numeric"})}</div>
                       <button style={{...deleteBtn,flexShrink:0}} onClick={()=>setConfirm({label:`Delete scan from ${s.date}?`,onConfirm:()=>setBodyScans(prev=>prev.filter(x=>x.id!==s.id))})}>✕</button>
                     </div>
-                    <div style={{display:"grid",gridTemplateColum
+                    <div style={{display:"grid",gridTemplateColumns:"1fr 1fr 1fr",gap:8}}>
+                      {[["Body Fat",s.bodyfat,"%"],["Muscle",s.muscle,"lb"],["Visceral",s.visceral,""],["Water",s.water,"%"],["BMR",s.bmr,""],["Bone",s.bone,"lb"]].filter(([,v])=>v!=null).map(([l,v,u])=>(
+                        <div key={l} style={{background:"#0f172a",borderRadius:8,padding:"8px",textAlign:"center"}}>
+                          <div style={{fontSize:9,color:"#475569",fontFamily:"monospace",textTransform:"uppercase",letterSpacing:1,marginBottom:3}}>{l}</div>
+                          <div style={{fontSize:15,fontWeight:900,color:theme.primary,fontFamily:"monospace"}}>{v}<span style={{fontSize:10}}>{u}</span></div>
+                        </div>
+                      ))}
+                    </div>
+                  </div>
+                ))}
+              </div>
+            </>
+          )}
+        </div>
+      )}
+
       {tab==="calculator"&&<PeptideCalculator theme={theme} DS={DS}/>}
     </div>
   );
